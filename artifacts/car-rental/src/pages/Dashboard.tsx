@@ -20,14 +20,14 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
     availableCars: fleetCars.filter((c) => c.available).length,
   };
 
-  const getStatusBadge = (status: string) => {
+  const statusBadge = (status: string) => {
     switch (status) {
       case "Confirmed":
-        return <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50 font-medium">Confirmed</Badge>;
+        return <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-50 font-medium whitespace-nowrap">Confirmed</Badge>;
       case "Pending":
-        return <Badge className="bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-50 font-medium">Pending</Badge>;
+        return <Badge className="bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-50 font-medium whitespace-nowrap">Pending</Badge>;
       case "Cancelled":
-        return <Badge className="bg-red-50 text-red-700 border border-red-200 hover:bg-red-50 font-medium">Cancelled</Badge>;
+        return <Badge className="bg-red-50 text-red-700 border border-red-200 hover:bg-red-50 font-medium whitespace-nowrap">Cancelled</Badge>;
       default:
         return null;
     }
@@ -37,20 +37,20 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
     { label: "Total Bookings", value: stats.total, icon: CalendarDays, accent: "text-primary" },
     { label: "Confirmed", value: stats.confirmed, icon: CheckCircle2, accent: "text-emerald-600" },
     { label: "Pending", value: stats.pending, icon: Clock, accent: "text-amber-500" },
-    { label: "Available Fleet", value: `${stats.availableCars} / ${fleetCars.length}`, icon: Car, accent: "text-primary" },
+    { label: "Available Fleet", value: `${stats.availableCars}/${fleetCars.length}`, icon: Car, accent: "text-primary" },
   ];
 
   return (
     <div className="bg-background min-h-screen">
-      <div className="container mx-auto px-4 py-10 max-w-7xl">
+      <div className="container mx-auto px-4 py-8 sm:py-10 max-w-7xl">
 
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground mb-1">Dashboard</h1>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Dashboard</h1>
           <p className="text-muted-foreground text-sm">Manage your reservations and fleet.</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {/* Stats — 2×2 on mobile, 4-col on lg */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-7 sm:mb-8">
           {statCards.map(({ label, value, icon: Icon, accent }, i) => (
             <motion.div
               key={label}
@@ -59,15 +59,15 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
               transition={{ delay: i * 0.07 }}
             >
               <Card className="bg-card border-border shadow-sm rounded-xl">
-                <CardHeader className="flex flex-row items-center justify-between pb-2 pt-4 px-5">
-                  <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <CardHeader className="flex flex-row items-center justify-between pb-1.5 pt-4 px-4 sm:px-5">
+                  <CardTitle className="text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider leading-tight">
                     {label}
                   </CardTitle>
-                  <Icon className={`h-4 w-4 ${accent}`} />
+                  <Icon className={`h-4 w-4 flex-shrink-0 ${accent}`} />
                 </CardHeader>
-                <CardContent className="px-5 pb-4">
+                <CardContent className="px-4 sm:px-5 pb-4">
                   <div
-                    className="text-3xl font-bold text-foreground"
+                    className="text-2xl sm:text-3xl font-bold text-foreground"
                     data-testid={`stat-${label.toLowerCase().replace(/\s+/g, "-")}`}
                   >
                     {value}
@@ -78,17 +78,17 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
           ))}
         </div>
 
-        {/* Bookings Table */}
-        <div className="mb-10">
+        {/* Bookings */}
+        <div className="mb-8 sm:mb-10">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
             <h2 className="text-base font-bold text-foreground">Recent Reservations</h2>
             <Tabs defaultValue="All" value={filter} onValueChange={setFilter}>
-              <TabsList className="bg-white border border-border h-9 p-0.5 rounded-lg gap-0.5">
+              <TabsList className="bg-white border border-border h-9 p-0.5 rounded-lg gap-0.5 w-full sm:w-auto">
                 {["All", "Pending", "Confirmed", "Cancelled"].map((tab) => (
                   <TabsTrigger
                     key={tab}
                     value={tab}
-                    className="text-xs px-3 rounded-md data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none"
+                    className="text-xs px-2.5 sm:px-3 rounded-md flex-1 sm:flex-none data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none"
                     data-testid={`tab-${tab.toLowerCase()}`}
                   >
                     {tab}
@@ -98,7 +98,44 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
             </Tabs>
           </div>
 
-          <Card className="bg-card border-border shadow-sm rounded-xl overflow-hidden">
+          {/* Mobile card list */}
+          <div className="md:hidden flex flex-col gap-3">
+            {filteredBookings.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                No reservations found for this filter.
+              </div>
+            ) : (
+              filteredBookings.map((booking, idx) => (
+                <motion.div
+                  key={booking.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.04 }}
+                  data-testid={`card-booking-${booking.id}`}
+                >
+                  <Card className="bg-card border-border shadow-sm rounded-xl">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-foreground text-sm">{booking.clientName}</p>
+                          <p className="text-xs text-muted-foreground">{booking.id}</p>
+                        </div>
+                        {statusBadge(booking.status)}
+                      </div>
+                      <p className="text-sm text-foreground font-medium mb-1">{booking.car}</p>
+                      <div className="flex items-center justify-between text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
+                        <span>{booking.pickupDate} → {booking.returnDate}</span>
+                        <span className="font-semibold text-accent text-sm">${booking.totalPrice.toLocaleString()}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop table */}
+          <Card className="hidden md:block bg-card border-border shadow-sm rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
                 <thead className="text-xs text-muted-foreground bg-muted/50 border-b border-border">
@@ -106,7 +143,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
                     <th className="px-5 py-3 font-semibold uppercase tracking-wider">Client</th>
                     <th className="px-5 py-3 font-semibold uppercase tracking-wider">Vehicle</th>
                     <th className="px-5 py-3 font-semibold uppercase tracking-wider">Dates</th>
-                    <th className="px-5 py-3 font-semibold uppercase tracking-wider hidden md:table-cell">Location</th>
+                    <th className="px-5 py-3 font-semibold uppercase tracking-wider">Location</th>
                     <th className="px-5 py-3 font-semibold uppercase tracking-wider">Amount</th>
                     <th className="px-5 py-3 font-semibold uppercase tracking-wider">Status</th>
                     <th className="px-5 py-3 text-right font-semibold uppercase tracking-wider">Actions</th>
@@ -138,13 +175,11 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
                           <div className="text-foreground text-sm">{booking.pickupDate}</div>
                           <div className="text-xs text-muted-foreground">to {booking.returnDate}</div>
                         </td>
-                        <td className="px-5 py-3.5 text-muted-foreground text-sm hidden md:table-cell">
-                          {booking.pickupLocation}
-                        </td>
+                        <td className="px-5 py-3.5 text-muted-foreground text-sm">{booking.pickupLocation}</td>
                         <td className="px-5 py-3.5 font-semibold text-accent text-sm">
                           ${booking.totalPrice.toLocaleString()}
                         </td>
-                        <td className="px-5 py-3.5">{getStatusBadge(booking.status)}</td>
+                        <td className="px-5 py-3.5">{statusBadge(booking.status)}</td>
                         <td className="px-5 py-3.5 text-right">
                           <button
                             className="text-muted-foreground hover:text-foreground transition-colors"
@@ -165,7 +200,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
         {/* Fleet Overview */}
         <div>
           <h2 className="text-base font-bold text-foreground mb-4">Fleet Overview</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {fleetCars.map((car, idx) => (
               <motion.div
                 key={car.id}
@@ -175,7 +210,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
                 data-testid={`card-fleet-${car.id}`}
               >
                 <Card className="bg-card border-border shadow-sm rounded-xl overflow-hidden hover:shadow-md transition-shadow">
-                  <div className="relative h-32 overflow-hidden bg-muted">
+                  <div className="relative h-24 sm:h-28 overflow-hidden bg-muted">
                     <img
                       src={car.image}
                       alt={car.name}
@@ -190,12 +225,12 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
                       )}
                     </div>
                   </div>
-                  <CardContent className="p-3.5">
-                    <h3 className="font-bold text-foreground text-sm mb-0.5">{car.name}</h3>
-                    <p className="text-xs text-muted-foreground mb-2.5">{car.type} · {car.seats} seats</p>
-                    <div className="flex items-center justify-between border-t border-border pt-2.5">
-                      <span className="text-xs text-muted-foreground">{car.transmission}</span>
-                      <span className="font-bold text-accent text-sm">${car.pricePerDay}<span className="font-normal text-xs text-muted-foreground">/day</span></span>
+                  <CardContent className="p-3 sm:p-3.5">
+                    <h3 className="font-bold text-foreground text-xs sm:text-sm mb-0.5 truncate">{car.name}</h3>
+                    <p className="text-xs text-muted-foreground mb-2">{car.type} · {car.seats} seats</p>
+                    <div className="flex items-center justify-between border-t border-border pt-2">
+                      <span className="text-xs text-muted-foreground hidden sm:block">{car.transmission}</span>
+                      <span className="font-bold text-accent text-sm">${car.pricePerDay}<span className="font-normal text-xs text-muted-foreground">/d</span></span>
                     </div>
                   </CardContent>
                 </Card>

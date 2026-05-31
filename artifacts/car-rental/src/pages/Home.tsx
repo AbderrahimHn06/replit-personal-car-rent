@@ -60,13 +60,13 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
     <div className="flex flex-col min-h-screen bg-background">
 
       {/* Hero */}
-      <section className="bg-primary pt-16 pb-0">
-        <div className="container mx-auto px-4 text-center pb-12">
+      <section className="bg-primary pt-12 pb-0">
+        <div className="container mx-auto px-4 text-center pb-10">
           <motion.p
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-accent font-semibold tracking-[0.2em] uppercase text-xs mb-4"
+            className="text-accent font-semibold tracking-[0.2em] uppercase text-xs mb-3"
           >
             Premium Car Rental
           </motion.p>
@@ -74,7 +74,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight mb-3"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight mb-3"
           >
             Find Your Perfect Ride
           </motion.h1>
@@ -82,24 +82,23 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-white/70 text-base max-w-lg mx-auto"
+            className="text-white/70 text-sm sm:text-base max-w-lg mx-auto"
           >
             Wide selection of vehicles for every need and budget.
           </motion.p>
         </div>
 
-        {/* Horizontal Search Form — overlaps hero/content boundary */}
+        {/* Search Form */}
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-white rounded-xl shadow-lg border border-border p-5 translate-y-8"
+            className="bg-white rounded-xl shadow-lg border border-border p-4 sm:p-5 translate-y-8"
           >
-            <div className="flex flex-col lg:flex-row gap-3 items-end">
-
-              {/* Pickup */}
-              <div className="flex-1 min-w-0">
+            {/* Row 1: locations */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                   Pickup Location
                 </label>
@@ -114,9 +113,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                   />
                 </div>
               </div>
-
-              {/* Return location */}
-              <div className="flex-1 min-w-0">
+              <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                   Return Location
                 </label>
@@ -131,80 +128,83 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                   />
                 </div>
               </div>
+            </div>
 
-              {/* Pickup date + time */}
-              <div className="flex gap-2 flex-shrink-0">
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                    Pickup Date
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <Input
-                      type="date"
-                      value={pickupDate}
-                      onChange={(e) => setPickupDate(e.target.value)}
-                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-40"
-                      data-testid="input-pickup-date"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                    Time
-                  </label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <Input
-                      type="time"
-                      value={pickupTime}
-                      onChange={(e) => setPickupTime(e.target.value)}
-                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-32"
-                      data-testid="input-pickup-time"
-                    />
-                  </div>
+            {/* Row 2: dates + times + button */}
+            <div className="grid grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto] gap-3 items-end">
+              {/* Pickup date */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  Pickup Date
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={pickupDate}
+                    onChange={(e) => setPickupDate(e.target.value)}
+                    className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-full"
+                    data-testid="input-pickup-date"
+                  />
                 </div>
               </div>
 
-              {/* Return date + time */}
-              <div className="flex gap-2 flex-shrink-0">
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                    Return Date
-                  </label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <Input
-                      type="date"
-                      value={returnDate}
-                      onChange={(e) => setReturnDate(e.target.value)}
-                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-40"
-                      data-testid="input-return-date"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                    Time
-                  </label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                    <Input
-                      type="time"
-                      value={returnTime}
-                      onChange={(e) => setReturnTime(e.target.value)}
-                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-32"
-                      data-testid="input-return-time"
-                    />
-                  </div>
+              {/* Pickup time */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  Pickup Time
+                </label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="time"
+                    value={pickupTime}
+                    onChange={(e) => setPickupTime(e.target.value)}
+                    className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-full"
+                    data-testid="input-pickup-time"
+                  />
                 </div>
               </div>
 
-              {/* CTA */}
-              <div className="flex-shrink-0 self-end">
+              {/* Return date */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  Return Date
+                </label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={returnDate}
+                    onChange={(e) => setReturnDate(e.target.value)}
+                    className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-full"
+                    data-testid="input-return-date"
+                  />
+                </div>
+              </div>
+
+              {/* Return time */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                  Return Time
+                </label>
+                <div className="relative">
+                  <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    type="time"
+                    value={returnTime}
+                    onChange={(e) => setReturnTime(e.target.value)}
+                    className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-full"
+                    data-testid="input-return-time"
+                  />
+                </div>
+              </div>
+
+              {/* CTA — full width on mobile (spans 2 cols), auto on lg */}
+              <div className="col-span-2 lg:col-span-1">
                 <Button
                   onClick={handleSearch}
-                  className="h-11 px-8 bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-semibold text-sm whitespace-nowrap shadow-sm"
+                  className="w-full h-11 px-8 bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-semibold text-sm shadow-sm"
                   data-testid="button-see-vehicles"
                 >
                   See vehicles
@@ -221,7 +221,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
         </div>
       </section>
 
-      {/* Spacer for the translate-y overlap */}
+      {/* Spacer for translate-y overlap */}
       <div className="h-12 bg-background" />
 
       {/* Available Cars */}
@@ -234,25 +234,26 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="py-12 bg-background"
+            className="py-10 bg-background"
           >
             <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex items-start justify-between mb-6 gap-4">
                 <div>
                   <h2 className="text-xl font-bold text-foreground">Available Vehicles</h2>
-                  <p className="text-muted-foreground text-sm mt-0.5">
-                    {availableCars.length} vehicles · {pickupLocation} · {pickupDate} – {returnDate}
+                  <p className="text-muted-foreground text-sm mt-0.5 leading-snug">
+                    {availableCars.length} vehicles · {pickupLocation}
+                    <span className="hidden sm:inline"> · {pickupDate} – {returnDate}</span>
                   </p>
                 </div>
                 {days && (
-                  <div className="hidden md:block text-right">
+                  <div className="text-right flex-shrink-0">
                     <span className="text-xs text-muted-foreground uppercase tracking-wider">Rental period</span>
                     <p className="font-bold text-foreground text-sm">{days} day{days > 1 ? "s" : ""}</p>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
                 {availableCars.map((car, idx) => (
                   <motion.div
                     key={car.id}
@@ -262,7 +263,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                     data-testid={`card-car-${car.id}`}
                   >
                     <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden rounded-xl">
-                      <div className="relative h-44 overflow-hidden bg-muted">
+                      <div className="relative h-40 overflow-hidden bg-muted">
                         <img
                           src={car.image}
                           alt={car.name}
@@ -278,7 +279,6 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                         <p className="text-muted-foreground text-xs mb-3">
                           {car.seats} seats · {car.transmission}
                         </p>
-
                         <div className="flex items-end justify-between mb-3">
                           <div>
                             <span className="text-xl font-bold text-accent">${car.pricePerDay}</span>
@@ -290,9 +290,8 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                             </span>
                           )}
                         </div>
-
                         <Button
-                          className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-8 rounded-lg font-semibold text-xs"
+                          className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-9 rounded-lg font-semibold text-xs"
                           onClick={() => handleBookNow(car.name, car.pricePerDay)}
                           data-testid={`button-book-${car.id}`}
                         >
@@ -309,13 +308,13 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
       </AnimatePresence>
 
       {/* Why Choose Us */}
-      <section className="py-20 bg-background">
+      <section className="py-16 sm:py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-3">Why Choose EliteRide</h2>
+          <div className="text-center mb-10 sm:mb-12">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-3">Why Choose EliteRide</h2>
             <div className="w-12 h-0.5 bg-accent mx-auto rounded-full" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-8 max-w-4xl mx-auto">
             {[
               { icon: Shield, title: "Guaranteed Privacy", desc: "Discreet delivery and collection, ensuring your travels remain entirely confidential." },
               { icon: Award, title: "Certified Fleet", desc: "Every vehicle undergoes rigorous inspection and detailing before each reservation." },
@@ -343,14 +342,14 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
       {/* Trust Badges */}
       <section className="py-10 border-t border-border bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-12">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             {[
               { value: "500+", label: "Happy Clients" },
               { value: "50+", label: "Vehicles" },
               { value: "24/7", label: "Support" },
               { value: "5★", label: "Average Rating" },
             ].map(({ value, label }) => (
-              <div key={label} className="text-center">
+              <div key={label}>
                 <div className="text-2xl font-bold text-accent">{value}</div>
                 <div className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5">{label}</div>
               </div>
