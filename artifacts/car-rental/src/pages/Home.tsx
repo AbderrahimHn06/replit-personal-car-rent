@@ -39,7 +39,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
 
   const handleBookNow = (carName: string, pricePerDay: number) => {
     const rental = days ?? 1;
-    const newBooking: Booking = {
+    addBooking({
       id: `bk-${Date.now()}`,
       clientName: "Guest",
       car: carName,
@@ -48,8 +48,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
       pickupLocation,
       status: "Pending",
       totalPrice: pricePerDay * rental,
-    };
-    addBooking(newBooking);
+    });
     toast({
       title: "Booking Request Sent",
       description: `${carName} reserved from ${pickupDate} to ${returnDate}. Our team will confirm shortly.`,
@@ -59,14 +58,15 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
   return (
     <div className="flex flex-col min-h-screen bg-background">
 
-      {/* Hero */}
-      <section className="bg-primary pt-16 pb-0">
-        <div className="container mx-auto px-4 text-center pb-12">
+      {/* ── Hero + Search ── */}
+      <section className="bg-primary">
+        {/* Headline */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 lg:pt-16 pb-8 sm:pb-10 text-center">
           <motion.p
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="text-accent font-semibold tracking-[0.2em] uppercase text-xs mb-4"
+            className="text-accent font-semibold tracking-widest uppercase text-xs mb-3"
           >
             Premium Car Rental
           </motion.p>
@@ -74,7 +74,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight mb-3"
+            className="text-2xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight mb-3"
           >
             Find Your Perfect Ride
           </motion.h1>
@@ -82,24 +82,29 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-white/70 text-base max-w-lg mx-auto"
+            className="text-white/70 text-sm sm:text-base max-w-lg mx-auto"
           >
             Wide selection of vehicles for every need and budget.
           </motion.p>
         </div>
 
-        {/* Horizontal Search Form — overlaps hero/content boundary */}
-        <div className="container mx-auto px-4">
+        {/* Search form card */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="bg-white rounded-xl shadow-lg border border-border p-5 translate-y-8"
+            className="bg-white rounded-t-xl shadow-lg border border-b-0 border-border p-4 sm:p-6"
           >
-            <div className="flex flex-col lg:flex-row gap-3 items-end">
+            {/* Form fields
+                Mobile  : flex-col  — all inputs + button full-width, stacked
+                Tablet  : 2-col grid — locations row 1, dates row 2, button row 3
+                Desktop : single flex row aligned at bottom
+            */}
+            <div className="flex flex-col gap-3 sm:grid sm:grid-cols-2 lg:flex lg:flex-row lg:items-end lg:gap-3">
 
-              {/* Pickup */}
-              <div className="flex-1 min-w-0">
+              {/* Pickup location */}
+              <div className="lg:flex-1">
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                   Pickup Location
                 </label>
@@ -109,14 +114,14 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                     value={pickupLocation}
                     onChange={(e) => setPickupLocation(e.target.value)}
                     placeholder="City, airport..."
-                    className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm"
+                    className="pl-9 h-11 w-full rounded-lg border-border bg-white focus-visible:ring-accent text-sm"
                     data-testid="input-pickup-location"
                   />
                 </div>
               </div>
 
               {/* Return location */}
-              <div className="flex-1 min-w-0">
+              <div className="lg:flex-1">
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                   Return Location
                 </label>
@@ -126,15 +131,15 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                     value={returnLocation}
                     onChange={(e) => setReturnLocation(e.target.value)}
                     placeholder="Same as pickup"
-                    className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm"
+                    className="pl-9 h-11 w-full rounded-lg border-border bg-white focus-visible:ring-accent text-sm"
                     data-testid="input-return-location"
                   />
                 </div>
               </div>
 
               {/* Pickup date + time */}
-              <div className="flex gap-2 flex-shrink-0">
-                <div>
+              <div className="grid grid-cols-2 gap-3 lg:flex lg:gap-2 lg:flex-shrink-0">
+                <div className="lg:flex-1">
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                     Pickup Date
                   </label>
@@ -144,7 +149,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                       type="date"
                       value={pickupDate}
                       onChange={(e) => setPickupDate(e.target.value)}
-                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-40"
+                      className="pl-9 h-11 w-full rounded-lg border-border bg-white focus-visible:ring-accent text-sm"
                       data-testid="input-pickup-date"
                     />
                   </div>
@@ -159,7 +164,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                       type="time"
                       value={pickupTime}
                       onChange={(e) => setPickupTime(e.target.value)}
-                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-32"
+                      className="pl-9 h-11 w-full rounded-lg border-border bg-white focus-visible:ring-accent text-sm"
                       data-testid="input-pickup-time"
                     />
                   </div>
@@ -167,8 +172,8 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
               </div>
 
               {/* Return date + time */}
-              <div className="flex gap-2 flex-shrink-0">
-                <div>
+              <div className="grid grid-cols-2 gap-3 lg:flex lg:gap-2 lg:flex-shrink-0">
+                <div className="lg:flex-1">
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                     Return Date
                   </label>
@@ -178,7 +183,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                       type="date"
                       value={returnDate}
                       onChange={(e) => setReturnDate(e.target.value)}
-                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-40"
+                      className="pl-9 h-11 w-full rounded-lg border-border bg-white focus-visible:ring-accent text-sm"
                       data-testid="input-return-date"
                     />
                   </div>
@@ -193,7 +198,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                       type="time"
                       value={returnTime}
                       onChange={(e) => setReturnTime(e.target.value)}
-                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-32"
+                      className="pl-9 h-11 w-full rounded-lg border-border bg-white focus-visible:ring-accent text-sm"
                       data-testid="input-return-time"
                     />
                   </div>
@@ -201,10 +206,10 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
               </div>
 
               {/* CTA */}
-              <div className="flex-shrink-0 self-end">
+              <div className="sm:col-span-2 lg:flex-shrink-0 lg:self-end">
                 <Button
                   onClick={handleSearch}
-                  className="h-11 px-8 bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-semibold text-sm whitespace-nowrap shadow-sm"
+                  className="w-full lg:w-auto h-11 px-8 bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-semibold text-sm"
                   data-testid="button-see-vehicles"
                 >
                   See vehicles
@@ -213,7 +218,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
             </div>
 
             {days && (
-              <p className="text-xs text-muted-foreground mt-3 pl-1">
+              <p className="text-xs text-muted-foreground mt-3">
                 {days} day{days > 1 ? "s" : ""} rental period
               </p>
             )}
@@ -221,10 +226,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
         </div>
       </section>
 
-      {/* Spacer for the translate-y overlap */}
-      <div className="h-12 bg-background" />
-
-      {/* Available Cars */}
+      {/* ── Available Cars ── */}
       <AnimatePresence>
         {hasSearched && (
           <motion.section
@@ -234,25 +236,25 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            className="py-12 bg-background"
+            className="py-8 sm:py-12 lg:py-16 bg-background border-t border-border"
           >
-            <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-start justify-between mb-6 sm:mb-8 gap-4">
                 <div>
-                  <h2 className="text-xl font-bold text-foreground">Available Vehicles</h2>
-                  <p className="text-muted-foreground text-sm mt-0.5">
+                  <h2 className="text-xl sm:text-2xl font-bold text-foreground">Available Vehicles</h2>
+                  <p className="text-muted-foreground text-sm mt-1">
                     {availableCars.length} vehicles · {pickupLocation} · {pickupDate} – {returnDate}
                   </p>
                 </div>
                 {days && (
-                  <div className="hidden md:block text-right">
+                  <div className="hidden sm:block text-right flex-shrink-0">
                     <span className="text-xs text-muted-foreground uppercase tracking-wider">Rental period</span>
                     <p className="font-bold text-foreground text-sm">{days} day{days > 1 ? "s" : ""}</p>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {availableCars.map((car, idx) => (
                   <motion.div
                     key={car.id}
@@ -261,38 +263,37 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                     transition={{ duration: 0.35, delay: idx * 0.06 }}
                     data-testid={`card-car-${car.id}`}
                   >
-                    <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden rounded-xl">
-                      <div className="relative h-44 overflow-hidden bg-muted">
+                    <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden rounded-xl h-full flex flex-col">
+                      <div className="relative overflow-hidden bg-muted">
                         <img
                           src={car.image}
                           alt={car.name}
-                          className="w-full h-full object-cover"
+                          className="w-full h-[200px] object-cover"
                           loading="lazy"
                         />
-                        <span className="absolute top-2.5 left-2.5 bg-white/90 text-foreground text-xs font-semibold px-2.5 py-0.5 rounded-full border border-border">
+                        <span className="absolute top-3 left-3 bg-white/90 text-foreground text-xs font-semibold px-2.5 py-1 rounded-full border border-border">
                           {car.type}
                         </span>
                       </div>
-                      <CardContent className="p-4">
-                        <h3 className="font-bold text-foreground text-sm mb-1">{car.name}</h3>
-                        <p className="text-muted-foreground text-xs mb-3">
+                      <CardContent className="p-4 sm:p-5 flex flex-col flex-1">
+                        <h3 className="font-bold text-foreground text-sm sm:text-base mb-1">{car.name}</h3>
+                        <p className="text-muted-foreground text-xs sm:text-sm mb-4">
                           {car.seats} seats · {car.transmission}
                         </p>
-
-                        <div className="flex items-end justify-between mb-3">
+                        <div className="flex items-end justify-between mb-4 mt-auto">
                           <div>
                             <span className="text-xl font-bold text-accent">${car.pricePerDay}</span>
                             <span className="text-xs text-muted-foreground"> / day</span>
                           </div>
                           {days && (
-                            <span className="text-xs text-muted-foreground">
-                              Total: <span className="font-semibold text-foreground">${car.pricePerDay * days}</span>
+                            <span className="text-xs text-muted-foreground text-right">
+                              Total:<br />
+                              <span className="font-semibold text-foreground">${car.pricePerDay * days}</span>
                             </span>
                           )}
                         </div>
-
                         <Button
-                          className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-8 rounded-lg font-semibold text-xs"
+                          className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-9 rounded-lg font-semibold text-sm"
                           onClick={() => handleBookNow(car.name, car.pricePerDay)}
                           data-testid={`button-book-${car.id}`}
                         >
@@ -308,14 +309,16 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
         )}
       </AnimatePresence>
 
-      {/* Why Choose Us */}
-      <section className="py-20 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl font-bold text-foreground mb-3">Why Choose EliteRide</h2>
+      {/* ── Why Choose Us ── */}
+      <section className="py-8 sm:py-12 lg:py-16 bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-3">
+              Why Choose EliteRide
+            </h2>
             <div className="w-12 h-0.5 bg-accent mx-auto rounded-full" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto">
             {[
               { icon: Shield, title: "Guaranteed Privacy", desc: "Discreet delivery and collection, ensuring your travels remain entirely confidential." },
               { icon: Award, title: "Certified Fleet", desc: "Every vehicle undergoes rigorous inspection and detailing before each reservation." },
@@ -327,7 +330,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: i * 0.12 }}
-                className="bg-card border border-border rounded-xl p-6 text-center shadow-sm"
+                className="bg-card border border-border rounded-xl p-5 sm:p-6 text-center shadow-sm"
               >
                 <div className="w-12 h-12 mx-auto bg-primary/10 rounded-xl flex items-center justify-center mb-4">
                   <Icon className="h-6 w-6 text-primary" />
@@ -340,30 +343,30 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
         </div>
       </section>
 
-      {/* Trust Badges */}
-      <section className="py-10 border-t border-border bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-12">
+      {/* ── Trust Badges ── */}
+      <section className="py-8 sm:py-10 border-t border-border bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             {[
               { value: "500+", label: "Happy Clients" },
               { value: "50+", label: "Vehicles" },
               { value: "24/7", label: "Support" },
               { value: "5★", label: "Average Rating" },
             ].map(({ value, label }) => (
-              <div key={label} className="text-center">
-                <div className="text-2xl font-bold text-accent">{value}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5">{label}</div>
+              <div key={label}>
+                <div className="text-xl sm:text-2xl font-bold text-accent">{value}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-primary py-10">
-        <div className="container mx-auto px-4 text-center">
+      {/* ── Footer ── */}
+      <footer className="bg-primary py-8 sm:py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
-            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
               <Car className="h-4 w-4 text-white" />
             </div>
             <span className="font-bold text-white tracking-tight">EliteRide</span>
