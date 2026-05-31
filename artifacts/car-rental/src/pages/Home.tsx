@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Calendar, Clock, Shield, Award, CheckCircle, Crown, ChevronDown } from "lucide-react";
+import { MapPin, Calendar, Clock, Shield, Award, CheckCircle, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,13 +21,14 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
 
   const availableCars = cars.filter((c) => c.available);
 
+  const days =
+    pickupDate && returnDate
+      ? Math.max(1, Math.ceil((new Date(returnDate).getTime() - new Date(pickupDate).getTime()) / 86400000))
+      : null;
+
   const handleSearch = () => {
     if (!pickupLocation || !pickupDate || !returnDate) {
-      toast({
-        title: "Missing details",
-        description: "Please fill in pickup location and dates.",
-        variant: "destructive",
-      });
+      toast({ title: "Missing details", description: "Please fill in pickup location and dates.", variant: "destructive" });
       return;
     }
     setHasSearched(true);
@@ -37,14 +38,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
   };
 
   const handleBookNow = (carName: string, pricePerDay: number) => {
-    if (!pickupDate || !returnDate) {
-      toast({ title: "Select dates first", description: "Please use the search form above to select your dates." });
-      return;
-    }
-    const days = Math.max(
-      1,
-      Math.ceil((new Date(returnDate).getTime() - new Date(pickupDate).getTime()) / 86400000)
-    );
+    const rental = days ?? 1;
     const newBooking: Booking = {
       id: `bk-${Date.now()}`,
       clientName: "Guest",
@@ -53,7 +47,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
       returnDate,
       pickupLocation,
       status: "Pending",
-      totalPrice: pricePerDay * days,
+      totalPrice: pricePerDay * rental,
     };
     addBooking(newBooking);
     toast({
@@ -62,57 +56,49 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
     });
   };
 
-  const days = pickupDate && returnDate
-    ? Math.max(1, Math.ceil((new Date(returnDate).getTime() - new Date(pickupDate).getTime()) / 86400000))
-    : null;
-
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Hero */}
-      <section className="relative min-h-[520px] flex flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-stone-800 via-zinc-700 to-stone-900">
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-25"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1600&q=80')" }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
+    <div className="flex flex-col min-h-screen bg-background">
 
-        <div className="relative z-10 text-center px-4 mb-10 mt-8">
+      {/* Hero */}
+      <section className="bg-primary pt-16 pb-0">
+        <div className="container mx-auto px-4 text-center pb-12">
           <motion.p
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-primary font-semibold tracking-[0.25em] uppercase text-sm mb-4"
+            transition={{ duration: 0.4 }}
+            className="text-accent font-semibold tracking-[0.2em] uppercase text-xs mb-4"
           >
             Premium Car Rental
           </motion.p>
           <motion.h1
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="text-4xl md:text-6xl font-bold text-white tracking-tight leading-tight mb-4"
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-4xl md:text-5xl font-bold text-white tracking-tight leading-tight mb-3"
           >
-            Arrive in <span className="text-primary">Elegance</span>
+            Find Your Perfect Ride
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-stone-300 text-lg max-w-xl mx-auto"
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-white/70 text-base max-w-lg mx-auto"
           >
-            Curated luxury vehicles for discerning individuals.
+            Wide selection of vehicles for every need and budget.
           </motion.p>
         </div>
 
-        {/* Horizontal Search Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
-          className="relative z-10 w-full max-w-5xl px-4 pb-10"
-        >
-          <div className="bg-white rounded-2xl shadow-2xl p-5">
+        {/* Horizontal Search Form — overlaps hero/content boundary */}
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="bg-white rounded-xl shadow-lg border border-border p-5 translate-y-8"
+          >
             <div className="flex flex-col lg:flex-row gap-3 items-end">
-              {/* Pickup Location */}
+
+              {/* Pickup */}
               <div className="flex-1 min-w-0">
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                   Pickup Location
@@ -123,13 +109,13 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                     value={pickupLocation}
                     onChange={(e) => setPickupLocation(e.target.value)}
                     placeholder="City, airport..."
-                    className="pl-9 h-11 rounded-lg border-border bg-muted/40 text-sm"
+                    className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm"
                     data-testid="input-pickup-location"
                   />
                 </div>
               </div>
 
-              {/* Return Location */}
+              {/* Return location */}
               <div className="flex-1 min-w-0">
                 <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                   Return Location
@@ -140,13 +126,13 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                     value={returnLocation}
                     onChange={(e) => setReturnLocation(e.target.value)}
                     placeholder="Same as pickup"
-                    className="pl-9 h-11 rounded-lg border-border bg-muted/40 text-sm"
+                    className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm"
                     data-testid="input-return-location"
                   />
                 </div>
               </div>
 
-              {/* Pickup Date + Time */}
+              {/* Pickup date + time */}
               <div className="flex gap-2 flex-shrink-0">
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
@@ -158,7 +144,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                       type="date"
                       value={pickupDate}
                       onChange={(e) => setPickupDate(e.target.value)}
-                      className="pl-9 h-11 rounded-lg border-border bg-muted/40 text-sm w-40"
+                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-40"
                       data-testid="input-pickup-date"
                     />
                   </div>
@@ -173,14 +159,14 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                       type="time"
                       value={pickupTime}
                       onChange={(e) => setPickupTime(e.target.value)}
-                      className="pl-9 h-11 rounded-lg border-border bg-muted/40 text-sm w-32"
+                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-32"
                       data-testid="input-pickup-time"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Return Date + Time */}
+              {/* Return date + time */}
               <div className="flex gap-2 flex-shrink-0">
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
@@ -192,7 +178,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                       type="date"
                       value={returnDate}
                       onChange={(e) => setReturnDate(e.target.value)}
-                      className="pl-9 h-11 rounded-lg border-border bg-muted/40 text-sm w-40"
+                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-40"
                       data-testid="input-return-date"
                     />
                   </div>
@@ -207,7 +193,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                       type="time"
                       value={returnTime}
                       onChange={(e) => setReturnTime(e.target.value)}
-                      className="pl-9 h-11 rounded-lg border-border bg-muted/40 text-sm w-32"
+                      className="pl-9 h-11 rounded-lg bg-white border-border focus-visible:ring-accent text-sm w-32"
                       data-testid="input-return-time"
                     />
                   </div>
@@ -218,7 +204,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
               <div className="flex-shrink-0 self-end">
                 <Button
                   onClick={handleSearch}
-                  className="h-11 px-7 bg-primary text-primary-foreground hover:bg-primary/90 rounded-lg font-semibold text-sm whitespace-nowrap shadow-lg"
+                  className="h-11 px-8 bg-accent text-accent-foreground hover:bg-accent/90 rounded-lg font-semibold text-sm whitespace-nowrap shadow-sm"
                   data-testid="button-see-vehicles"
                 >
                   See vehicles
@@ -231,93 +217,82 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                 {days} day{days > 1 ? "s" : ""} rental period
               </p>
             )}
-          </div>
-        </motion.div>
-
-        {!hasSearched && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2 }}
-            className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/40 flex flex-col items-center"
-          >
-            <ChevronDown className="h-5 w-5 animate-bounce" />
           </motion.div>
-        )}
+        </div>
       </section>
 
-      {/* Available Cars Results */}
+      {/* Spacer for the translate-y overlap */}
+      <div className="h-12 bg-background" />
+
+      {/* Available Cars */}
       <AnimatePresence>
         {hasSearched && (
           <motion.section
             ref={resultsRef}
             key="results"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="py-16 bg-white"
+            transition={{ duration: 0.4 }}
+            className="py-12 bg-background"
           >
             <div className="container mx-auto px-4">
-              <div className="flex items-center justify-between mb-10">
+              <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    Available Vehicles
-                  </h2>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    {availableCars.length} vehicles available · {pickupLocation} · {pickupDate} – {returnDate}
+                  <h2 className="text-xl font-bold text-foreground">Available Vehicles</h2>
+                  <p className="text-muted-foreground text-sm mt-0.5">
+                    {availableCars.length} vehicles · {pickupLocation} · {pickupDate} – {returnDate}
                   </p>
                 </div>
                 {days && (
                   <div className="hidden md:block text-right">
                     <span className="text-xs text-muted-foreground uppercase tracking-wider">Rental period</span>
-                    <p className="font-bold text-foreground">{days} day{days > 1 ? "s" : ""}</p>
+                    <p className="font-bold text-foreground text-sm">{days} day{days > 1 ? "s" : ""}</p>
                   </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {availableCars.map((car, idx) => (
                   <motion.div
                     key={car.id}
-                    initial={{ opacity: 0, y: 24 }}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: idx * 0.08 }}
+                    transition={{ duration: 0.35, delay: idx * 0.06 }}
                     data-testid={`card-car-${car.id}`}
                   >
-                    <Card className="overflow-hidden border-border hover:shadow-lg transition-shadow duration-300 group">
-                      <div className={`h-44 w-full bg-gradient-to-br ${car.imageGradient} relative overflow-hidden`}>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-white/20 font-bold italic text-3xl uppercase tracking-widest transform -rotate-6 select-none">
-                            {car.category}
-                          </span>
-                        </div>
-                        <div className="absolute top-3 left-3">
-                          <span className="bg-white/90 text-foreground text-xs font-semibold px-2.5 py-1 rounded-full">
-                            {car.category}
-                          </span>
-                        </div>
+                    <Card className="bg-card border-border shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden rounded-xl">
+                      <div className="relative h-44 overflow-hidden bg-muted">
+                        <img
+                          src={car.image}
+                          alt={car.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                        <span className="absolute top-2.5 left-2.5 bg-white/90 text-foreground text-xs font-semibold px-2.5 py-0.5 rounded-full border border-border">
+                          {car.type}
+                        </span>
                       </div>
-                      <CardContent className="p-5">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h3 className="font-bold text-foreground text-base">{car.name}</h3>
-                            <p className="text-muted-foreground text-xs mt-0.5">{car.seats} seats · {car.transmission}</p>
-                          </div>
-                          <div className="text-right flex-shrink-0 ml-2">
-                            <span className="text-xl font-bold text-primary">${car.pricePerDay}</span>
-                            <span className="text-xs text-muted-foreground block">/ day</span>
-                          </div>
-                        </div>
+                      <CardContent className="p-4">
+                        <h3 className="font-bold text-foreground text-sm mb-1">{car.name}</h3>
+                        <p className="text-muted-foreground text-xs mb-3">
+                          {car.seats} seats · {car.transmission}
+                        </p>
 
-                        {days && (
-                          <p className="text-xs text-muted-foreground mb-3 font-medium">
-                            Total estimate: <span className="text-foreground font-bold">${car.pricePerDay * days}</span>
-                          </p>
-                        )}
+                        <div className="flex items-end justify-between mb-3">
+                          <div>
+                            <span className="text-xl font-bold text-accent">${car.pricePerDay}</span>
+                            <span className="text-xs text-muted-foreground"> / day</span>
+                          </div>
+                          {days && (
+                            <span className="text-xs text-muted-foreground">
+                              Total: <span className="font-semibold text-foreground">${car.pricePerDay * days}</span>
+                            </span>
+                          )}
+                        </div>
 
                         <Button
-                          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-9 rounded-lg font-semibold text-sm"
+                          className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-8 rounded-lg font-semibold text-xs"
                           onClick={() => handleBookNow(car.name, car.pricePerDay)}
                           data-testid={`button-book-${car.id}`}
                         >
@@ -334,30 +309,30 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
       </AnimatePresence>
 
       {/* Why Choose Us */}
-      <section className={`py-20 ${hasSearched ? "bg-muted/40" : "bg-white"}`}>
+      <section className="py-20 bg-background">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Why Choose EliteRide</h2>
-            <div className="w-16 h-1 bg-primary mx-auto rounded-full"></div>
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-foreground mb-3">Why Choose EliteRide</h2>
+            <div className="w-12 h-0.5 bg-accent mx-auto rounded-full" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
-              { icon: Shield, title: "Unmatched Privacy", desc: "Discreet delivery and collection, ensuring your travels remain entirely confidential." },
-              { icon: Award, title: "Impeccable Condition", desc: "Every vehicle undergoes rigorous inspection and detailing before each reservation." },
-              { icon: CheckCircle, title: "Concierge Support", desc: "Dedicated 24/7 assistance for itinerary changes, recommendations, or immediate needs." },
+              { icon: Shield, title: "Guaranteed Privacy", desc: "Discreet delivery and collection, ensuring your travels remain entirely confidential." },
+              { icon: Award, title: "Certified Fleet", desc: "Every vehicle undergoes rigorous inspection and detailing before each reservation." },
+              { icon: CheckCircle, title: "24/7 Support", desc: "Dedicated assistance for itinerary changes, recommendations, or immediate needs." },
             ].map(({ icon: Icon, title, desc }, i) => (
               <motion.div
                 key={title}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="text-center"
+                transition={{ duration: 0.4, delay: i * 0.12 }}
+                className="bg-card border border-border rounded-xl p-6 text-center shadow-sm"
               >
-                <div className="w-14 h-14 mx-auto bg-primary/10 rounded-2xl flex items-center justify-center mb-5">
-                  <Icon className="h-7 w-7 text-primary" />
+                <div className="w-12 h-12 mx-auto bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                  <Icon className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-base font-bold text-foreground mb-2 uppercase tracking-wide">{title}</h3>
+                <h3 className="text-sm font-bold text-foreground mb-2 uppercase tracking-wide">{title}</h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">{desc}</p>
               </motion.div>
             ))}
@@ -366,18 +341,18 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
       </section>
 
       {/* Trust Badges */}
-      <section className="py-12 bg-white border-t border-border">
+      <section className="py-10 border-t border-border bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-10 text-center">
+          <div className="flex flex-wrap justify-center gap-12">
             {[
               { value: "500+", label: "Happy Clients" },
-              { value: "50+", label: "Luxury Vehicles" },
-              { value: "24/7", label: "Concierge Service" },
+              { value: "50+", label: "Vehicles" },
+              { value: "24/7", label: "Support" },
               { value: "5★", label: "Average Rating" },
             ].map(({ value, label }) => (
-              <div key={label}>
-                <div className="text-2xl font-bold text-primary">{value}</div>
-                <div className="text-xs text-muted-foreground uppercase tracking-wider mt-1">{label}</div>
+              <div key={label} className="text-center">
+                <div className="text-2xl font-bold text-accent">{value}</div>
+                <div className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5">{label}</div>
               </div>
             ))}
           </div>
@@ -385,17 +360,21 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
       </section>
 
       {/* Footer */}
-      <footer className="bg-stone-900 py-12">
+      <footer className="bg-primary py-10">
         <div className="container mx-auto px-4 text-center">
-          <Crown className="h-7 w-7 text-primary mx-auto mb-5" />
-          <h4 className="text-lg font-bold text-white uppercase tracking-widest mb-3">EliteRide</h4>
-          <p className="text-stone-400 text-sm max-w-sm mx-auto mb-8 leading-relaxed">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
+              <Car className="h-4 w-4 text-white" />
+            </div>
+            <span className="font-bold text-white tracking-tight">EliteRide</span>
+          </div>
+          <p className="text-white/60 text-sm max-w-sm mx-auto mb-6 leading-relaxed">
             The finest vehicles for those who demand excellence in every journey.
           </p>
-          <div className="flex justify-center gap-6 text-sm text-stone-500">
-            <a href="#" className="hover:text-primary transition-colors">Terms</a>
-            <a href="#" className="hover:text-primary transition-colors">Privacy</a>
-            <a href="#" className="hover:text-primary transition-colors">Contact</a>
+          <div className="flex justify-center gap-6 text-sm text-white/50">
+            <a href="#" className="hover:text-white transition-colors">Terms</a>
+            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+            <a href="#" className="hover:text-white transition-colors">Contact</a>
           </div>
         </div>
       </footer>
