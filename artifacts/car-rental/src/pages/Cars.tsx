@@ -64,80 +64,88 @@ export function Cars({ addBooking }: { addBooking: (b: Booking) => void }) {
 
       <div className="container mx-auto px-4 py-10">
         {/* Filters */}
-        <div className="bg-card border border-border rounded-xl p-4 mb-8 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-semibold text-foreground">Filters</span>
-            {(activeType !== "All" || activePriceIdx !== 0) && (
-              <button
-                className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => { setActiveType("All"); setActivePriceIdx(0); }}
-                data-testid="button-clear-filters"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-5">
-            {/* Type filter */}
-            <div className="flex-1">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2">
-                Vehicle Type
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setActiveType("All")}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                    activeType === "All"
-                      ? "bg-primary text-white border-primary"
-                      : "bg-white text-muted-foreground border-border hover:border-primary hover:text-primary"
-                  }`}
-                  data-testid="filter-type-all"
-                >
-                  All
-                </button>
-                {ALL_TYPES.map((type) => (
+        {(() => {
+          const activeCount = (activeType !== "All" ? 1 : 0) + (activePriceIdx !== 0 ? 1 : 0);
+          const hasActive = activeCount > 0;
+          return (
+            <div className="bg-white border border-border rounded-2xl shadow-sm p-5 sm:p-6 mb-7">
+              {/* Header row */}
+              <div className="flex items-center gap-2 mb-5">
+                <SlidersHorizontal className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm font-bold text-foreground">Filters</span>
+                {hasActive && (
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold leading-none">
+                    {activeCount}
+                  </span>
+                )}
+                {hasActive && (
                   <button
-                    key={type}
-                    onClick={() => setActiveType(type)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                      activeType === type
-                        ? "bg-primary text-white border-primary"
-                        : "bg-white text-muted-foreground border-border hover:border-primary hover:text-primary"
-                    }`}
-                    data-testid={`filter-type-${type.toLowerCase()}`}
+                    className="ml-auto text-xs font-semibold text-primary hover:text-primary/70 transition-colors"
+                    onClick={() => { setActiveType("All"); setActivePriceIdx(0); }}
+                    data-testid="button-clear-filters"
                   >
-                    {type}
+                    Reset Filters
                   </button>
-                ))}
+                )}
+              </div>
+
+              {/* Vehicle Type */}
+              <div className="mb-5">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+                  Vehicle Type
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {(["All", ...ALL_TYPES] as const).map((type) => {
+                    const isActive = activeType === type;
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => setActiveType(type as CarType | "All")}
+                        className={`h-10 px-4 rounded-full text-sm font-semibold border transition-all duration-150 ${
+                          isActive
+                            ? "bg-primary text-white border-transparent shadow-sm"
+                            : "bg-white text-primary border-border hover:bg-primary/8 hover:border-primary/30"
+                        }`}
+                        data-testid={`filter-type-${type.toLowerCase()}`}
+                      >
+                        {type}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-border mb-5" />
+
+              {/* Price Range */}
+              <div>
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+                  Price Range
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {PRICE_RANGES.map((range, idx) => {
+                    const isActive = activePriceIdx === idx;
+                    return (
+                      <button
+                        key={range.label}
+                        onClick={() => setActivePriceIdx(idx)}
+                        className={`h-10 px-4 rounded-full text-sm font-semibold border transition-all duration-150 ${
+                          isActive
+                            ? "bg-primary text-white border-transparent shadow-sm"
+                            : "bg-white text-primary border-border hover:bg-primary/8 hover:border-primary/30"
+                        }`}
+                        data-testid={`filter-price-${idx}`}
+                      >
+                        {range.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-
-            {/* Price range filter */}
-            <div className="sm:w-56 flex-shrink-0">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold mb-2">
-                Price Range
-              </p>
-              <div className="flex flex-col gap-1.5">
-                {PRICE_RANGES.map((range, idx) => (
-                  <button
-                    key={range.label}
-                    onClick={() => setActivePriceIdx(idx)}
-                    className={`text-left px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                      activePriceIdx === idx
-                        ? "bg-accent text-accent-foreground border-accent"
-                        : "bg-white text-muted-foreground border-border hover:border-accent hover:text-foreground"
-                    }`}
-                    data-testid={`filter-price-${idx}`}
-                  >
-                    {range.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+          );
+        })()}
 
         {/* Results count */}
         <div className="flex items-center justify-between mb-5">
