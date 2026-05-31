@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -11,12 +11,12 @@ import { Booking, initialBookings } from "@/data/mockData";
 
 const queryClient = new QueryClient();
 
-export function AppRouter({ 
-  bookings, 
-  addBooking 
-}: { 
-  bookings: Booking[], 
-  addBooking: (b: Booking) => void 
+export function AppRouter({
+  bookings,
+  addBooking
+}: {
+  bookings: Booking[],
+  addBooking: (b: Booking) => void
 }) {
   return (
     <Switch>
@@ -33,11 +33,6 @@ export function AppRouter({
 
 function App() {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
-
-  // Apply dark mode by default for this project
-  useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
 
   const addBooking = (booking: Booking) => {
     setBookings([booking, ...bookings]);

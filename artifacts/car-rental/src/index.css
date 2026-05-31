@@ -61,81 +61,57 @@
 }
 
 :root {
-  --background: 220 16% 7%; /* #0f1115 */
-  --foreground: 0 0% 98%;
+  /* #F5F6F7 */
+  --background: 210 11% 97%;
+  /* #1F2933 */
+  --foreground: 209 24% 16%;
 
-  --border: 220 16% 15%;
-  --input: 220 16% 15%;
-  --ring: 45 60% 52%; /* Gold */
+  /* #E5E7EB */
+  --border: 220 9% 90%;
+  --input: 220 9% 90%;
+  /* #D6A85C — gold ring on focus */
+  --ring: 37 60% 60%;
 
-  --card: 220 20% 11%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 220 16% 15%;
+  /* #FFFFFF */
+  --card: 0 0% 100%;
+  --card-foreground: 209 24% 16%;
+  --card-border: 220 9% 90%;
 
-  --popover: 220 20% 11%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 220 16% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 209 24% 16%;
+  --popover-border: 220 9% 90%;
 
-  --primary: 45 60% 52%; /* Gold */
-  --primary-foreground: 220 20% 11%;
+  /* #3E5F7D — brand blue */
+  --primary: 208 34% 37%;
+  --primary-foreground: 0 0% 100%;
 
-  --secondary: 220 16% 15%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 220 9% 94%;
+  --secondary-foreground: 209 24% 16%;
 
-  --muted: 220 16% 15%;
-  --muted-foreground: 220 10% 60%;
+  --muted: 220 9% 94%;
+  /* #6B7280 */
+  --muted-foreground: 220 9% 46%;
 
-  --accent: 45 60% 52%;
-  --accent-foreground: 220 20% 11%;
+  /* #D6A85C — gold for CTAs and price highlights */
+  --accent: 37 60% 60%;
+  --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
 
-  --sidebar: 220 20% 11%;
-  --sidebar-foreground: 0 0% 98%;
-  --sidebar-border: 220 16% 15%;
-  --sidebar-primary: 45 60% 52%;
-  --sidebar-primary-foreground: 220 20% 11%;
-  --sidebar-accent: 220 16% 15%;
-  --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 45 60% 52%;
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 209 24% 16%;
+  --sidebar-border: 220 9% 90%;
+  --sidebar-primary: 208 34% 37%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 37 60% 60%;
+  --sidebar-accent-foreground: 0 0% 100%;
+  --sidebar-ring: 37 60% 60%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
-  --radius: 0.5rem;
-}
-
-.dark {
-  --background: 220 16% 7%;
-  --foreground: 0 0% 98%;
-
-  --border: 220 16% 15%;
-  --input: 220 16% 15%;
-  --ring: 45 60% 52%;
-
-  --card: 220 20% 11%;
-  --card-foreground: 0 0% 98%;
-  --card-border: 220 16% 15%;
-
-  --popover: 220 20% 11%;
-  --popover-foreground: 0 0% 98%;
-  --popover-border: 220 16% 15%;
-
-  --primary: 45 60% 52%;
-  --primary-foreground: 220 20% 11%;
-
-  --secondary: 220 16% 15%;
-  --secondary-foreground: 0 0% 98%;
-
-  --muted: 220 16% 15%;
-  --muted-foreground: 220 10% 60%;
-
-  --accent: 45 60% 52%;
-  --accent-foreground: 220 20% 11%;
-
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
+  --radius: 0.625rem;
 }
 
 @layer base {
