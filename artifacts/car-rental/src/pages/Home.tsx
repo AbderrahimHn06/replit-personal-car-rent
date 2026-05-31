@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { cars, Booking } from "@/data/mockData";
+import { cars, Booking, Car as CarType } from "@/data/mockData";
+import { BookingModal } from "@/components/BookingModal";
 
 export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
   const { toast } = useToast();
@@ -18,6 +19,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
   const [returnDate, setReturnDate] = useState("2026-06-09");
   const [returnTime, setReturnTime] = useState("11:00");
   const [hasSearched, setHasSearched] = useState(false);
+  const [selectedCar, setSelectedCar] = useState<CarType | null>(null);
 
   const availableCars = cars.filter((c) => c.available);
 
@@ -35,25 +37,6 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 100);
-  };
-
-  const handleBookNow = (carName: string, pricePerDay: number) => {
-    const rental = days ?? 1;
-    const newBooking: Booking = {
-      id: `bk-${Date.now()}`,
-      clientName: "Guest",
-      car: carName,
-      pickupDate,
-      returnDate,
-      pickupLocation,
-      status: "Pending",
-      totalPrice: pricePerDay * rental,
-    };
-    addBooking(newBooking);
-    toast({
-      title: "Booking Request Sent",
-      description: `${carName} reserved from ${pickupDate} to ${returnDate}. Our team will confirm shortly.`,
-    });
   };
 
   return (
@@ -292,7 +275,7 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
                         </div>
                         <Button
                           className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-9 rounded-lg font-semibold text-xs"
-                          onClick={() => handleBookNow(car.name, car.pricePerDay)}
+                          onClick={() => setSelectedCar(car)}
                           data-testid={`button-book-${car.id}`}
                         >
                           Book Now
@@ -377,6 +360,24 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
           </div>
         </div>
       </footer>
+
+      {/* Booking Modal */}
+      <AnimatePresence>
+        {selectedCar && (
+          <BookingModal
+            key={selectedCar.id}
+            car={selectedCar}
+            onClose={() => setSelectedCar(null)}
+            addBooking={addBooking}
+            pickupLocation={pickupLocation}
+            returnLocation={returnLocation}
+            pickupDate={pickupDate}
+            pickupTime={pickupTime}
+            returnDate={returnDate}
+            returnTime={returnTime}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

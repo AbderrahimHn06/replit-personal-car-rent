@@ -1,0 +1,189 @@
+Implement the booking flow exactly as follows.
+
+STEP 1 — Available Cars
+
+After the user searches and the available cars are displayed:
+
+Each car card shows:
+- Image
+- Car name
+- Category
+- Price per day
+- Transmission
+- Seats
+- Fuel type
+- Book Now button
+
+When the user clicks "Book Now":
+DO NOT immediately navigate to another page.
+
+Instead, open a large booking modal.
+
+--------------------------------------------------
+
+STEP 2 — Car Details Modal
+
+Modal size:
+- Large (max-w-5xl)
+- Centered
+- Dark overlay background
+- Scrollable on mobile
+
+Layout:
+
+LEFT SIDE:
+- Large vehicle image
+- Thumbnail images below (3-4 mock images)
+
+RIGHT SIDE:
+
+Vehicle Information:
+- Car name
+- Category
+- Daily price
+- Transmission
+- Fuel type
+- Seats
+- Air conditioning
+- Luggage capacity
+
+Included Features:
+✓ Unlimited mileage
+✓ Basic insurance
+✓ Road assistance
+✓ Air conditioning
+✓ Free cancellation
+
+Rental Summary:
+- Pickup location
+- Return location
+- Pickup date & time
+- Return date & time
+- Total rental days
+- Estimated total price
+
+Below:
+
+Button:
+"Continue Booking"
+
+--------------------------------------------------
+
+STEP 3 — Booking Form Modal
+
+When clicking Continue Booking:
+
+Do NOT leave the modal.
+
+Replace the modal content with a booking form.
+
+Show booking summary at the top:
+
+Selected Vehicle:
+- Image thumbnail
+- Vehicle name
+- Total days
+- Estimated price
+
+Customer Information Form:
+
+Required:
+- Full Name
+- Phone Number
+- Email Address
+
+Optional:
+- WhatsApp Number
+- Flight Number
+- Notes / Special Requests
+
+Driver Information:
+
+Required:
+- Driver Age
+- Driver License Number
+
+Optional:
+- Nationality
+
+Emergency Contact:
+
+Optional:
+- Contact Name
+- Contact Phone
+
+Terms:
+
+☐ I agree to rental terms
+☐ I confirm the information is correct
+
+Buttons:
+- Back
+- Confirm Reservation
+
+Confirm button disabled until required fields are completed.
+
+--------------------------------------------------
+
+STEP 4 — Success State
+
+After Confirm Reservation:
+
+Keep user in modal.
+
+Show success screen:
+
+Large green check icon
+
+Title:
+Reservation Request Sent
+
+Message:
+Your reservation request has been received.
+Our team will contact you shortly to confirm availability and finalize your booking.
+
+Show:
+
+Booking Reference:
+BK-2026-XXXX
+
+Vehicle:
+[Vehicle Name]
+
+Rental Period:
+[Dates]
+
+Estimated Total:
+[$XXX]
+
+Buttons:
+
+- Browse More Cars
+- Back to Home
+
+--------------------------------------------------
+
+UI REQUIREMENTS
+
+- Preserve search information throughout the flow
+- Use React state only
+- No backend
+- No API calls
+- No payment page yet
+- Modal should animate smoothly
+- Mobile friendly
+- Booking summary always visible
+- Price automatically calculated:
+  days × daily rate
+
+Goal:
+
+The experience should feel like a real premium car rental booking process:
+
+Search Cars
+→ Available Cars
+→ Car Details Modal
+→ Customer Information Form
+→ Reservation Confirmation
+
+without navigating away unnecessarily.

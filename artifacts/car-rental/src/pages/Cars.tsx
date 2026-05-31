@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { SlidersHorizontal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { cars, CarType, Booking } from "@/data/mockData";
+import { cars, CarType, Car, Booking } from "@/data/mockData";
+import { BookingModal } from "@/components/BookingModal";
 
 const ALL_TYPES: CarType[] = ["SUV", "Economy", "Compact", "Luxury", "Sedan", "City"];
 
@@ -16,9 +16,12 @@ const PRICE_RANGES = [
 ];
 
 export function Cars({ addBooking }: { addBooking: (b: Booking) => void }) {
-  const { toast } = useToast();
   const [activeType, setActiveType] = useState<CarType | "All">("All");
   const [activePriceIdx, setActivePriceIdx] = useState(0);
+  const [selectedCar, setSelectedCar] = useState<Car | null>(null);
+
+  const today = new Date().toISOString().split("T")[0];
+  const threeDaysLater = new Date(Date.now() + 3 * 86_400_000).toISOString().split("T")[0];
 
   const priceRange = PRICE_RANGES[activePriceIdx];
 
@@ -27,27 +30,6 @@ export function Cars({ addBooking }: { addBooking: (b: Booking) => void }) {
     const priceMatch = car.pricePerDay >= priceRange.min && car.pricePerDay < priceRange.max;
     return typeMatch && priceMatch;
   });
-
-  const handleBook = (carName: string, pricePerDay: number) => {
-    const today = new Date();
-    const pickup = today.toISOString().split("T")[0];
-    const ret = new Date(today.setDate(today.getDate() + 3)).toISOString().split("T")[0];
-    const newBooking: Booking = {
-      id: `bk-${Date.now()}`,
-      clientName: "Guest",
-      car: carName,
-      pickupDate: pickup,
-      returnDate: ret,
-      pickupLocation: "To be confirmed",
-      status: "Pending",
-      totalPrice: pricePerDay * 3,
-    };
-    addBooking(newBooking);
-    toast({
-      title: "Booking Request Sent",
-      description: `${carName} has been added to your reservations.`,
-    });
-  };
 
   return (
     <div className="bg-background min-h-screen">
@@ -210,7 +192,7 @@ export function Cars({ addBooking }: { addBooking: (b: Booking) => void }) {
                       </div>
                       <Button
                         className="bg-accent text-accent-foreground hover:bg-accent/90 h-8 px-4 rounded-lg text-xs font-semibold"
-                        onClick={() => handleBook(car.name, car.pricePerDay)}
+                        onClick={() => car.available && setSelectedCar(car)}
                         disabled={!car.available}
                         data-testid={`button-book-${car.id}`}
                       >
@@ -224,6 +206,20 @@ export function Cars({ addBooking }: { addBooking: (b: Booking) => void }) {
           </div>
         )}
       </div>
+
+      {/* Booking Modal */}
+      <AnimatePresence>
+        {selectedCar && (
+          <BookingModal
+            key={selectedCar.id}
+            car={selectedCar}
+            onClose={() => setSelectedCar(null)}
+            addBooking={addBooking}
+            pickupDate={today}
+            returnDate={threeDaysLater}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

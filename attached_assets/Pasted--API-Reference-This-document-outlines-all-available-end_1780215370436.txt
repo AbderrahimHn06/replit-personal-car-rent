@@ -1,0 +1,581 @@
+# API Reference
+
+This document outlines all available endpoints for the Car Rental SaaS REST API.
+
+## Base URL
+```
+Production:  https://rental-prototye.onrender.com/api
+```
+
+## Authentication
+Currently, the API is unauthenticated for development. Future updates will incorporate JWT authentication via Supabase Auth. For now, endpoints are publicly accessible for testing.
+
+## Common Error Responses
+The API uses a standard error envelope format for all HTTP 4xx and 5xx errors.
+
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Validation failed",
+    "details": [
+      {
+        "field": "body.brand",
+        "message": "Brand is required"
+      }
+    ]
+  }
+}
+```
+
+### Status Codes
+- `200 OK` - Request succeeded
+- `201 Created` - Resource created successfully
+- `400 Bad Request` - Validation error or bad input
+- `403 Forbidden` - Active subscription required to access the resource
+- `404 Not Found` - Resource not found
+- `500 Internal Server Error` - Unexpected server error
+
+### Subscription Required Error (403)
+When accessing protected routes without an active subscription, the API returns:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "SUBSCRIPTION_REQUIRED",
+    "message": "Abonnement inactif. Veuillez souscrire pour continuer.",
+    "checkout_endpoint": "/api/subscriptions/checkout"
+  }
+}
+```
+
+---
+
+## 🏢 Agencies
+
+### List Agencies
+`GET /api/agencies`
+Returns a list of all agencies, ordered by creation date (newest first).
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "name": "Sétif Rent Car",
+      "phone": "0550...",
+      "whatsapp": "0550...",
+      "city": "Sétif",
+      "address": "...",
+      "maps_url": "https://maps...",
+      "logo_url": "https://...",
+      "created_at": "2024-01-01T12:00:00Z"
+    }
+  ]
+}
+```
+
+### Get Agency by ID
+`GET /api/agencies/:id`
+
+**Response (200 OK):** *(Same shape as a single item in List Agencies)*
+
+### Create Agency
+`POST /api/agencies`
+
+**Request Body:**
+```json
+{
+  "name": "Algiers Auto Rent",
+  "phone": "0555123456",
+  "city": "Algiers",
+  "address": "Rue Didouche Mourad"
+}
+```
+
+**Response (201 Created):** *(Returns the created agency object)*
+
+### Update Agency
+`PATCH /api/agencies/:id`
+
+**Request Body:**
+```json
+{
+  "whatsapp": "0555123456"
+}
+```
+
+**Response (200 OK):** *(Returns the updated agency object)*
+
+### Delete Agency
+`DELETE /api/agencies/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": { "deleted": true }
+}
+```
+
+---
+
+## 💳 Subscriptions
+
+### Get Subscription Status
+`GET /api/subscriptions/:agencyId`
+Returns the current subscription status for the given agency.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "agency_id": "uuid",
+    "status": "active",
+    "plan_name": "Mensuel",
+    "amount": 2200,
+    "currency": "dzd",
+    "current_period_start": "2024-01-01T12:00:00Z",
+    "current_period_end": "2024-01-31T12:00:00Z"
+  }
+}
+```
+*(If no subscription exists, `status` will be `"inactive"`)*
+
+### Create Checkout Session
+`POST /api/subscriptions/checkout`
+Initiates a Chargily payment session for the agency.
+
+**Request Body:**
+```json
+{
+  "agency_id": "uuid"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "checkout_url": "https://pay.chargily.net/test/checkout/..."
+  }
+}
+```
+
+### Payment Success Redirect
+`GET /api/subscriptions/success?agency_id=UUID`
+Target URL after successful payment. (Webhooks handle actual activation).
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Paiement reçu. Votre abonnement sera activé sous peu."
+}
+```
+
+### Payment Failure Redirect
+`GET /api/subscriptions/failure?agency_id=UUID`
+Target URL after a failed payment.
+
+**Response (200 OK):**
+```json
+{
+  "success": false,
+  "message": "Le paiement a échoué. Veuillez réessayer."
+}
+```
+
+---
+
+## ⚙️ Settings
+
+### Get Agency Settings
+`GET /api/settings/:agencyId`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid",
+    "agency_id": "uuid",
+    "agency_name": "Sétif Rent Car",
+    "business_hours": "08:00 - 18:00",
+    "default_terms": "Standard terms...",
+    "created_at": "2024-01-01T12:00:00Z"
+  }
+}
+```
+
+### Create Settings
+`POST /api/settings`
+
+**Request Body:**
+```json
+{
+  "agency_id": "uuid",
+  "agency_name": "Sétif Rent Car",
+  "business_hours": "08:00 - 18:00"
+}
+```
+
+**Response (201 Created):** *(Returns the created settings object)*
+
+### Update Settings
+`PATCH /api/settings/:agencyId`
+
+**Request Body:**
+```json
+{
+  "default_terms": "Updated terms apply."
+}
+```
+
+**Response (200 OK):** *(Returns the updated settings object)*
+
+---
+
+## 🚗 Cars
+
+### List Cars
+`GET /api/cars?agencyId=UUID`
+
+*Query Parameters:*
+- `agencyId` (optional): Filter cars by agency UUID
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "agency_id": "uuid",
+      "brand": "Renault",
+      "model": "Clio 5",
+      "year": 2023,
+      "license_plate": "12345-123-16",
+      "status": "Disponible",
+      "daily_price": 6000
+    }
+  ]
+}
+```
+
+### Get Car by ID
+`GET /api/cars/:id`
+
+**Response (200 OK):** *(Single car object)*
+
+### Create Car
+`POST /api/cars`
+
+**Request Body:**
+```json
+{
+  "agency_id": "uuid",
+  "brand": "Toyota",
+  "model": "Yaris",
+  "license_plate": "99999-123-16",
+  "daily_price": 5000,
+  "transmission": "Automatique",
+  "fuel_type": "Essence"
+}
+```
+
+**Response (201 Created):** *(Returns the created car object)*
+
+### Update Car
+`PATCH /api/cars/:id`
+
+**Request Body:**
+```json
+{
+  "status": "En entretien",
+  "mileage": 15000
+}
+```
+
+**Response (200 OK):** *(Returns the updated car object)*
+
+### Delete Car
+`DELETE /api/cars/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": { "deleted": true }
+}
+```
+
+---
+
+## 👥 Clients
+
+### List Clients
+`GET /api/clients?agencyId=UUID`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "agency_id": "uuid",
+      "full_name": "John Doe",
+      "phone": "0555000000",
+      "is_blocked": false
+    }
+  ]
+}
+```
+
+### Get Client by ID
+`GET /api/clients/:id`
+
+**Response (200 OK):** *(Single client object)*
+
+### Create Client
+`POST /api/clients`
+
+**Request Body:**
+```json
+{
+  "agency_id": "uuid",
+  "full_name": "Jane Doe",
+  "phone": "0555111111",
+  "document_number": "ID123456",
+  "whatsapp": "0555111111"
+}
+```
+
+**Response (201 Created):** *(Returns the created client object)*
+
+### Update Client
+`PATCH /api/clients/:id`
+
+**Request Body:**
+```json
+{
+  "city": "Oran",
+  "notes": "VIP client"
+}
+```
+
+**Response (200 OK):** *(Returns the updated client object)*
+
+### Delete Client
+`DELETE /api/clients/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": { "deleted": true }
+}
+```
+
+---
+
+## 🚫 Blocked Clients
+
+### List Blocked Clients
+`GET /api/blocked-clients?agencyId=UUID`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "agency_id": "uuid",
+      "client_id": "uuid",
+      "reason": "Did not return car on time",
+      "blocked_at": "2024-01-01T12:00:00Z",
+      "clients": {
+        "full_name": "John Doe",
+        "phone": "0555000000"
+      }
+    }
+  ]
+}
+```
+
+### Block a Client
+`POST /api/blocked-clients`
+*Note: Also automatically updates the client's `is_blocked` flag to true.*
+
+**Request Body:**
+```json
+{
+  "agency_id": "uuid",
+  "client_id": "uuid",
+  "reason": "Unpaid deposit"
+}
+```
+
+**Response (201 Created):** *(Returns the created block record)*
+
+### Update Block Reason
+`PATCH /api/blocked-clients/:id`
+
+**Request Body:**
+```json
+{
+  "reason": "Updated reason text"
+}
+```
+
+**Response (200 OK):** *(Returns the updated block record)*
+
+### Unblock a Client
+`DELETE /api/blocked-clients/:id`
+*Note: Automatically unblocks the client if no other block records exist for them.*
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": { "deleted": true, "client_unblocked": true }
+}
+```
+
+---
+
+## 📅 Rentals
+
+### List Rentals
+`GET /api/rentals?agencyId=UUID`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "uuid",
+      "agency_id": "uuid",
+      "client_id": "uuid",
+      "car_id": "uuid",
+      "start_date": "2025-06-01",
+      "end_date": "2025-06-05",
+      "daily_price": 5000,
+      "total_price": 20000,
+      "status": "Active",
+      "clients": { "full_name": "John Doe", "phone": "0555000000" },
+      "cars": { "brand": "Toyota", "model": "Yaris", "license_plate": "12345" }
+    }
+  ]
+}
+```
+
+### Get Rental by ID
+`GET /api/rentals/:id`
+
+**Response (200 OK):** *(Single rental object)*
+
+### Create Rental
+`POST /api/rentals`
+*Note: Auto-calculates `total_price` if omitted. Defaults `daily_price` from the car if omitted. Updates car status to "Loué".*
+
+**Request Body:**
+```json
+{
+  "agency_id": "uuid",
+  "client_id": "uuid",
+  "car_id": "uuid",
+  "start_date": "2025-06-01",
+  "end_date": "2025-06-05",
+  "deposit": 10000
+}
+```
+
+**Response (201 Created):** *(Returns the created rental object)*
+
+### Update Rental (e.g. Return Car)
+`PATCH /api/rentals/:id`
+*Note: Setting status to "Terminée" automatically frees up the associated car (sets status to "Disponible").*
+
+**Request Body:**
+```json
+{
+  "status": "Terminée"
+}
+```
+
+**Response (200 OK):** *(Returns the updated rental object)*
+
+### Delete Rental
+`DELETE /api/rentals/:id`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": { "deleted": true }
+}
+```
+
+---
+
+## 📊 Dashboard
+
+### Get Dashboard Summary
+`GET /api/dashboard/summary?agencyId=UUID`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "data": {
+    "cars": {
+      "available": 10,
+      "rented": 5,
+      "reserved": 2,
+      "maintenance": 1,
+      "total": 18
+    },
+    "rentals": {
+      "active": 5,
+      "ending_soon": 2
+    },
+    "clients": {
+      "total": 150,
+      "blocked": 3
+    },
+    "recent_rentals": [
+      {
+        "id": "uuid",
+        "start_date": "2025-06-01",
+        "end_date": "2025-06-05",
+        "status": "Active",
+        "clients": { "full_name": "John Doe" },
+        "cars": { "brand": "Toyota", "model": "Yaris", "license_plate": "12345" }
+      }
+    ],
+    "urgent_alerts": [
+      {
+        "type": "overdue_rental",
+        "severity": "high",
+        "message": "Overdue rental: Toyota Yaris (12345) — was due 2025-05-20",
+        "rental_id": "uuid"
+      },
+      {
+        "type": "maintenance_due",
+        "severity": "medium",
+        "message": "Maintenance due: Renault Clio (54321) — 2025-06-01",
+        "car_id": "uuid"
+      }
+    ]
+  }
+}
+```

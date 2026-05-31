@@ -1,0 +1,353 @@
+The current dashboard is too passive. I do NOT want a read-only statistics page.
+
+Turn the dashboard into a complete car rental management system that helps the agency run daily operations.
+
+Use the API documentation provided below as the single source of truth.
+Ignore ALL subscription-related endpoints and features.
+
+====================================================
+MAIN PURPOSE
+====================================================
+
+The dashboard must be the central workspace where the agency manages:
+
+- Booking requests coming from the website
+- Rentals
+- Cars
+- Clients
+- Blocked clients
+- Availability
+- Returns
+- Maintenance
+- Alerts
+- Agency settings
+
+The agency owner should be able to operate the entire business from this dashboard.
+
+====================================================
+DASHBOARD STRUCTURE
+====================================================
+
+Create a professional admin layout:
+
+Sidebar:
+- Overview
+- Booking Requests
+- Rentals
+- Cars
+- Clients
+- Blocked Clients
+- Availability
+- Settings
+
+Top Bar:
+- Search
+- Notifications
+- Agency name
+- User profile
+
+====================================================
+1. OVERVIEW
+====================================================
+
+Use the dashboard summary endpoint.
+
+Display KPI cards:
+
+- Total Cars
+- Available Cars
+- Rented Cars
+- Cars in Maintenance
+- Active Rentals
+- Ending Soon
+- Total Clients
+- Blocked Clients
+
+Show:
+
+- Recent rentals
+- Urgent alerts
+- Cars status distribution
+- Rental activity overview
+
+Urgent alerts must be highly visible.
+
+====================================================
+2. BOOKING REQUESTS
+====================================================
+
+This is the most important section.
+
+Every reservation submitted through the website booking form must appear here.
+
+Create a complete Booking Requests page.
+
+Display:
+
+- Request ID
+- Date received
+- Customer name
+- Phone
+- Email
+- Requested vehicle
+- Pickup location
+- Return location
+- Pickup date
+- Return date
+- Estimated price
+- Status
+
+Statuses:
+
+- New
+- Contacted
+- Confirmed
+- Cancelled
+
+Actions:
+
+- View Details
+- Mark Contacted
+- Confirm Request
+- Cancel Request
+
+Booking Details Modal:
+
+Show:
+
+Customer:
+- Name
+- Phone
+- Email
+
+Rental:
+- Vehicle
+- Pickup location
+- Return location
+- Dates
+- Total days
+- Estimated price
+
+Notes:
+- Special requests
+
+====================================================
+3. RENTALS MANAGEMENT
+====================================================
+
+Create a dedicated Rentals page.
+
+Display:
+
+- Rental ID
+- Client
+- Vehicle
+- Start date
+- End date
+- Daily price
+- Total price
+- Deposit
+- Status
+
+Statuses:
+
+- Active
+- Completed
+- Overdue
+
+Actions:
+
+- View Rental
+- Mark Returned
+- Extend Rental
+
+Rental Details:
+
+- Client information
+- Vehicle information
+- Payment information
+- Deposit information
+- Rental timeline
+
+Highlight overdue rentals.
+
+====================================================
+4. CARS MANAGEMENT
+====================================================
+
+Create a complete fleet management page.
+
+Display:
+
+- Car image
+- Brand
+- Model
+- Year
+- License plate
+- Daily price
+- Transmission
+- Fuel type
+- Status
+
+Statuses:
+
+- Available
+- Reserved
+- Rented
+- Maintenance
+
+Actions:
+
+- Add Car
+- Edit Car
+- Delete Car
+- View Details
+
+Car Details:
+
+- Vehicle information
+- Pricing
+- Current status
+- Rental history
+- Maintenance information
+
+====================================================
+5. CLIENTS MANAGEMENT
+====================================================
+
+Create a full client management page.
+
+Display:
+
+- Full name
+- Phone
+- WhatsApp
+- City
+- Number of rentals
+- Status
+
+Actions:
+
+- View Profile
+- Edit Client
+- Create Rental
+- Block Client
+
+Client Profile:
+
+Personal information:
+- Name
+- Phone
+- WhatsApp
+- Email
+- City
+- Documents
+
+History:
+- Previous rentals
+- Total rentals
+- Notes
+
+====================================================
+6. BLOCKED CLIENTS
+====================================================
+
+Display:
+
+- Client
+- Phone
+- Reason
+- Block date
+
+Actions:
+
+- View Details
+- Edit Reason
+- Unblock Client
+
+====================================================
+7. AVAILABILITY MANAGEMENT
+====================================================
+
+Create a dedicated availability page.
+
+Show:
+
+- Vehicle timeline
+- Upcoming reservations
+- Upcoming returns
+- Currently available vehicles
+
+The agency must instantly know:
+
+- Which cars are free
+- Which cars are rented
+- Which cars are returning soon
+
+====================================================
+8. ALERT CENTER
+====================================================
+
+Create an alert section.
+
+Show:
+
+- Overdue rentals
+- Cars returning today
+- Cars requiring maintenance
+- New booking requests
+- Requests waiting too long
+
+Use:
+
+- Red = urgent
+- Orange = warning
+- Blue = information
+
+====================================================
+9. SETTINGS
+====================================================
+
+Use agency settings endpoint.
+
+Allow management of:
+
+- Agency name
+- Business hours
+- Terms and conditions
+
+====================================================
+10. QUICK ACTIONS
+====================================================
+
+Always visible at top of dashboard:
+
++ New Rental
++ Add Car
++ Add Client
++ View Booking Requests
+
+====================================================
+UI REQUIREMENTS
+====================================================
+
+- Light theme
+- Same branding/colors as the public website
+- Professional ERP style
+- Responsive
+- Fast navigation
+- Modern tables
+- Search everywhere
+- Filters everywhere
+- Status badges
+- Detail modals
+
+====================================================
+IMPORTANT
+====================================================
+
+Do NOT create a simple analytics dashboard.
+
+This must be a complete operational management system that allows the agency to manage the entire rental business from one place using the API documentation below.
+
+The dashboard should feel similar to a real SaaS used by rental agencies every day.
