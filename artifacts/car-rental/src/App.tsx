@@ -6,22 +6,26 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { Navbar } from "@/components/Navbar";
 import { Home } from "@/pages/Home";
+import { Cars } from "@/pages/Cars";
 import { Dashboard } from "@/pages/Dashboard";
 import { Booking, initialBookings } from "@/data/mockData";
 
 const queryClient = new QueryClient();
 
-export function AppRouter({
+function AppRouter({
   bookings,
-  addBooking
+  addBooking,
 }: {
-  bookings: Booking[],
-  addBooking: (b: Booking) => void
+  bookings: Booking[];
+  addBooking: (b: Booking) => void;
 }) {
   return (
     <Switch>
       <Route path="/">
         <Home addBooking={addBooking} />
+      </Route>
+      <Route path="/cars">
+        <Cars addBooking={addBooking} />
       </Route>
       <Route path="/dashboard">
         <Dashboard bookings={bookings} />
@@ -35,7 +39,7 @@ function App() {
   const [bookings, setBookings] = useState<Booking[]>(initialBookings);
 
   const addBooking = (booking: Booking) => {
-    setBookings([booking, ...bookings]);
+    setBookings((prev) => [booking, ...prev]);
   };
 
   return (
