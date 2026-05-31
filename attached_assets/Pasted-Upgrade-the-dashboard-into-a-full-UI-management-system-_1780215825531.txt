@@ -1,0 +1,121 @@
+Upgrade the /dashboard into a full UI management system for the car rental agency, for both online and offline clients.
+
+IMPORTANT:
+- Front end only
+- UI only
+- No backend
+- No real state management logic
+- No API integration logic yet
+- Use mock data only
+- Make all screens, tables, modals, forms, filters, badges, and layouts look real and usable
+
+The dashboard must help the agency manage daily work for:
+- Online booking requests from the website
+- Walk-in / offline customers
+- Active rentals
+- Returns
+- Cars
+- Clients
+- Blocked clients
+- Availability
+- Maintenance
+- Alerts
+- Agency settings
+
+Build these dashboard features as UI only:
+
+1. Overview
+- KPI cards: total bookings, pending requests, confirmed bookings, active rentals, available cars, rented cars, maintenance cars, total clients, blocked clients
+- Recent activity feed
+- Urgent alerts panel
+- Small charts or stat blocks for bookings and fleet status
+
+2. Booking Requests
+- Table of online booking requests
+- Columns: customer, phone, email, requested car, pickup date, return date, pickup location, status, source
+- Status badges: new, contacted, confirmed, cancelled
+- Filter bar: all, new, contacted, confirmed, cancelled
+- Detail modal for each request
+- Actions in UI only: view, contact, confirm, cancel
+
+3. Offline / Walk-in Rentals
+- Separate section for counter / office rentals
+- Table of manual rentals created by the agency
+- Fields: client, car, dates, price, deposit, status
+- Button: new walk-in rental
+- Quick form modal UI for creating a manual rental
+- Show it as a smooth workflow UI, but no real logic
+
+4. Rentals Management
+- Full rentals table
+- Fields: rental reference, client, car, start date, end date, total price, deposit, status
+- Status badges: active, overdue, completed, reserved
+- Actions: view details, mark returned, extend, print agreement
+- Rental details side panel or modal
+
+5. Cars / Fleet Management
+- Grid or table view of cars
+- Fields: image, brand, model, year, plate, daily price, transmission, fuel, status
+- Status badges: available, reserved, rented, maintenance
+- Filters by status, type, transmission
+- Add/edit car modal UI
+- Car details panel with rental history, mileage, notes, maintenance info
+
+6. Clients
+- Client table
+- Fields: name, phone, whatsapp, city, total rentals, status
+- Separate tabs for online clients and walk-in clients
+- Client profile modal
+- Actions: view, edit, create rental, block client
+
+7. Blocked Clients
+- List of blocked clients
+- Reason, date blocked, related rentals
+- UI actions: view reason, unblock, edit reason
+
+8. Availability
+- Calendar / timeline / schedule UI
+- Show which cars are free, reserved, rented, returning soon
+- Compact daily/weekly availability view
+- Car availability filter
+
+9. Maintenance
+- Maintenance queue UI
+- Cars due for service
+- Status chips: due soon, in progress, completed
+- Maintenance notes card
+- Maintenance scheduling UI only
+
+10. Alerts / Notifications
+- Urgent booking requests
+- Overdue rentals
+- Cars returning today
+- Cars needing maintenance
+- Blocked customer warnings
+- Use colored alert cards
+
+11. Reports / Summary
+- Simple dashboard report cards only
+- Bookings by source
+- Rental occupancy
+- Revenue estimate
+- Fleet utilization
+- No advanced chart logic required, just UI
+
+12. Settings
+- Agency info card
+- Business hours
+- Terms and conditions
+- Contact details
+- Logo / branding preview
+
+UI requirements:
+- Premium light dashboard
+- Clean admin layout
+- Sidebar navigation
+- Top bar with search, filters, notifications, profile
+- Responsive for desktop, tablet, mobile
+- Tables, cards, tabs, badges, modals, drawers
+- Professional, practical, real business feel
+
+Make it look like a real car rental operations dashboard used every day by an agency owner.
