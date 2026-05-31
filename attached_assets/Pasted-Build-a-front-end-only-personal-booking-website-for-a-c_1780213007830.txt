@@ -1,0 +1,57 @@
+Build a front-end-only personal booking website for a car rental agency, with a clean custom luxury look inspired by safarelamir.com and qcalgerie.com, but do not copy their content or layout. Keep it minimal and focused on core features only. Optimize for low complexity and small code output.
+
+Tech stack:
+- React + Vite
+- Tailwind CSS
+- Front end only
+- No backend, no database, no authentication, no payment system, no API calls
+- Use local mock data and local state only
+- Keep the number of components low
+
+Goal:
+Create a polished car rental booking website with a simple dashboard for managing bookings.
+
+Main pages/sections:
+1. Home page
+   - Hero section with strong headline, short subtitle, and CTA buttons
+   - Featured cars section with 3–6 vehicle cards
+   - Simple booking form UI with date, time, pickup, dropoff, car type
+   - Why choose us section
+   - Testimonials or trust badges
+   - Contact/footer
+
+2. Dashboard page or dashboard section
+   - Summary cards: total bookings, available cars, pending requests
+   - Booking list/table with status chips
+   - Fleet overview cards
+   - Simple filters or tabs for: All, Pending, Confirmed, Cancelled
+   - Use mock data only
+
+Design direction:
+- Premium, modern, elegant, dark or neutral theme with gold or warm accent
+- Strong typography, large spacing, soft shadows, rounded cards
+- Clean car-rental aesthetic with subtle motion
+- Fully responsive for mobile, tablet, desktop
+- Use high-quality placeholder images or gradients if needed
+
+Core features only:
+- Browse cars
+- Fill booking form
+- View booking dashboard
+- Filter bookings
+- Responsive navigation
+- Reusable car cards and dashboard cards
+
+Important constraints:
+- Keep it simple and production-like
+- Do not add unnecessary features
+- Do not explain the code
+- Do not generate backend files
+- Do not include API integration
+- Prefer a single-page experience with dashboard section or tab navigation
+- Make the design visually strong even with mock data
+
+Output:
+- Generate the full working front-end project code
+- Include only what is needed to run the UI
+- Use clean file structure and readable components
