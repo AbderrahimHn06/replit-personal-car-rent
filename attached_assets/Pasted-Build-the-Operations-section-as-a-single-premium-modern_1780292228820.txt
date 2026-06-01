@@ -1,0 +1,414 @@
+Build the Operations section as a single premium, modern, highly readable workspace for a car rental agency.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API logic
+- No real business logic
+- Do not use a generic admin template look
+- Keep the UI spacious, calm, premium, and easy to scan
+- The Operations area should feel like one connected workflow, not 3 unrelated pages
+
+OPERATIONS STRUCTURE
+Inside Operations, use one main page with internal tabs or segmented navigation for:
+- Booking Requests
+- Walk-in Rentals
+- Rentals
+
+This section must feel grouped and efficient.
+Do not make the sidebar show these as separate competing experiences.
+The sidebar item can stay as “Operations”, and inside the page the user switches between the 3 sub-views.
+
+GLOBAL STYLE
+- Light dashboard
+- White cards
+- Very light gray background
+- Soft borders
+- Rounded corners
+- Subtle shadows
+- Strong spacing
+- Premium car-rental operations feel
+- Readable in one glance
+- No clutter
+- No dense spreadsheet look
+
+OPERATIONS PAGE LAYOUT
+The page should be built in this order:
+
+1. Page header
+2. Summary KPI cards
+3. Internal tabs / segmented switcher
+4. Main workspace for the selected tab
+5. Detail drawer/modal system
+6. Small helper panels if needed
+
+PAGE HEADER
+- Title: “Operations”
+- Subtitle: “Manage bookings, walk-ins, and rentals in one place”
+- Right side:
+  - search
+  - filter button
+  - date range or status quick filter
+  - compact action button like “New booking”
+
+Header layout:
+- Title and subtitle left aligned
+- Actions right aligned
+- On mobile, stack vertically
+- Keep the header clean and airy
+
+SUMMARY KPI CARDS
+At the top of Operations, show a compact row of overview cards.
+These cards must be visually lighter than the Overview page KPI cards, but still premium.
+
+Cards to include:
+- Booking Requests
+- Walk-in Rentals
+- Active Rentals
+- Pending Actions
+- Confirmed Today
+- Overdue Returns
+
+Card design:
+- small icon
+- label
+- big number
+- small supporting text
+- soft colored accent
+- equal height
+- consistent padding
+
+Layout:
+- Desktop: 4 or 6 cards in a grid
+- Tablet: 2 per row
+- Mobile: 1 per row
+
+These cards should help the user understand workload instantly.
+
+INTERNAL TABS / SWITCHER
+Below the KPI row, place a strong segmented control or tab row:
+- Booking Requests
+- Walk-in Rentals
+- Rentals
+
+Tab design:
+- Rounded pill tabs
+- Active tab filled with primary color
+- Inactive tabs outlined or light background
+- Smooth, premium interaction
+- Easy to scan
+- Large enough to tap on mobile
+
+The tab switcher must feel like the main control for the section.
+
+BOOKING REQUESTS TAB
+This tab should feel like a booking inbox.
+
+PAGE GOAL
+Show website booking requests that the agency must review, contact, confirm, or cancel.
+
+LAYOUT
+- Top row: filters + search + small stats
+- Main area: full table on desktop, stacked cards or scrollable table on mobile
+- Right side or drawer: detail panel when a row is clicked
+
+FILTERS
+Use pill filters above the table:
+- All
+- New
+- Contacted
+- Confirmed
+- Cancelled
+
+Optional additional filters:
+- Today
+- This week
+- High priority
+
+BOOKING REQUEST TABLE
+Columns:
+- Customer
+- Phone
+- Email
+- Requested car
+- Pickup date
+- Return date
+- Pickup location
+- Status
+- Source
+- Actions
+
+Table design:
+- White table container
+- Very soft header background
+- Header labels small and muted
+- Rows tall enough to breathe
+- Strong row spacing
+- Hover effect
+- First column visually stronger
+- Secondary metadata smaller
+- Status badges rounded and readable
+
+STATUS BADGES
+- New = blue or neutral highlight
+- Contacted = amber
+- Confirmed = green
+- Cancelled = gray or red depending on style
+
+ACTIONS
+Each row should include small actions:
+- View
+- Contact
+- Confirm
+- Cancel
+
+Use compact icon buttons or pills, not bulky buttons.
+
+DETAIL VIEW
+When clicking a booking row:
+- open a drawer or modal on the right
+- show booking details in sections
+
+Detail content:
+- customer info
+- contact info
+- booking details
+- selected car
+- dates and times
+- source
+- notes
+- status history
+
+Detail panel layout:
+- clear title at top
+- status badge near title
+- section headers
+- readable spacing
+- action buttons at bottom
+
+Buttons in detail view:
+- Contact client
+- Confirm booking
+- Cancel booking
+- Close
+
+The detail panel must feel like a real operations tool.
+
+WALK-IN RENTALS TAB
+This tab should feel like a front desk / counter workflow.
+
+PAGE GOAL
+Let staff create rentals manually for customers who come in physically.
+
+LAYOUT
+- Main table of current walk-in rentals
+- Primary button: “New Walk-in Rental”
+- Right panel or modal form for creating a rental
+
+TABLE CONTENT
+Columns:
+- Client
+- Car
+- Dates
+- Price
+- Deposit
+- Status
+- Actions
+
+NEW WALK-IN MODAL
+This should be a polished form modal, not a plain form.
+
+Fields:
+- client name
+- phone
+- ID or license info
+- car picker
+- pickup date
+- return date
+- daily price
+- deposit
+- notes
+
+Form styling:
+- labels above fields
+- clean spacing
+- consistent input height
+- rounded inputs
+- white background
+- light borders
+- aligned buttons
+- clear primary action
+
+Form actions:
+- Save rental
+- Cancel
+
+The form should feel like a real rental desk workflow.
+
+RENTALS TAB
+This tab should show all current and past rentals.
+
+PAGE GOAL
+Manage the lifecycle of rentals, including active, overdue, reserved, and completed.
+
+LAYOUT
+- Top filters
+- Main rentals table
+- Detail modal or side drawer
+- Quick action buttons
+
+FILTERS
+- All
+- Active
+- Reserved
+- Overdue
+- Completed
+
+RENTALS TABLE
+Columns:
+- Rental reference
+- Client
+- Car
+- Start date
+- End date
+- Total price
+- Deposit
+- Status
+- Actions
+
+STATUS BADGES
+- Active = blue or green
+- Reserved = amber
+- Overdue = red
+- Completed = gray or green
+
+ACTIONS
+- View details
+- Mark returned
+- Extend
+- Print agreement
+
+DETAIL VIEW
+When opening a rental:
+- show rental reference
+- client details
+- car details
+- payment summary
+- dates
+- status timeline
+- notes
+- related alerts if overdue
+
+At the bottom:
+- Mark returned
+- Extend rental
+- Close
+
+RENTALS UI FEEL
+This area must feel like a serious business operations table, but still elegant and easy to read.
+
+MAIN TABLE DESIGN RULES FOR ALL OPERATIONS TABLES
+Do not use boring default HTML table styling.
+Every table should feel custom.
+
+Use:
+- soft rounded container
+- clean table header
+- generous row height
+- subtle hover state
+- readable badges
+- clear action buttons
+- strong spacing between rows
+- sticky header if possible
+- smooth overflow behavior on mobile
+
+TABLE TYPOGRAPHY
+- Main cell text: medium weight
+- Secondary text: smaller, muted
+- Header text: uppercase or semi-bold, slightly muted
+- Dates should be easy to scan
+- Status badges must be legible, not tiny
+
+DETAIL DRAWERS / MODALS
+For every item type, opening a row should show a polished detail drawer or modal.
+
+General drawer layout:
+- Title at top
+- status badge near title
+- structured sections with headings
+- info displayed in rows
+- bottom action bar with buttons
+
+Sections in a drawer:
+- General info
+- Client details
+- Car details
+- Booking/rental details
+- Notes
+- Actions
+
+Do not make the drawer feel cramped.
+Use spacing and hierarchy.
+
+SEARCH AND FILTER AREA
+Above each tab’s main table, include:
+- search input
+- filter button or chips
+- sort dropdown if needed
+- compact summary count
+
+Search bar style:
+- rounded
+- white background
+- subtle border
+- icon inside
+- aligned with filters
+
+This area must feel functional and clean.
+
+MOBILE BEHAVIOR
+On mobile:
+- tabs must remain easy to tap
+- tables should either scroll horizontally cleanly or transform into stacked cards
+- detail views must become full-screen modal or bottom sheet
+- all buttons full-width where needed
+- no tiny unreadable table text
+- no horizontal overflow from the page layout
+
+CARD-TO-LIST BEHAVIOR
+Where tables are too tight on mobile:
+- convert rows into stacked cards
+- each card should show the main identity first
+- then 2 to 4 key metadata lines
+- then status and action buttons
+
+This should preserve readability.
+
+VISUAL TONE
+The Operations page should feel:
+- practical
+- premium
+- organized
+- efficient
+- readable
+- calm
+- business-grade
+
+It should NOT feel:
+- like a generic admin dashboard
+- crowded
+- noisy
+- cheap
+- spreadsheet-like
+
+FINAL UX GOAL
+The Operations section must feel like one coherent workflow used every day by a car rental agency team:
+- review booking requests
+- create walk-in rentals
+- manage active rentals
+- inspect details
+- act quickly
+- stay organized
+
+Make the UI polished, highly readable, and custom.

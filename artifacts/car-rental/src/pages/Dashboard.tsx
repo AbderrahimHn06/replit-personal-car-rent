@@ -251,7 +251,6 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
             <OperationsSection
               activeTab={opsTab}
               onTabChange={setOpsTab}
-              bookings={bookings}
             />
           )}
           {section === "fleet"        && <Fleet />}
