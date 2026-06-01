@@ -44,9 +44,7 @@ const NAV_GROUPS: NavGroup[] = [
   {
     label: "Rentals",
     items: [
-      { id: "operations", label: "Booking Requests", icon: CalendarCheck, badge: kpis.pendingRequests, opsTab: "bookings" },
-      { id: "operations", label: "Walk-in Rentals",  icon: UserPlus,      opsTab: "offline" },
-      { id: "operations", label: "All Rentals",      icon: Key,           badge: kpis.activeRentals, opsTab: "rentals" },
+      { id: "operations", label: "Rentals", icon: Key, badge: kpis.pendingRequests },
     ],
   },
   {

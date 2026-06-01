@@ -1,0 +1,662 @@
+Build a premium Fleet Management section for a car rental agency.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API logic
+- No real business logic
+- Luxury light theme
+- Highly readable
+- Spacious layout
+- Custom UI, not a generic admin template
+
+PAGE PURPOSE
+
+The Fleet page is the central place where the agency manages vehicles.
+
+The user must be able to:
+- View all cars
+- Check availability
+- Check status
+- Open detailed vehicle profiles
+- Add vehicles
+- Edit vehicles
+- See maintenance information
+- See rental history
+- Access vehicle schedule
+
+The page should feel like a modern fleet command center.
+
+====================================================
+PAGE STRUCTURE
+====================================================
+
+1. Header
+2. Fleet KPI Summary
+3. Filters & Search
+4. Fleet View Switcher
+5. Vehicle Grid/List
+6. Vehicle Details Drawer
+7. Vehicle Schedule Modal
+
+====================================================
+HEADER
+====================================================
+
+Left:
+
+Title:
+Fleet
+
+Subtitle:
+Manage vehicles, availability, maintenance, and fleet operations
+
+Right:
+
+- Search
+- Filter button
+- Add Vehicle button
+
+Desktop:
+Title left
+Actions right
+
+Mobile:
+Stack vertically
+
+Style:
+Large title
+Muted subtitle
+Strong spacing
+
+====================================================
+FLEET KPI SUMMARY
+====================================================
+
+Top summary cards:
+
+- Total Vehicles
+- Available
+- Reserved
+- Rented
+- Maintenance
+- Returning Today
+
+Card design:
+
+- White card
+- Rounded 16-20px
+- Soft border
+- Small icon
+- Label
+- Large number
+- Small trend/status text
+
+Layout:
+
+Desktop:
+6 cards
+
+Tablet:
+3 per row
+
+Mobile:
+1 or 2 per row
+
+====================================================
+SEARCH + FILTER BAR
+====================================================
+
+Below KPI cards.
+
+Search:
+
+Placeholder:
+Search by model, brand, plate number...
+
+Filters:
+
+Status:
+- Available
+- Reserved
+- Rented
+- Maintenance
+
+Transmission:
+- Automatic
+- Manual
+
+Fuel:
+- Petrol
+- Diesel
+- Hybrid
+- Electric
+
+Vehicle Type:
+- Economy
+- Compact
+- Sedan
+- SUV
+- Luxury
+- Van
+
+Sort:
+- Newest
+- Price
+- Availability
+
+Style:
+
+Rounded controls
+Consistent height
+No tiny inputs
+
+====================================================
+VIEW SWITCHER
+====================================================
+
+Top-right above fleet content.
+
+Options:
+
+- Grid View
+- List View
+
+Grid should be default.
+
+Switcher design:
+
+Premium segmented control
+
+Active state clearly visible
+
+====================================================
+GRID VIEW
+====================================================
+
+This is the main experience.
+
+Use premium vehicle cards.
+
+Desktop:
+3 or 4 cards per row
+
+Tablet:
+2 cards
+
+Mobile:
+1 card
+
+====================================================
+VEHICLE CARD
+====================================================
+
+Top:
+Large vehicle image
+
+Image ratio:
+16:9
+
+Use:
+object-cover
+
+Overlay badges:
+
+Top-right:
+Status badge
+
+Available:
+Green
+
+Reserved:
+Blue
+
+Rented:
+Amber
+
+Maintenance:
+Red
+
+====================================================
+CARD CONTENT
+====================================================
+
+Vehicle name:
+
+Example:
+Renault Clio 5
+
+Below:
+
+- Year
+- Transmission
+- Fuel
+- Seats
+
+Then:
+
+Plate number
+
+Then:
+
+Price per day
+
+Large and bold
+
+Example:
+
+6,500 DZD/day
+
+====================================================
+BOTTOM ACTIONS
+====================================================
+
+Buttons:
+
+View Details
+
+Quick Availability
+
+More Menu
+
+Button area must be aligned
+
+No random spacing
+
+====================================================
+CARD HOVER EFFECT
+====================================================
+
+Desktop:
+
+- Slight elevation
+- Slight scale
+- Soft shadow increase
+
+No aggressive animations
+
+====================================================
+LIST VIEW
+====================================================
+
+Alternative view.
+
+Show:
+
+Image
+Vehicle
+Plate
+Price/day
+Transmission
+Fuel
+Status
+Actions
+
+Rows should be large and readable.
+
+====================================================
+VEHICLE DETAILS DRAWER
+====================================================
+
+When clicking a vehicle.
+
+Open a right-side drawer.
+
+Not a tiny modal.
+
+Drawer width:
+
+Desktop:
+450-550px
+
+Mobile:
+Full screen
+
+====================================================
+DRAWER HEADER
+====================================================
+
+Vehicle image
+
+Vehicle name
+
+Status badge
+
+Plate number
+
+Edit button
+
+====================================================
+SECTION 1
+OVERVIEW
+====================================================
+
+Show:
+
+Brand
+
+Model
+
+Year
+
+Color
+
+Plate
+
+VIN
+
+Mileage
+
+Transmission
+
+Fuel
+
+Seats
+
+Daily price
+
+====================================================
+SECTION 2
+CURRENT STATUS
+====================================================
+
+Show:
+
+Current status
+
+Available from
+
+Current booking
+
+Expected return
+
+Next reservation
+
+Display as status cards.
+
+====================================================
+SECTION 3
+RENTAL HISTORY
+====================================================
+
+Mini timeline.
+
+Examples:
+
+15 May
+Rental completed
+
+12 May
+Reserved online
+
+8 May
+Returned
+
+Use timeline UI.
+
+Not a plain table.
+
+====================================================
+SECTION 4
+MAINTENANCE
+====================================================
+
+Show:
+
+Last service
+
+Next service
+
+Garage
+
+Cost
+
+Notes
+
+Maintenance status badge
+
+====================================================
+SECTION 5
+DOCUMENTS
+====================================================
+
+Mock cards:
+
+Insurance
+
+Registration
+
+Inspection
+
+Each card:
+
+Document name
+
+Expiration date
+
+Status
+
+====================================================
+SECTION 6
+QUICK ACTIONS
+====================================================
+
+Buttons:
+
+Edit Vehicle
+
+View Schedule
+
+Maintenance Record
+
+Mark Available
+
+====================================================
+VEHICLE SCHEDULE
+====================================================
+
+This is extremely important.
+
+When clicking:
+
+View Schedule
+
+Open a dedicated modal.
+
+Do NOT use a simple table.
+
+Create a booking calendar style.
+
+====================================================
+SCHEDULE MODAL
+====================================================
+
+Header:
+
+Vehicle name
+
+Plate number
+
+Month selector
+
+Previous month
+
+Next month
+
+====================================================
+CALENDAR
+====================================================
+
+Show monthly booking schedule.
+
+Days:
+
+Color coding:
+
+Available:
+Light green
+
+Reserved:
+Blue
+
+Rented:
+Amber
+
+Maintenance:
+Red
+
+Returning:
+Purple
+
+====================================================
+BOOKING BLOCKS
+====================================================
+
+Booking blocks should span multiple days.
+
+Example:
+
+Ahmed Rental
+June 10 → June 15
+
+Displayed as one connected block.
+
+====================================================
+RIGHT SIDEBAR INSIDE MODAL
+====================================================
+
+Selected Day Details:
+
+Status
+
+Customer
+
+Rental dates
+
+Return time
+
+Notes
+
+====================================================
+VISUAL DESIGN
+====================================================
+
+The calendar should feel similar to:
+
+Google Calendar
+Linear
+Notion Calendar
+
+Not a spreadsheet.
+
+====================================================
+ADD VEHICLE MODAL
+====================================================
+
+Clicking:
+
+Add Vehicle
+
+Opens a premium modal.
+
+Sections:
+
+Basic Information
+
+Pricing
+
+Specifications
+
+Images
+
+Documents
+
+====================================================
+FIELDS
+====================================================
+
+Brand
+
+Model
+
+Year
+
+Plate Number
+
+Color
+
+Transmission
+
+Fuel
+
+Seats
+
+Mileage
+
+Daily Price
+
+Weekly Price
+
+Monthly Price
+
+Description
+
+====================================================
+IMAGE SECTION
+====================================================
+
+Large upload area
+
+Image previews
+
+Drag and drop style UI
+
+====================================================
+DESIGN SYSTEM
+====================================================
+
+Fleet page should feel more visual than Operations.
+
+Cars are the product.
+
+Vehicle images should be prominent.
+
+Use:
+
+- Large cards
+- Beautiful spacing
+- Strong hierarchy
+- Premium badges
+- Clear actions
+- Modern drawer design
+- Calendar-based scheduling
+
+====================================================
+MOBILE
+====================================================
+
+Cards become full width
+
+Drawer becomes full screen
+
+Schedule modal becomes full screen
+
+Filters become collapsible
+
+No horizontal overflow
+
+====================================================
+FINAL GOAL
+====================================================
+
+The Fleet page should feel like a premium vehicle management platform used by a professional rental agency, not a generic CRUD table.
+
+Focus heavily on:
+- Vehicle cards
+- Vehicle profile drawer
+- Schedule calendar
+- Availability visibility
+- Premium visual hierarchy
+- Readability
+- Beautiful spacing
