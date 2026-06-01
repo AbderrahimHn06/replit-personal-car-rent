@@ -1,0 +1,114 @@
+Refine /dashboard into a premium car-rental operations UI with very specific visual rules. Frontend only, mock data only.
+
+Do NOT use a generic admin template look. Every table, card, badge, modal, and schedule must feel custom, modern, spacious, and easy to scan.
+
+GLOBAL STYLE
+- Light dashboard only
+- Background: very light gray
+- Surfaces: white cards
+- Borders: soft gray
+- Shadows: subtle
+- Corners: rounded-xl / rounded-2xl
+- Text hierarchy: strong titles, clear labels, muted metadata
+- Use lots of whitespace, no crowded blocks
+
+SIDEBAR
+Group items with section labels and visual separators:
+- Overview
+- Operations: Booking Requests, Walk-in Rentals, Rentals
+- Fleet: Fleet, Availability, Maintenance
+- Clients: Clients, Blocked Clients
+- Insights: Alerts, Reports
+- Settings
+
+Sidebar rules:
+- Section titles smaller, uppercase, muted
+- Active item = filled pill with icon + strong contrast
+- Related items should visually sit together
+- Keep sidebar calm, not noisy
+
+PAGE HEADER
+Every section must have:
+- Title
+- short subtitle
+- right-side actions or filters
+- clear spacing below header
+
+CARDS
+Do not use generic KPI cards.
+Use premium stat cards with:
+- icon in small colored circle
+- label at top
+- big number
+- small trend/status text
+- optional tiny sparkline or bar
+- card padding p-5 / p-6
+- internal vertical spacing consistent
+- never cramped
+
+TABLES
+Do not use plain default tables.
+Use custom data tables with:
+- white container card
+- header row with soft background
+- header text uppercase, small, muted
+- body rows with generous height
+- zebra or hover state very subtle
+- row padding p-4
+- first column stronger text
+- metadata in smaller gray text under main text when needed
+- action buttons as small icon buttons or pill buttons
+- badges rounded-full with clear color meanings
+- tables must breathe, with visible separation between rows
+
+AVAILABILITY PAGE
+Make this the most readable section.
+
+Layout:
+- Header row with title, subtitle, week controls, and legend
+- Legend must use labeled colored chips, not only dots
+- Weekly grid inside a large white card
+
+Grid rules:
+- Left column for vehicle name + plate
+- Top row for days
+- Each cell large enough to read
+- Use strong borders between columns and rows
+- Status text must be full words, not abbreviations:
+  Free, Reserved, Rented, Maintenance, Out
+- Each status must have a clear color chip background and readable text
+- Vehicle name bold; plate smaller and muted underneath
+- Add hover highlight on row
+- Add sticky left column and sticky top header if possible
+
+Availability must feel like a schedule board, not a spreadsheet.
+
+MODALS / DRAWERS
+- Use a clear title, subtitle, and action area
+- Sectioned content with spacing
+- Form fields full-width, consistent height
+- Primary action visually dominant
+- Secondary action subtle
+- Do not overcrowd modals
+
+FILTERS / TABS
+- Use pill-style filter chips
+- Active chip filled, inactive chip outlined
+- Spacing between chips consistent
+- Keep filters above tables/cards with enough margin
+
+MOBILE
+- Sidebar collapsible
+- Tables scroll horizontally only if needed, with sticky key columns if possible
+- Cards stack into 1 column
+- Availability becomes vertically scrollable or simplified into a compact list
+- No tiny text
+- No horizontal overflow
+
+QUALITY BAR
+- Make the dashboard look like a real daily operations tool for a luxury car rental agency
+- Readability first
+- Elegant spacing
+- Strong hierarchy
+- Custom-looking tables and cards
+- Modern, premium, practical
