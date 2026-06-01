@@ -1,0 +1,2 @@
+- [EliteRide local store pattern](eliteride-localstore.md) — module-level mutable arrays + Set<listener> + useState tick hooks; no Context needed for cross-component reactive state
+- [EliteRide port & routing](eliteride-setup.md) — runs on port 22460; sections use internal state not URL routing

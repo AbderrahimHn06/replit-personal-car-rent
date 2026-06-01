@@ -158,23 +158,147 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
   );
 }
 
-/* ─── Edit Vehicle Modal ───────────────────────────────────────── */
-function EditVehicleModal({ car, onClose, onSave }: {
-  car: FleetCar;
-  onClose: () => void;
-  onSave: (updated: FleetCar) => void;
+/* ─── Shared vehicle form fields ───────────────────────────────── */
+function VehicleFormFields({ form, set }: {
+  form: FleetCar;
+  set: (k: keyof FleetCar, v: string | number | boolean) => void;
 }) {
-  const [form, setForm] = useState<FleetCar>({ ...car });
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
-
-  const set = (k: keyof FleetCar, v: string | number) => setForm(prev => ({ ...prev, [k]: v }));
-
   const inp = "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
   const sel = "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
+  const lbl = "block text-[12px] font-semibold text-slate-600 mb-1.5";
+  const sec = "text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4";
+
+  return (
+    <div className="space-y-7">
+      {/* Vehicle Info */}
+      <div>
+        <p className={sec}>Vehicle Information</p>
+        <div className="grid grid-cols-2 gap-3.5">
+          <div><label className={lbl}>Brand</label><input className={inp} value={form.brand} onChange={e => set("brand", e.target.value)} placeholder="e.g. Renault" /></div>
+          <div><label className={lbl}>Model</label><input className={inp} value={form.model} onChange={e => set("model", e.target.value)} placeholder="e.g. Clio 5" /></div>
+          <div><label className={lbl}>Year</label><input type="number" className={inp} value={form.year || ""} onChange={e => set("year", parseInt(e.target.value) || 0)} placeholder="2024" /></div>
+          <div><label className={lbl}>Plate Number</label><input className={inp} value={form.plate} onChange={e => set("plate", e.target.value)} placeholder="e.g. RCL-031-31" /></div>
+          <div><label className={lbl}>Color</label><input className={inp} value={form.color} onChange={e => set("color", e.target.value)} placeholder="e.g. Pearl White" /></div>
+          <div>
+            <label className={lbl}>Type / Category</label>
+            <select className={sel} value={form.type} onChange={e => set("type", e.target.value)}>
+              <option value="">Select type</option>
+              {["Economy","Compact","Sedan","SUV","Luxury","Van","City"].map(t => <option key={t}>{t}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className={lbl}>Transmission</label>
+            <select className={sel} value={form.transmission} onChange={e => set("transmission", e.target.value)}>
+              <option>Manual</option><option>Automatic</option>
+            </select>
+          </div>
+          <div>
+            <label className={lbl}>Fuel Type</label>
+            <select className={sel} value={form.fuel} onChange={e => set("fuel", e.target.value)}>
+              <option>Gasoline</option><option>Diesel</option><option>Electric</option>
+            </select>
+          </div>
+          <div><label className={lbl}>Seats</label><input type="number" className={inp} value={form.seats || ""} onChange={e => set("seats", parseInt(e.target.value) || 0)} placeholder="5" /></div>
+          <div><label className={lbl}>Doors</label><input type="number" className={inp} value={form.doors || ""} onChange={e => set("doors", parseInt(e.target.value) || 0)} placeholder="4" /></div>
+          <div><label className={lbl}>Mileage (km)</label><input type="number" className={inp} value={form.mileage || ""} onChange={e => set("mileage", parseInt(e.target.value) || 0)} placeholder="0" /></div>
+          <div><label className={lbl}>Engine Size</label><input className={inp} value={form.engineSize ?? ""} onChange={e => set("engineSize", e.target.value)} placeholder="e.g. 1.5 dCi 115hp" /></div>
+          <div className="col-span-2"><label className={lbl}>VIN / Chassis Number</label><input className={inp} value={form.vin ?? ""} onChange={e => set("vin", e.target.value)} placeholder="e.g. VF1BJA00012345679" /></div>
+          <div>
+            <label className={lbl}>Status</label>
+            <select className={sel} value={form.status} onChange={e => set("status", e.target.value as FleetStatus)}>
+              <option value="available">Available</option>
+              <option value="reserved">Reserved</option>
+              <option value="rented">Rented</option>
+              <option value="maintenance">Maintenance</option>
+            </select>
+          </div>
+          <div><label className={lbl}>Image URL</label><input className={inp} value={form.image} onChange={e => set("image", e.target.value)} placeholder="https://…" /></div>
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div>
+        <p className={sec}>Pricing</p>
+        <div className="grid grid-cols-2 gap-3.5">
+          <div><label className={lbl}>Daily Rate ($)</label><input type="number" className={inp} value={form.pricePerDay || ""} onChange={e => set("pricePerDay", parseFloat(e.target.value) || 0)} placeholder="45" /></div>
+          <div><label className={lbl}>Weekly Rate ($)</label><input type="number" className={inp} value={form.pricePerWeek ?? ""} onChange={e => set("pricePerWeek", parseFloat(e.target.value) || 0)} placeholder="280" /></div>
+          <div><label className={lbl}>Monthly Rate ($)</label><input type="number" className={inp} value={form.pricePerMonth ?? ""} onChange={e => set("pricePerMonth", parseFloat(e.target.value) || 0)} placeholder="900" /></div>
+          <div><label className={lbl}>Deposit Amount ($)</label><input type="number" className={inp} value={form.depositAmount ?? ""} onChange={e => set("depositAmount", parseFloat(e.target.value) || 0)} placeholder="150" /></div>
+          <div><label className={lbl}>Late Fee ($/day)</label><input type="number" className={inp} value={form.lateFee ?? ""} onChange={e => set("lateFee", parseFloat(e.target.value) || 0)} placeholder="15" /></div>
+          <div><label className={lbl}>Extra Mileage Fee ($/km)</label><input type="number" className={inp} value={form.extraMileageFee ?? ""} onChange={e => set("extraMileageFee", parseFloat(e.target.value) || 0)} placeholder="0.25" /></div>
+        </div>
+      </div>
+
+      {/* Documents */}
+      <div>
+        <p className={sec}>Documents</p>
+        <div className="grid grid-cols-2 gap-3.5">
+          <div><label className={lbl}>Insurance Provider</label><input className={inp} value={form.insuranceProvider ?? ""} onChange={e => set("insuranceProvider", e.target.value)} placeholder="e.g. AXA Algeria" /></div>
+          <div><label className={lbl}>Insurance Number</label><input className={inp} value={form.insuranceNumber ?? ""} onChange={e => set("insuranceNumber", e.target.value)} placeholder="AXA-2024-XXX" /></div>
+          <div><label className={lbl}>Insurance Start</label><input type="date" className={inp} value={form.insuranceStart ?? ""} onChange={e => set("insuranceStart", e.target.value)} /></div>
+          <div><label className={lbl}>Insurance End</label><input type="date" className={inp} value={form.insuranceEnd ?? ""} onChange={e => set("insuranceEnd", e.target.value)} /></div>
+          <div><label className={lbl}>Registration Number</label><input className={inp} value={form.registrationNumber ?? ""} onChange={e => set("registrationNumber", e.target.value)} /></div>
+          <div><label className={lbl}>Registration Expiry</label><input type="date" className={inp} value={form.registrationExpiry ?? ""} onChange={e => set("registrationExpiry", e.target.value)} /></div>
+          <div><label className={lbl}>Technical Inspection Date</label><input type="date" className={inp} value={form.inspectionDate ?? ""} onChange={e => set("inspectionDate", e.target.value)} /></div>
+          <div><label className={lbl}>Inspection Expiry</label><input type="date" className={inp} value={form.inspectionExpiry ?? ""} onChange={e => set("inspectionExpiry", e.target.value)} /></div>
+        </div>
+      </div>
+
+      {/* Maintenance */}
+      <div>
+        <p className={sec}>Maintenance</p>
+        <div className="grid grid-cols-2 gap-3.5">
+          <div><label className={lbl}>Last Service Date</label><input type="date" className={inp} value={form.lastService} onChange={e => set("lastService", e.target.value)} /></div>
+          <div><label className={lbl}>Next Service Date</label><input type="date" className={inp} value={form.nextService} onChange={e => set("nextService", e.target.value)} /></div>
+          <div><label className={lbl}>Last Service Mileage (km)</label><input type="number" className={inp} value={form.lastServiceMileage ?? ""} onChange={e => set("lastServiceMileage", parseInt(e.target.value) || 0)} /></div>
+          <div><label className={lbl}>Garage / Service Center</label><input className={inp} value={form.garageName ?? ""} onChange={e => set("garageName", e.target.value)} placeholder="e.g. Renault Service Center" /></div>
+          <div className="col-span-2">
+            <label className={lbl}>Maintenance Notes</label>
+            <textarea rows={2} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition"
+              value={form.maintenanceNotes ?? ""} onChange={e => set("maintenanceNotes", e.target.value)} />
+          </div>
+        </div>
+      </div>
+
+      {/* Notes */}
+      <div>
+        <p className={sec}>Notes & Description</p>
+        <div className="space-y-3.5">
+          <div>
+            <label className={lbl}>Short Description</label>
+            <input className={inp} value={form.description ?? ""} onChange={e => set("description", e.target.value)} placeholder="Brief description for clients" />
+          </div>
+          <div>
+            <label className={lbl}>Operational Notes</label>
+            <textarea rows={2} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition"
+              value={form.notes} onChange={e => set("notes", e.target.value)} />
+          </div>
+          <div>
+            <label className={lbl}>Internal Notes <span className="text-slate-300">(not shown to clients)</span></label>
+            <textarea rows={2} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition"
+              value={form.internalNotes ?? ""} onChange={e => set("internalNotes", e.target.value)} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const BLANK_CAR: FleetCar = {
+  id: "", brand: "", model: "", year: new Date().getFullYear(), plate: "",
+  color: "", type: "", transmission: "Manual", fuel: "Gasoline",
+  seats: 5, doors: 4, mileage: 0, status: "available",
+  image: "", notes: "", pricePerDay: 0,
+  lastService: "", nextService: "",
+};
+
+/* ─── Edit Vehicle Modal ───────────────────────────────────────── */
+function EditVehicleModal({ car, onClose, onSave }: {
+  car: FleetCar; onClose: () => void; onSave: (updated: FleetCar) => void;
+}) {
+  const [form, setForm] = useState<FleetCar>({ ...car });
+  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
+  const set = (k: keyof FleetCar, v: string | number | boolean) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
     <>
@@ -188,106 +312,12 @@ function EditVehicleModal({ car, onClose, onSave }: {
             </div>
             <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-5 w-5" /></button>
           </div>
-
-          <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
-            {/* Basic Info */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Basic Information</p>
-              <div className="grid grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Brand</label>
-                  <input className={inp} value={form.brand} onChange={e => set("brand", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Model</label>
-                  <input className={inp} value={form.model} onChange={e => set("model", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Year</label>
-                  <input type="number" className={inp} value={form.year} onChange={e => set("year", parseInt(e.target.value) || form.year)} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Plate Number</label>
-                  <input className={inp} value={form.plate} onChange={e => set("plate", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Color</label>
-                  <input className={inp} value={form.color} onChange={e => set("color", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Type</label>
-                  <select className={sel} value={form.type} onChange={e => set("type", e.target.value)}>
-                    {["Economy","Compact","Sedan","SUV","Luxury","Van","City"].map(t => <option key={t}>{t}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Specs */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Specifications</p>
-              <div className="grid grid-cols-3 gap-3.5">
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Transmission</label>
-                  <select className={sel} value={form.transmission} onChange={e => set("transmission", e.target.value as "Manual"|"Automatic")}>
-                    <option>Manual</option>
-                    <option>Automatic</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Fuel</label>
-                  <select className={sel} value={form.fuel} onChange={e => set("fuel", e.target.value as "Gasoline"|"Diesel"|"Electric")}>
-                    <option>Gasoline</option>
-                    <option>Diesel</option>
-                    <option>Electric</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Seats</label>
-                  <input type="number" className={inp} value={form.seats} onChange={e => set("seats", parseInt(e.target.value) || form.seats)} />
-                </div>
-                <div className="col-span-3">
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Mileage (km)</label>
-                  <input type="number" className={inp} value={form.mileage} onChange={e => set("mileage", parseInt(e.target.value) || form.mileage)} />
-                </div>
-              </div>
-            </div>
-
-            {/* Pricing + Status */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Pricing & Status</p>
-              <div className="grid grid-cols-2 gap-3.5">
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Daily Rate ($)</label>
-                  <input type="number" className={inp} value={form.pricePerDay} onChange={e => set("pricePerDay", parseFloat(e.target.value) || form.pricePerDay)} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Status</label>
-                  <select className={sel} value={form.status} onChange={e => set("status", e.target.value as FleetStatus)}>
-                    <option value="available">Available</option>
-                    <option value="reserved">Reserved</option>
-                    <option value="rented">Rented</option>
-                    <option value="maintenance">Maintenance</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Notes */}
-            <div>
-              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Notes</label>
-              <textarea rows={3} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition"
-                value={form.notes} onChange={e => set("notes", e.target.value)} />
-            </div>
+          <div className="flex-1 overflow-y-auto px-7 py-6">
+            <VehicleFormFields form={form} set={set} />
           </div>
-
           <div className="border-t border-slate-100 px-7 py-5 flex gap-3 flex-shrink-0">
-            <button onClick={() => onSave(form)} className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm">
-              Save Changes
-            </button>
-            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors">
-              Cancel
-            </button>
+            <button onClick={() => onSave(form)} className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm">Save Changes</button>
+            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
           </div>
         </div>
       </div>
@@ -296,13 +326,13 @@ function EditVehicleModal({ car, onClose, onSave }: {
 }
 
 /* ─── Add Vehicle Modal ───────────────────────────────────────── */
-function AddVehicleModal({ onClose }: { onClose: () => void }) {
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
-  }, []);
-  const inp = "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
-  const sel = "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
+function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car: FleetCar) => void }) {
+  const [form, setForm] = useState<FleetCar>({ ...BLANK_CAR, id: `f-${Date.now()}` });
+  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
+  const set = (k: keyof FleetCar, v: string | number | boolean) => setForm(prev => ({ ...prev, [k]: v }));
+
+  const canSubmit = form.brand && form.model && form.plate && form.pricePerDay > 0;
+
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
@@ -311,51 +341,21 @@ function AddVehicleModal({ onClose }: { onClose: () => void }) {
           <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
             <div>
               <h3 className="text-[17px] font-bold text-[#1a2332]">Add New Vehicle</h3>
-              <p className="text-[12px] text-slate-400 mt-0.5">Fill in the details to add a vehicle to your fleet</p>
+              <p className="text-[12px] text-slate-400 mt-0.5">Fill in all details to add a vehicle to your fleet</p>
             </div>
             <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-5 w-5" /></button>
           </div>
-          <div className="flex-1 overflow-y-auto px-7 py-6 space-y-7">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Basic Information</p>
-              <div className="grid grid-cols-2 gap-3.5">
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Brand</label><input className={inp} placeholder="e.g. Renault" /></div>
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Model</label><input className={inp} placeholder="e.g. Clio 5" /></div>
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Year</label><input type="number" className={inp} placeholder="2024" /></div>
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Plate Number</label><input className={inp} placeholder="e.g. RCL-031-31" /></div>
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Color</label><input className={inp} placeholder="e.g. Pearl White" /></div>
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Type</label>
-                  <select className={sel}><option value="">Select type</option>{["Economy","Compact","Sedan","SUV","Luxury","Van"].map(t=><option key={t}>{t}</option>)}</select></div>
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Specifications</p>
-              <div className="grid grid-cols-3 gap-3.5">
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Transmission</label><select className={sel}><option>Manual</option><option>Automatic</option></select></div>
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Fuel</label><select className={sel}><option>Gasoline</option><option>Diesel</option><option>Electric</option></select></div>
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Seats</label><input type="number" className={inp} placeholder="5" /></div>
-                <div className="col-span-3"><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Mileage (km)</label><input type="number" className={inp} placeholder="0" /></div>
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Pricing</p>
-              <div className="grid grid-cols-3 gap-3.5">
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Daily ($)</label><input type="number" className={inp} placeholder="45" /></div>
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Weekly ($)</label><input type="number" className={inp} placeholder="280" /></div>
-                <div><label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Monthly ($)</label><input type="number" className={inp} placeholder="900" /></div>
-              </div>
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Vehicle Image</p>
-              <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-violet-300 hover:bg-violet-50/30 transition-colors cursor-pointer">
-                <Upload className="h-8 w-8 text-slate-300 mx-auto mb-3" />
-                <p className="text-[13px] font-semibold text-slate-500">Click to upload or drag and drop</p>
-                <p className="text-[11.5px] text-slate-400 mt-1">PNG, JPG up to 10MB</p>
-              </div>
-            </div>
+          <div className="flex-1 overflow-y-auto px-7 py-6">
+            <VehicleFormFields form={form} set={set} />
           </div>
           <div className="border-t border-slate-100 px-7 py-5 flex gap-3 flex-shrink-0">
-            <button className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm">Add Vehicle</button>
+            <button
+              onClick={() => { if (canSubmit) { onAdd?.(form); onClose(); } }}
+              disabled={!canSubmit}
+              className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Add Vehicle
+            </button>
             <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
           </div>
         </div>

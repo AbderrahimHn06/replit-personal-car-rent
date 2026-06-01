@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Save, Building2, Phone, Mail, MapPin, Clock, FileText, Palette } from "lucide-react";
+import { Save, Building2, Phone, Mail, Clock, FileText, Palette, MapPin, Plus, Edit2, X, ToggleLeft, ToggleRight, CheckCircle } from "lucide-react";
+import { useLocations, addLocation, updateLocation, removeLocation, AgencyLocation } from "@/data/localStore";
 
 const INITIAL = {
   agencyName: "EliteRide Car Rental",
@@ -15,9 +16,9 @@ const INITIAL = {
 
 const HOURS = [
   { day: "Monday – Friday", open: "08:00", close: "20:00", closed: false },
-  { day: "Saturday", open: "08:00", close: "18:00", closed: false },
-  { day: "Sunday", open: "09:00", close: "14:00", closed: false },
-  { day: "Public Holidays", open: "", close: "", closed: true },
+  { day: "Saturday",        open: "08:00", close: "18:00", closed: false },
+  { day: "Sunday",          open: "09:00", close: "14:00", closed: false },
+  { day: "Public Holidays", open: "",      close: "",      closed: true  },
 ];
 
 function Field({ label, value, onChange, placeholder, type = "text", full = false }: {
@@ -28,25 +29,176 @@ function Field({ label, value, onChange, placeholder, type = "text", full = fals
     <div className={full ? "col-span-2" : ""}>
       <label className="text-xs font-semibold text-slate-600 block mb-1.5">{label}</label>
       <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
+        type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
         className="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
       />
     </div>
   );
 }
 
+/* ─── Location Form Modal ──────────────────────────────────────── */
+const BLANK_LOC: Omit<AgencyLocation, "id"> = { name: "", address: "", city: "", notes: "", isActive: true };
+
+function LocationModal({ initial, onSave, onClose }: {
+  initial?: AgencyLocation | null;
+  onSave: (l: AgencyLocation) => void;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState<Omit<AgencyLocation, "id">>(initial ? { name: initial.name, address: initial.address, city: initial.city, notes: initial.notes, isActive: initial.isActive } : { ...BLANK_LOC });
+  const set = (k: keyof typeof form, v: string | boolean) => setForm(p => ({ ...p, [k]: v }));
+
+  const inp = "w-full h-10 rounded-xl border border-slate-200 px-3.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
+
+  function handleSave() {
+    if (!form.name.trim()) return;
+    onSave({ ...(initial ?? { id: `loc-${Date.now()}` }), ...form });
+    onClose();
+  }
+
+  return (
+    <>
+      <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto" onClick={e => e.stopPropagation()}>
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+            <div>
+              <h3 className="text-[16px] font-bold text-[#1a2332]">{initial ? "Edit Location" : "Add Location"}</h3>
+              <p className="text-[12px] text-slate-400 mt-0.5">Agency pickup / return point</p>
+            </div>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-4 w-4" /></button>
+          </div>
+          <div className="px-6 py-5 space-y-4">
+            <div>
+              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Location Name *</label>
+              <input className={inp} placeholder="e.g. Oran Airport" value={form.name} onChange={e => set("name", e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Address</label>
+              <input className={inp} placeholder="e.g. Ahmed Ben Bella Airport, Es Senia" value={form.address} onChange={e => set("address", e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">City</label>
+              <input className={inp} placeholder="e.g. Oran" value={form.city} onChange={e => set("city", e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Notes <span className="text-slate-300">(optional)</span></label>
+              <textarea
+                className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition"
+                rows={2} placeholder="e.g. Terminal 1 arrivals hall" value={form.notes} onChange={e => set("notes", e.target.value)}
+              />
+            </div>
+            <div className="flex items-center justify-between py-2 border-t border-slate-100">
+              <div>
+                <p className="text-[13px] font-semibold text-slate-700">Active</p>
+                <p className="text-[11px] text-slate-400">Show in pickup/return dropdowns</p>
+              </div>
+              <button onClick={() => set("isActive", !form.isActive)} className="transition-colors">
+                {form.isActive
+                  ? <ToggleRight className="h-7 w-7 text-emerald-500" />
+                  : <ToggleLeft  className="h-7 w-7 text-slate-300"   />}
+              </button>
+            </div>
+          </div>
+          <div className="px-6 pb-5 flex gap-3">
+            <button onClick={handleSave} disabled={!form.name.trim()} className="flex-1 h-10 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+              {initial ? "Save Changes" : "Add Location"}
+            </button>
+            <button onClick={onClose} className="h-10 px-5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ─── Locations Section ────────────────────────────────────────── */
+function LocationsSection() {
+  const locations = useLocations();
+  const [editing, setEditing] = useState<AgencyLocation | null>(null);
+  const [adding, setAdding] = useState(false);
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-4 w-4 text-primary" />
+          <div>
+            <h3 className="text-sm font-bold text-slate-700">Locations</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Pickup & return points shown to clients and staff</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setAdding(true)}
+          className="flex items-center gap-1.5 h-9 px-4 bg-[#1a2332] text-white rounded-xl text-xs font-semibold hover:bg-[#243044] transition-colors"
+        >
+          <Plus className="h-3.5 w-3.5" /> Add Location
+        </button>
+      </div>
+
+      {locations.length === 0 ? (
+        <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-xl">
+          <MapPin className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+          <p className="text-sm font-semibold text-slate-400">No locations yet</p>
+          <p className="text-xs text-slate-400 mt-0.5">Add your agency's pickup and return points</p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {locations.map(loc => (
+            <div key={loc.id} className={`flex items-center justify-between px-4 py-3.5 rounded-xl border transition-colors ${loc.isActive ? "bg-white border-slate-200 hover:bg-slate-50" : "bg-slate-50 border-slate-200 opacity-60"}`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${loc.isActive ? "bg-emerald-500" : "bg-slate-300"}`} />
+                <div>
+                  <p className="text-[13px] font-semibold text-slate-800">{loc.name}</p>
+                  {loc.address && <p className="text-[11.5px] text-slate-400">{loc.address}{loc.city ? ` · ${loc.city}` : ""}</p>}
+                  {loc.notes && <p className="text-[11px] text-slate-400 italic mt-0.5">{loc.notes}</p>}
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0 ml-4">
+                <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-semibold ${loc.isActive ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"}`}>
+                  {loc.isActive ? "Active" : "Inactive"}
+                </span>
+                <button
+                  onClick={() => { updateLocation({ ...loc, isActive: !loc.isActive }); }}
+                  className="h-7 px-2.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 transition-colors"
+                  title={loc.isActive ? "Disable" : "Enable"}
+                >
+                  {loc.isActive ? "Disable" : "Enable"}
+                </button>
+                <button
+                  onClick={() => setEditing(loc)}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                >
+                  <Edit2 className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => removeLocation(loc.id)}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {adding && (
+        <LocationModal onSave={l => addLocation(l)} onClose={() => setAdding(false)} />
+      )}
+      {editing && (
+        <LocationModal initial={editing} onSave={l => { updateLocation(l); setEditing(null); }} onClose={() => setEditing(null)} />
+      )}
+    </div>
+  );
+}
+
+/* ─── Main Settings Section ────────────────────────────────────── */
 export function SettingsSection() {
   const [form, setForm] = useState(INITIAL);
   const [saved, setSaved] = useState(false);
   const setF = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
-  };
+  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 3000); };
 
   return (
     <div className="p-4 sm:p-6 space-y-6 max-w-4xl">
@@ -57,13 +209,9 @@ export function SettingsSection() {
         </div>
         <button
           onClick={handleSave}
-          className={`flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold transition-all ${
-            saved
-              ? "bg-emerald-600 text-white"
-              : "bg-primary text-white hover:bg-primary/90"
-          }`}
+          className={`flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold transition-all ${saved ? "bg-emerald-600 text-white" : "bg-primary text-white hover:bg-primary/90"}`}
         >
-          <Save className="h-3.5 w-3.5" />
+          {saved ? <CheckCircle className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
           {saved ? "Saved!" : "Save Changes"}
         </button>
       </div>
@@ -97,9 +245,7 @@ export function SettingsSection() {
             <div key={i} className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
               <span className="text-sm font-medium text-slate-700 w-48">{h.day}</span>
               {h.closed ? (
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">
-                  Closed
-                </span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">Closed</span>
               ) : (
                 <div className="flex items-center gap-3">
                   <input defaultValue={h.open} className="w-24 h-8 px-2 border border-slate-200 rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
@@ -112,6 +258,9 @@ export function SettingsSection() {
         </div>
       </div>
 
+      {/* Locations */}
+      <LocationsSection />
+
       {/* Terms & Conditions */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
@@ -120,9 +269,7 @@ export function SettingsSection() {
         </div>
         <p className="text-xs text-slate-400 mb-3">These terms are shown to clients during the booking process.</p>
         <textarea
-          value={form.terms}
-          onChange={e => setF("terms", e.target.value)}
-          rows={10}
+          value={form.terms} onChange={e => setF("terms", e.target.value)} rows={10}
           className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-700 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
         />
       </div>
@@ -134,7 +281,6 @@ export function SettingsSection() {
           <h3 className="text-sm font-bold text-slate-700">Branding</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* Logo preview */}
           <div>
             <label className="text-xs font-semibold text-slate-600 block mb-2">Agency Logo</label>
             <div className="h-28 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center bg-slate-50 cursor-pointer hover:bg-slate-100 hover:border-primary/30 transition-colors">
@@ -145,24 +291,17 @@ export function SettingsSection() {
               <p className="text-[11px] text-slate-400 mt-1">Click to upload new logo</p>
             </div>
           </div>
-
-          {/* Color scheme */}
           <div>
             <label className="text-xs font-semibold text-slate-600 block mb-2">Brand Colors</label>
             <div className="space-y-3">
-              {[
-                { label: "Primary Color", value: "#3E5F7D" },
-                { label: "Accent Color", value: "#D6A85C" },
-              ].map(({ label, value }) => (
+              {[{ label: "Primary Color", value: "#3E5F7D" }, { label: "Accent Color", value: "#D6A85C" }].map(({ label, value }) => (
                 <div key={label} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg border-2 border-white shadow-sm flex-shrink-0" style={{ backgroundColor: value }} />
                   <div className="flex-1">
                     <p className="text-xs font-semibold text-slate-600">{label}</p>
                     <p className="text-[11px] text-slate-400 font-mono">{value}</p>
                   </div>
-                  <button className="h-7 px-3 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors">
-                    Change
-                  </button>
+                  <button className="h-7 px-3 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors">Change</button>
                 </div>
               ))}
             </div>

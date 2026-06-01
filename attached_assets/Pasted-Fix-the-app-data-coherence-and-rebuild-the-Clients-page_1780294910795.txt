@@ -1,0 +1,356 @@
+Fix the app data coherence and rebuild the Clients page with a custom premium UI.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API calls
+- Use local state only
+- Keep everything consistent across Fleet, Rentals, Availability, and Clients
+
+1) FIX THE CAR DATA MODEL
+The Add Car modal is missing important fields. Rebuild it so it contains all the data needed for a real rental agency vehicle record.
+
+Use these car fields:
+
+Basic info
+- brand
+- model
+- year
+- plate number
+- color
+- category / type
+- transmission
+- fuel type
+- seats
+- doors
+- mileage
+- engine size if needed
+- VIN or chassis number if needed
+
+Pricing
+- daily price
+- weekly price
+- monthly price
+- deposit amount
+- late fee
+- extra mileage fee
+
+Status / operations
+- status: available, reserved, rented, maintenance
+- isActive
+- isFeatured if needed
+
+Documents
+- insurance provider
+- insurance number
+- insurance start date
+- insurance end date
+- registration number
+- registration expiry
+- technical inspection date
+- inspection expiry
+- road tax / vignette if relevant
+
+Maintenance
+- last service date
+- next service date
+- maintenance notes
+- garage name if needed
+- last mileage at service
+
+Media
+- main image
+- additional images array
+
+Notes
+- short description
+- internal notes
+
+The modal must include all these fields in a clean grouped layout:
+- Vehicle info
+- Pricing
+- Documents
+- Maintenance
+- Media
+- Notes
+
+Keep the modal premium, scrollable, responsive, and easy to edit.
+
+2) KEEP DATA COHERENT ACROSS THE APP
+Use the same car object structure everywhere:
+- Fleet
+- Availability
+- Rentals
+- Schedule
+- Book modal
+
+Do not use different car data shapes in different pages.
+
+When a car is selected in one place, it should always show the same:
+- name
+- plate
+- status
+- price
+- image
+- documents
+- maintenance data
+
+3) FIX RENTAL CREATION FLOW
+When creating a rental, the user must NOT type the car name manually.
+
+Car selection:
+- use a dropdown or searchable select
+- choose from existing cars only
+- show car image, name, plate, and status in the selector
+- if a car is already selected, autofill the rental with that car object
+
+Client selection:
+- use a dropdown or searchable select
+- choose from existing clients if they already exist
+- show client name, phone, city, and status
+- if the client already exists, use that client directly
+- if the client does not exist, allow creating a new client from the same modal or a secondary modal
+
+Rental creation flow:
+- select car
+- select client
+- select dates
+- select locations
+- confirm rental
+- save to local state
+- update car status locally if needed
+
+The rental modal must support:
+- existing car selection
+- existing client selection
+- new client creation
+- no manual car name typing
+
+4) CLIENTS PAGE — MAKE IT MAXIMUM DETAIL AND CUSTOM
+Build a premium, highly detailed Clients page.
+This page should feel like a real agency CRM for returning and new customers.
+
+PAGE PURPOSE
+Manage every client:
+- online clients
+- walk-in clients
+- blocked clients
+- repeat customers
+- rental history
+- documents
+- notes
+- debt or deposit status
+- client reliability
+
+PAGE STRUCTURE
+1. Header
+2. Client summary KPI cards
+3. Filters and search
+4. Tabs
+5. Client table or cards
+6. Client detail drawer / profile view
+7. Client activity / rental history
+8. Client documents
+9. Client notes
+10. Actions panel
+
+HEADER
+- Title: Clients
+- Subtitle: Manage customer profiles, history, documents, and trust status
+- Right side:
+  - search
+  - filter button
+  - add client button
+
+KPI CARDS
+Top summary cards:
+- Total clients
+- Online clients
+- Walk-in clients
+- Repeat clients
+- Blocked clients
+- Clients with active rentals
+
+CARD STYLE
+- premium white cards
+- rounded corners
+- soft shadows
+- icon + label + big number
+- small trend text
+
+FILTERS
+Include:
+- All
+- Online
+- Walk-in
+- Repeat
+- Blocked
+- Active rental
+- No rental history
+
+SEARCH
+Search by:
+- name
+- phone
+- city
+- license number
+- email
+
+TABS
+Use tabs or pills for:
+- All Clients
+- Online Clients
+- Walk-in Clients
+- Blocked Clients
+- Repeat Clients
+
+CLIENT LIST
+Use a polished table on desktop and cards on mobile.
+
+Table columns:
+- Client
+- Phone
+- WhatsApp
+- City
+- Total rentals
+- Last rental
+- Status
+- Trust score
+- Actions
+
+Row content:
+- client avatar or initials
+- name in bold
+- phone under name
+- city and small metadata
+- status badge
+- trust or reliability badge if needed
+
+CLIENT STATUS BADGES
+- Active
+- New
+- Repeat
+- Blocked
+- VIP
+- Problematic if needed
+
+CLIENT DETAIL DRAWER / PROFILE
+Clicking a client opens a detailed side drawer or modal.
+
+This must be one of the most detailed screens in the dashboard.
+
+Profile header:
+- avatar / initials
+- full name
+- status badge
+- trust score
+- quick actions
+
+Quick actions:
+- Create rental
+- Edit client
+- Block / unblock
+- Add note
+- View history
+
+DETAIL SECTIONS
+
+A. Identity / contact
+- full name
+- phone
+- WhatsApp
+- email
+- city
+- address
+- nationality if needed
+- license number
+- ID number
+- birth date if needed
+
+B. Rental summary
+- total rentals
+- active rentals
+- completed rentals
+- cancelled rentals
+- total spend
+- average rental duration
+- last rental date
+- next scheduled rental if any
+
+C. Trust / risk info
+- trust score
+- blocked reason
+- late return history
+- damage history
+- unpaid deposit history
+- reliability notes
+
+D. Rental history
+Use a timeline or table:
+- car
+- dates
+- amount
+- status
+- return state
+- notes
+
+E. Documents
+Use document cards:
+- ID card
+- driver license
+- passport if needed
+- license expiration
+- upload status
+
+F. Notes
+- internal notes
+- public notes if needed
+- warning notes
+- special client preferences
+
+G. Payment / deposit info
+- deposit held
+- deposit returned
+- pending balance
+- overdue balance if any
+
+H. Related activity
+- booking requests
+- walk-in rentals
+- support or admin notes
+- blocked/unblocked history
+
+CLIENT PROFILE VISUAL STYLE
+The client drawer should not be generic.
+Make it feel like a custom CRM profile:
+- strong header
+- sections with spacing
+- icons
+- badges
+- compact stat cards
+- timeline history
+- document cards
+- action buttons
+- premium light theme
+
+CUSTOM UI REQUIREMENTS
+Do not use standard boring admin cards.
+Use:
+- avatar circles
+- colored trust indicators
+- timeline blocks
+- note cards
+- document chips
+- status pills
+- elegant section dividers
+- spacious layout
+
+MOBILE BEHAVIOR
+- client list becomes stacked cards
+- profile drawer becomes full-screen modal
+- sections remain readable
+- buttons full width where needed
+
+FINAL GOAL
+Make the data model coherent across the whole app, make car creation complete, make rental creation use existing cars and clients first, and make the Clients page a rich custom CRM-like experience with maximum detail and premium visual quality.

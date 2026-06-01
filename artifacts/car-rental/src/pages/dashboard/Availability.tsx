@@ -1,9 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Search, CalendarDays, Clock, MapPin, Car, ChevronLeft,
   ChevronRight, X, CheckCircle, AlertTriangle, Wrench, Info,
+  User, Phone, Mail, FileText, DollarSign, CheckCircle2,
 } from "lucide-react";
-import { fleet, rentals, FleetCar, FleetStatus } from "@/data/dashboardData";
+import { fleet, rentals as staticRentals, FleetCar, FleetStatus, DashboardRental, clients } from "@/data/dashboardData";
+import { useActiveLocations, addRental, useRentals } from "@/data/localStore";
 
 /* ─── helpers ──────────────────────────────────────────────────── */
 const STATUS_CFG: Record<FleetStatus, { label: string; dot: string; badge: string }> = {
@@ -12,7 +14,6 @@ const STATUS_CFG: Record<FleetStatus, { label: string; dot: string; badge: strin
   rented:      { label: "Rented",      dot: "bg-amber-500",   badge: "bg-amber-50 text-amber-700 border border-amber-200"     },
   maintenance: { label: "Maintenance", dot: "bg-red-500",     badge: "bg-red-50 text-red-700 border border-red-200"           },
 };
-
 function StatusBadge({ s }: { s: FleetStatus }) {
   const { label, dot, badge } = STATUS_CFG[s];
   return (
@@ -22,17 +23,13 @@ function StatusBadge({ s }: { s: FleetStatus }) {
     </span>
   );
 }
-
 function fmtShort(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-/* availability logic */
-function isCarAvailable(car: FleetCar, pickupDate: string, returnDate: string): { available: boolean; reason?: string; conflict?: { client: string; from: string; to: string } } {
-  if (car.status === "maintenance") {
-    return { available: false, reason: "In maintenance" };
-  }
-  const overlap = rentals.find(r => {
+function isCarAvailable(car: FleetCar, pickupDate: string, returnDate: string, allRentals: DashboardRental[]): { available: boolean; reason?: string; conflict?: { client: string; from: string; to: string } } {
+  if (car.status === "maintenance") return { available: false, reason: "In maintenance" };
+  const overlap = allRentals.find(r => {
     if (r.plate !== car.plate && !r.car.includes(car.model)) return false;
     if (r.status === "completed") return false;
     return r.startDate <= returnDate && r.endDate >= pickupDate;
@@ -56,16 +53,15 @@ const RENTAL_COLORS = [
   "bg-violet-100 text-violet-800 border-violet-300",
 ];
 
-function CarScheduleModal({ car, onClose, highlightFrom, highlightTo }: {
-  car: FleetCar;
-  onClose: () => void;
-  highlightFrom?: string;
-  highlightTo?: string;
+function CarScheduleModal({ car, onClose, highlightFrom, highlightTo, allRentals }: {
+  car: FleetCar; onClose: () => void; highlightFrom?: string; highlightTo?: string;
+  allRentals: DashboardRental[];
 }) {
   const [year,  setYear]  = useState(2026);
   const [month, setMonth] = useState(5);
+  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
 
-  const carRentals  = rentals.filter(r => r.plate === car.plate || r.car.includes(car.model));
+  const carRentals  = allRentals.filter(r => r.plate === car.plate || r.car.includes(car.model));
   const monthName   = new Date(year, month, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
   const firstDay    = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -77,9 +73,7 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo }: {
   function getDayInfo(day: number) {
     const d = new Date(year, month, day);
     const iso = d.toISOString().split("T")[0];
-    // highlight search range
     const inHighlight = highlightFrom && highlightTo && iso >= highlightFrom && iso <= highlightTo;
-    // find rental
     for (let i = 0; i < carRentals.length; i++) {
       const start = new Date(carRentals[i].startDate); start.setHours(0,0,0,0);
       const end   = new Date(carRentals[i].endDate);   end.setHours(23,59,59,999);
@@ -93,8 +87,6 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo }: {
       <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 pointer-events-none">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden" onClick={e => e.stopPropagation()}>
-
-          {/* Header */}
           <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
             <div className="flex items-center gap-3">
               <img src={car.image} alt={car.brand} className="w-12 h-9 object-cover rounded-xl" />
@@ -108,23 +100,18 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo }: {
             </div>
             <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-5 w-5" /></button>
           </div>
-
           <div className="flex-1 overflow-y-auto">
-            {/* Month nav */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
               <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"><ChevronLeft className="h-4 w-4" /></button>
               <p className="text-[14px] font-bold text-[#1a2332]">{monthName}</p>
               <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"><ChevronRight className="h-4 w-4" /></button>
             </div>
-
-            {/* Legend */}
             {highlightFrom && highlightTo && (
               <div className="px-6 py-3 border-b border-slate-100 flex items-center gap-2">
                 <Info className="h-3.5 w-3.5 text-violet-400" />
-                <p className="text-[12px] text-slate-500">Your search period: <span className="font-semibold text-violet-600">{fmtShort(highlightFrom)} → {fmtShort(highlightTo)}</span> is highlighted in violet</p>
+                <p className="text-[12px] text-slate-500">Your search period: <span className="font-semibold text-violet-600">{fmtShort(highlightFrom)} → {fmtShort(highlightTo)}</span> highlighted in violet</p>
               </div>
             )}
-
             <div className="px-6 pb-6 pt-4">
               <div className="grid grid-cols-7 mb-2">
                 {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => (
@@ -134,29 +121,21 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo }: {
               <div className="grid grid-cols-7 gap-1">
                 {Array.from({ length: startOffset }).map((_, i) => <div key={`e${i}`} />)}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
-                  const day  = i + 1;
+                  const day = i + 1;
                   const { rental, colorIdx, inHighlight } = getDayInfo(day);
                   const isToday = year === 2026 && month === 5 && day === 1;
                   return (
                     <div key={day} className={`min-h-[52px] rounded-xl p-1.5 border transition-colors ${
-                      rental
-                        ? `${RENTAL_COLORS[colorIdx].split(" ").slice(0,2).join(" ")} border-current/20`
-                        : inHighlight
-                          ? "bg-violet-50 border-violet-200"
-                          : "bg-emerald-50/60 border-emerald-100"
+                      rental ? `${RENTAL_COLORS[colorIdx].split(" ").slice(0,2).join(" ")} border-current/20`
+                        : inHighlight ? "bg-violet-50 border-violet-200" : "bg-emerald-50/60 border-emerald-100"
                     }`}>
-                      <span className={`text-[11px] font-bold block ${
-                        isToday ? "w-5 h-5 rounded-full bg-[#1a2332] text-white flex items-center justify-center text-[10px]"
-                                : rental ? "text-inherit" : inHighlight ? "text-violet-600" : "text-emerald-700"
-                      }`}>{day}</span>
+                      <span className={`text-[11px] font-bold block ${isToday ? "w-5 h-5 rounded-full bg-[#1a2332] text-white flex items-center justify-center text-[10px]" : rental ? "text-inherit" : inHighlight ? "text-violet-600" : "text-emerald-700"}`}>{day}</span>
                       {rental && <p className="text-[9px] font-semibold leading-tight mt-0.5 line-clamp-2 opacity-90">{rental.client.split(" ")[0]}</p>}
                       {!rental && inHighlight && <p className="text-[9px] font-semibold text-violet-500 mt-0.5">free</p>}
                     </div>
                   );
                 })}
               </div>
-
-              {/* Bookings list */}
               {carRentals.length > 0 && (
                 <div className="mt-5 space-y-2">
                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Existing Bookings</p>
@@ -185,16 +164,267 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo }: {
   );
 }
 
+/* ─── Create Rental Modal ──────────────────────────────────────── */
+interface CreateRentalForm {
+  clientId: string;
+  clientName: string;
+  clientPhone: string;
+  clientEmail: string;
+  licenseNumber: string;
+  pickupLocation: string;
+  returnLocation: string;
+  notes: string;
+  deposit: string;
+}
+
+function CreateRentalModal({ car, pickupDate, pickupTime, returnDate, returnTime, dayCount, onClose, onCreated }: {
+  car: FleetCar;
+  pickupDate: string; pickupTime: string;
+  returnDate: string; returnTime: string;
+  dayCount: number;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const locations = useActiveLocations();
+  const [form, setForm] = useState<CreateRentalForm>({
+    clientId: "", clientName: "", clientPhone: "", clientEmail: "",
+    licenseNumber: "", pickupLocation: "", returnLocation: "",
+    notes: "", deposit: car.depositAmount ? String(car.depositAmount) : "",
+  });
+  const [useExisting, setUseExisting] = useState(true);
+
+  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
+
+  const set = (k: keyof CreateRentalForm, v: string) => setForm(p => ({ ...p, [k]: v }));
+
+  const totalPrice = car.pricePerDay * Math.max(1, dayCount);
+
+  const handleClientSelect = (id: string) => {
+    if (!id) { set("clientId", ""); set("clientName", ""); set("clientPhone", ""); set("clientEmail", ""); set("licenseNumber", ""); return; }
+    const c = clients.find(c => c.id === id);
+    if (c) {
+      setForm(p => ({ ...p, clientId: id, clientName: c.name, clientPhone: c.phone, clientEmail: c.email, licenseNumber: c.licenseNumber }));
+    }
+  };
+
+  const canSubmit = form.clientName && form.clientPhone && form.licenseNumber && form.pickupLocation && form.returnLocation;
+
+  function handleSubmit() {
+    if (!canSubmit) return;
+    const ref = `RNT-2026-${String(Math.floor(Math.random() * 900) + 100).padStart(4, "0")}`;
+    const newRental: import("@/data/dashboardData").DashboardRental = {
+      id: `r-${Date.now()}`,
+      reference: ref,
+      client: form.clientName,
+      clientPhone: form.clientPhone,
+      car: `${car.brand} ${car.model}`,
+      plate: car.plate,
+      startDate: pickupDate,
+      endDate: returnDate,
+      totalPrice,
+      deposit: Number(form.deposit) || 0,
+      status: "reserved",
+      source: "walk-in",
+      pickupLocation: form.pickupLocation,
+      returnLocation: form.returnLocation,
+      driverLicense: form.licenseNumber,
+      notes: form.notes,
+    };
+    addRental(newRental);
+    onCreated();
+  }
+
+  const inp = "w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
+  const sel = "w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
+
+  return (
+    <>
+      <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 pointer-events-none">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
+            <div>
+              <h3 className="text-[18px] font-bold text-[#1a2332]">Create Rental</h3>
+              <p className="text-[12.5px] text-slate-400 mt-0.5">Fill in client details to confirm the booking</p>
+            </div>
+            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-5 w-5" /></button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
+
+            {/* A. Selected Vehicle */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Selected Vehicle</p>
+              <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                <img src={car.image} alt={car.brand} className="w-20 h-14 object-cover rounded-xl flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-[#1a2332]">{car.brand} {car.model}</p>
+                  <p className="text-[12px] text-slate-400 font-mono">{car.plate} · {car.year} · {car.color}</p>
+                  <p className="text-[11.5px] text-slate-500 mt-0.5">{car.transmission} · {car.fuel} · {car.seats} seats</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-[20px] font-bold text-[#1a2332]">${car.pricePerDay}</p>
+                  <p className="text-[11px] text-slate-400">/day</p>
+                </div>
+              </div>
+            </div>
+
+            {/* B. Rental Period */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Rental Period</p>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white rounded-xl border border-slate-200 p-3">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Pickup</p>
+                    <p className="text-[13px] font-semibold text-[#1a2332]">{fmtShort(pickupDate)}</p>
+                    <p className="text-[11.5px] text-slate-400">{pickupTime}</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-slate-200 p-3">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Return</p>
+                    <p className="text-[13px] font-semibold text-[#1a2332]">{fmtShort(returnDate)}</p>
+                    <p className="text-[11.5px] text-slate-400">{returnTime}</p>
+                  </div>
+                </div>
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-[12px] font-semibold text-emerald-800">{dayCount} day{dayCount !== 1 ? "s" : ""} rental</p>
+                    <p className="text-[11px] text-emerald-600">{car.pricePerDay} × {dayCount} days</p>
+                  </div>
+                  <p className="text-[20px] font-bold text-emerald-700">${totalPrice}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* C. Client Information */}
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Client Information</p>
+                <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+                  <button onClick={() => setUseExisting(true)} className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${useExisting ? "bg-white text-[#1a2332] shadow-sm" : "text-slate-500"}`}>Existing</button>
+                  <button onClick={() => setUseExisting(false)} className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${!useExisting ? "bg-white text-[#1a2332] shadow-sm" : "text-slate-500"}`}>New</button>
+                </div>
+              </div>
+
+              {useExisting && (
+                <div className="mb-3">
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Select Client</label>
+                  <select className={sel} value={form.clientId} onChange={e => handleClientSelect(e.target.value)}>
+                    <option value="">— Choose existing client —</option>
+                    {clients.filter(c => c.status !== "blocked").map(c => (
+                      <option key={c.id} value={c.id}>{c.name} · {c.phone} · {c.city}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><User className="inline h-3 w-3 mr-1" />Client Name</label>
+                  <input className={inp} placeholder="Full name" value={form.clientName} onChange={e => set("clientName", e.target.value)} readOnly={useExisting && !!form.clientId} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><Phone className="inline h-3 w-3 mr-1" />Phone</label>
+                  <input className={inp} placeholder="Phone number" value={form.clientPhone} onChange={e => set("clientPhone", e.target.value)} readOnly={useExisting && !!form.clientId} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><Mail className="inline h-3 w-3 mr-1" />Email <span className="text-slate-300">(optional)</span></label>
+                  <input className={inp} placeholder="Email address" value={form.clientEmail} onChange={e => set("clientEmail", e.target.value)} readOnly={useExisting && !!form.clientId} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><FileText className="inline h-3 w-3 mr-1" />License Number</label>
+                  <input className={inp} placeholder="DL-XX-XXXX-X" value={form.licenseNumber} onChange={e => set("licenseNumber", e.target.value)} readOnly={useExisting && !!form.clientId} />
+                </div>
+              </div>
+            </div>
+
+            {/* Pickup / Return Location */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Pickup & Return Locations</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><MapPin className="inline h-3 w-3 mr-1" />Pickup Location</label>
+                  <select className={sel} value={form.pickupLocation} onChange={e => set("pickupLocation", e.target.value)}>
+                    <option value="">— Select location —</option>
+                    {locations.map(l => <option key={l.id} value={l.name}>{l.name}{l.city ? ` · ${l.city}` : ""}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><MapPin className="inline h-3 w-3 mr-1" />Return Location</label>
+                  <select className={sel} value={form.returnLocation} onChange={e => set("returnLocation", e.target.value)}>
+                    <option value="">— Select location —</option>
+                    {locations.map(l => <option key={l.id} value={l.name}>{l.name}{l.city ? ` · ${l.city}` : ""}</option>)}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* D. Additional Information */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Additional Information</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Notes <span className="text-slate-300">(optional)</span></label>
+                  <textarea className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition" rows={2} placeholder="Special requests, instructions…" value={form.notes} onChange={e => set("notes", e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><DollarSign className="inline h-3 w-3 mr-1" />Deposit Amount ($)</label>
+                  <input type="number" className={inp} placeholder="0" value={form.deposit} onChange={e => set("deposit", e.target.value)} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="border-t border-slate-100 px-7 py-5 flex gap-3 flex-shrink-0">
+            <button
+              onClick={handleSubmit}
+              disabled={!canSubmit}
+              className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 className="h-4.5 w-4.5" /> Create Rental
+            </button>
+            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+/* ─── Success Toast ────────────────────────────────────────────── */
+function SuccessToast({ message, onClose }: { message: string; onClose: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onClose, 4000);
+    return () => clearTimeout(t);
+  }, [onClose]);
+  return (
+    <div className="fixed bottom-6 right-6 z-[70] flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-4">
+      <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+      <p className="text-[13.5px] font-semibold">{message}</p>
+      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100"><X className="h-4 w-4" /></button>
+    </div>
+  );
+}
+
 /* ─── Main Availability Section ────────────────────────────────── */
 export function AvailabilitySection() {
-  const [pickupDate,    setPickupDate]    = useState("2026-06-10");
-  const [pickupTime,    setPickupTime]    = useState("09:00");
-  const [returnDate,    setReturnDate]    = useState("2026-06-15");
-  const [returnTime,    setReturnTime]    = useState("17:00");
-  const [pickupLoc,     setPickupLoc]     = useState("");
-  const [returnLoc,     setReturnLoc]     = useState("");
-  const [searched,      setSearched]      = useState(false);
-  const [scheduleFor,   setScheduleFor]   = useState<FleetCar | null>(null);
+  const [pickupDate,  setPickupDate]  = useState("2026-06-10");
+  const [pickupTime,  setPickupTime]  = useState("09:00");
+  const [returnDate,  setReturnDate]  = useState("2026-06-15");
+  const [returnTime,  setReturnTime]  = useState("17:00");
+  const [pickupLoc,   setPickupLoc]   = useState("");
+  const [returnLoc,   setReturnLoc]   = useState("");
+  const [searched,    setSearched]    = useState(false);
+  const [scheduleFor, setScheduleFor] = useState<FleetCar | null>(null);
+  const [bookingCar,  setBookingCar]  = useState<FleetCar | null>(null);
+  const [toastMsg,    setToastMsg]    = useState<string | null>(null);
+
+  const activeLocations = useActiveLocations();
+  const allRentals = useRentals();
 
   function handleSearch() {
     if (!pickupDate || !returnDate || returnDate < pickupDate) return;
@@ -203,8 +433,8 @@ export function AvailabilitySection() {
 
   const results = useMemo(() => {
     if (!searched) return [];
-    return fleet.map(car => ({ car, ...isCarAvailable(car, pickupDate, returnDate) }));
-  }, [searched, pickupDate, returnDate]);
+    return fleet.map(car => ({ car, ...isCarAvailable(car, pickupDate, returnDate, allRentals) }));
+  }, [searched, pickupDate, returnDate, allRentals]);
 
   const available   = results.filter(r => r.available);
   const unavailable = results.filter(r => !r.available);
@@ -214,7 +444,8 @@ export function AvailabilitySection() {
     return Math.max(1, Math.ceil((new Date(returnDate).getTime() - new Date(pickupDate).getTime()) / 86400000));
   }, [pickupDate, returnDate]);
 
-  const inp  = "h-10 rounded-xl border border-slate-200 px-3.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition w-full";
+  const inp = "h-10 rounded-xl border border-slate-200 px-3.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition w-full";
+  const sel = "h-10 rounded-xl border border-slate-200 px-3.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition w-full";
 
   return (
     <div className="flex flex-col min-h-full bg-[#f8f9fb]">
@@ -223,14 +454,13 @@ export function AvailabilitySection() {
       <div className="px-6 sm:px-8 pt-7 pb-0">
         <div className="mb-6">
           <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">Availability</h2>
-          <p className="text-[13px] text-slate-400 mt-1 font-medium">Check which vehicles are available for your selected dates and times</p>
+          <p className="text-[13px] text-slate-400 mt-1 font-medium">Check which vehicles are available for your selected dates and locations</p>
         </div>
 
         {/* Search form */}
         <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm px-6 py-5 mb-6">
           <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">Search Availability</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
-            {/* Pickup */}
             <div>
               <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
                 <CalendarDays className="h-3.5 w-3.5 text-slate-400" /> Pickup Date
@@ -243,7 +473,6 @@ export function AvailabilitySection() {
               </label>
               <input type="time" className={inp} value={pickupTime} onChange={e => setPickupTime(e.target.value)} />
             </div>
-            {/* Return */}
             <div>
               <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
                 <CalendarDays className="h-3.5 w-3.5 text-slate-400" /> Return Date
@@ -256,7 +485,6 @@ export function AvailabilitySection() {
               </label>
               <input type="time" className={inp} value={returnTime} onChange={e => setReturnTime(e.target.value)} />
             </div>
-            {/* Search button */}
             <button
               onClick={handleSearch}
               disabled={!pickupDate || !returnDate || returnDate < pickupDate}
@@ -266,15 +494,37 @@ export function AvailabilitySection() {
             </button>
           </div>
 
-          {/* Optional locations */}
+          {/* Location dropdowns */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-            <div className="relative">
-              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
-              <input type="text" className={`${inp} pl-10`} placeholder="Pickup location (optional)" value={pickupLoc} onChange={e => setPickupLoc(e.target.value)} />
+            <div>
+              <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-slate-400" /> Pickup Location
+              </label>
+              {activeLocations.length > 0 ? (
+                <select className={sel} value={pickupLoc} onChange={e => setPickupLoc(e.target.value)}>
+                  <option value="">— Select pickup location —</option>
+                  {activeLocations.map(l => <option key={l.id} value={l.name}>{l.name}{l.address ? ` · ${l.address}` : ""}</option>)}
+                </select>
+              ) : (
+                <div className="h-10 rounded-xl border border-slate-200 px-3.5 flex items-center text-[12px] text-slate-400 bg-slate-50">
+                  No locations configured — add them in Settings
+                </div>
+              )}
             </div>
-            <div className="relative">
-              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
-              <input type="text" className={`${inp} pl-10`} placeholder="Return location (optional)" value={returnLoc} onChange={e => setReturnLoc(e.target.value)} />
+            <div>
+              <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-slate-400" /> Return Location
+              </label>
+              {activeLocations.length > 0 ? (
+                <select className={sel} value={returnLoc} onChange={e => setReturnLoc(e.target.value)}>
+                  <option value="">— Select return location —</option>
+                  {activeLocations.map(l => <option key={l.id} value={l.name}>{l.name}{l.address ? ` · ${l.address}` : ""}</option>)}
+                </select>
+              ) : (
+                <div className="h-10 rounded-xl border border-slate-200 px-3.5 flex items-center text-[12px] text-slate-400 bg-slate-50">
+                  No locations configured — add them in Settings
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -287,16 +537,16 @@ export function AvailabilitySection() {
                 <CalendarDays className="h-4 w-4 text-slate-500" />
                 <span className="text-[12.5px] font-semibold text-slate-700">
                   {pickupDate && new Date(pickupDate).toLocaleDateString("en-GB", { day:"numeric", month:"short" })}
-                  {" "} → {" "}
+                  {" → "}
                   {returnDate && new Date(returnDate).toLocaleDateString("en-GB", { day:"numeric", month:"short" })}
                 </span>
                 <span className="text-[11.5px] text-slate-400">({dayCount} day{dayCount !== 1 ? "s" : ""})</span>
               </div>
               {(pickupLoc || returnLoc) && (
-                <div className="flex items-center gap-1.5 text-[12px] text-slate-500">
-                  <MapPin className="h-3.5 w-3.5" />
+                <div className="flex items-center gap-1.5 text-[12px] text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded-xl">
+                  <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
                   {pickupLoc && <span>{pickupLoc}</span>}
-                  {pickupLoc && returnLoc && <span>→</span>}
+                  {pickupLoc && returnLoc && <span className="text-slate-300">→</span>}
                   {returnLoc && <span>{returnLoc}</span>}
                 </div>
               )}
@@ -304,14 +554,12 @@ export function AvailabilitySection() {
                 <X className="h-3.5 w-3.5" /> Clear results
               </button>
             </div>
-
-            {/* Summary row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
               {[
-                { label: "Available",   value: available.length,                                    color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100", icon: CheckCircle  },
+                { label: "Available",   value: available.length,                                     color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100", icon: CheckCircle  },
                 { label: "Reserved",    value: results.filter(r=>r.conflict?.client && r.conflict).length, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100", icon: CalendarDays },
-                { label: "Unavailable", value: unavailable.length,                                  color: "text-red-600",     bg: "bg-red-50",     border: "border-red-100",     icon: AlertTriangle },
-                { label: "Maintenance", value: fleet.filter(c => c.status === "maintenance").length, color: "text-orange-600", bg: "bg-orange-50",  border: "border-orange-100",  icon: Wrench        },
+                { label: "Unavailable", value: unavailable.length,                                   color: "text-red-600",     bg: "bg-red-50",     border: "border-red-100",     icon: AlertTriangle },
+                { label: "Maintenance", value: fleet.filter(c => c.status === "maintenance").length,  color: "text-orange-600", bg: "bg-orange-50",  border: "border-orange-100",  icon: Wrench        },
               ].map(({ label, value, color, bg, border, icon: Icon }) => (
                 <div key={label} className={`${bg} border ${border} rounded-xl px-4 py-3 flex items-center gap-3`}>
                   <Icon className={`h-5 w-5 ${color} flex-shrink-0`} />
@@ -326,11 +574,11 @@ export function AvailabilitySection() {
         )}
       </div>
 
-      {/* Results content */}
+      {/* Results */}
       {searched && (
         <div className="px-6 sm:px-8 pb-8 space-y-6">
 
-          {/* Available cars */}
+          {/* Available */}
           {available.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
@@ -373,11 +621,17 @@ export function AvailabilitySection() {
                         </div>
                       )}
                       <div className="flex gap-2">
-                        <button onClick={() => setScheduleFor(car)} className="flex-1 h-9 bg-slate-100 text-slate-700 rounded-xl text-[12px] font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5">
+                        <button
+                          onClick={() => setScheduleFor(car)}
+                          className="flex-1 h-9 bg-slate-100 text-slate-700 rounded-xl text-[12px] font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5"
+                        >
                           <CalendarDays className="h-3.5 w-3.5" /> Schedule
                         </button>
-                        <button className="flex-1 h-9 bg-[#1a2332] text-white rounded-xl text-[12px] font-semibold hover:bg-[#243044] transition-colors">
-                          Book
+                        <button
+                          onClick={() => setBookingCar(car)}
+                          className="flex-1 h-9 bg-[#1a2332] text-white rounded-xl text-[12px] font-semibold hover:bg-[#243044] transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <Car className="h-3.5 w-3.5" /> Book
                         </button>
                       </div>
                     </div>
@@ -387,7 +641,7 @@ export function AvailabilitySection() {
             </div>
           )}
 
-          {/* Unavailable cars */}
+          {/* Unavailable */}
           {unavailable.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
@@ -401,9 +655,7 @@ export function AvailabilitySection() {
                     <div className="relative h-40 bg-slate-100 overflow-hidden">
                       <img src={car.image} alt={`${car.brand} ${car.model}`} className="w-full h-full object-cover grayscale-[40%]" loading="lazy" />
                       <div className="absolute inset-0 bg-black/30" />
-                      <div className="absolute top-2.5 right-2.5">
-                        <StatusBadge s={car.status} />
-                      </div>
+                      <div className="absolute top-2.5 right-2.5"><StatusBadge s={car.status} /></div>
                       <div className="absolute bottom-2.5 left-3">
                         <p className="text-white text-[13px] font-bold">{car.brand} {car.model}</p>
                         <p className="text-white/75 text-[10.5px] font-mono">{car.plate}</p>
@@ -412,12 +664,8 @@ export function AvailabilitySection() {
                     <div className="p-4">
                       <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 mb-3">
                         <p className="text-[11.5px] font-bold text-red-600">{reason}</p>
-                        {conflict && (
-                          <p className="text-[11px] text-red-500 mt-0.5">{conflict.client} · {fmtShort(conflict.from)} → {fmtShort(conflict.to)}</p>
-                        )}
-                        {car.status === "maintenance" && (
-                          <p className="text-[11px] text-red-500 mt-0.5 flex items-center gap-1"><Wrench className="h-3 w-3" /> In service</p>
-                        )}
+                        {conflict && <p className="text-[11px] text-red-500 mt-0.5">{conflict.client} · {fmtShort(conflict.from)} → {fmtShort(conflict.to)}</p>}
+                        {car.status === "maintenance" && <p className="text-[11px] text-red-500 mt-0.5">Est. ready after service</p>}
                       </div>
                       <button onClick={() => setScheduleFor(car)} className="w-full h-9 bg-slate-100 text-slate-600 rounded-xl text-[12px] font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5">
                         <CalendarDays className="h-3.5 w-3.5" /> View Schedule
@@ -428,29 +676,55 @@ export function AvailabilitySection() {
               </div>
             </div>
           )}
+
+          {available.length === 0 && unavailable.length === 0 && (
+            <div className="text-center py-16">
+              <Car className="h-10 w-10 text-slate-200 mx-auto mb-3" />
+              <p className="text-[14px] font-semibold text-slate-400">No vehicles found</p>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Empty state before search */}
+      {/* Empty state */}
       {!searched && (
-        <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-5">
-            <Car className="h-8 w-8 text-slate-300" />
+        <div className="flex-1 flex flex-col items-center justify-center px-6 pb-16 text-center">
+          <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+            <CalendarDays className="h-8 w-8 text-slate-300" />
           </div>
-          <h3 className="text-[16px] font-bold text-slate-400 mb-2">Select dates to check availability</h3>
-          <p className="text-[13px] text-slate-300 max-w-sm leading-relaxed">Enter pickup and return dates above, then click "Check Availability" to see which vehicles are free for that period.</p>
+          <p className="text-[15px] font-semibold text-slate-600 mb-1.5">Check vehicle availability</p>
+          <p className="text-[13px] text-slate-400 max-w-sm">Select pickup and return dates above, then click "Check Availability" to see which cars are free.</p>
         </div>
       )}
 
-      {/* Schedule modal */}
+      {/* Schedule Modal */}
       {scheduleFor && (
         <CarScheduleModal
           car={scheduleFor}
           onClose={() => setScheduleFor(null)}
           highlightFrom={pickupDate}
           highlightTo={returnDate}
+          allRentals={allRentals}
         />
       )}
+
+      {/* Create Rental Modal */}
+      {bookingCar && (
+        <CreateRentalModal
+          car={bookingCar}
+          pickupDate={pickupDate} pickupTime={pickupTime}
+          returnDate={returnDate} returnTime={returnTime}
+          dayCount={dayCount}
+          onClose={() => setBookingCar(null)}
+          onCreated={() => {
+            setBookingCar(null);
+            setToastMsg(`Rental created for ${bookingCar.brand} ${bookingCar.model} — ${dayCount} days`);
+          }}
+        />
+      )}
+
+      {/* Toast */}
+      {toastMsg && <SuccessToast message={toastMsg} onClose={() => setToastMsg(null)} />}
     </div>
   );
 }
