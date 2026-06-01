@@ -1,0 +1,156 @@
+Refine the Availability workflow and fix the Book action.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API
+- No real booking logic
+- Use local state only
+- Keep the current Availability page structure
+
+1) FIX THE "BOOK" BUTTON
+
+Current issue:
+- The "Book" button on available car cards does nothing.
+
+Required behavior:
+- Clicking "Book" must open a booking creation modal.
+- The modal should automatically use:
+  - selected pickup date
+  - selected pickup time
+  - selected return date
+  - selected return time
+  - selected car
+- The user should not have to select the car again.
+
+Modal title:
+"Create Rental"
+
+Modal sections:
+
+A. Selected Vehicle
+- vehicle image
+- vehicle name
+- plate number
+- daily price
+
+B. Rental Period
+- pickup date/time
+- return date/time
+- rental duration
+- estimated total price
+
+C. Client Information
+- client name
+- phone
+- optional email
+- license number
+
+D. Additional Information
+- notes
+- deposit amount
+
+Actions:
+- Create Rental
+- Cancel
+
+UI:
+- centered modal
+- responsive
+- premium styling
+- proper overlay
+- scrollable if needed
+
+Since this is frontend only:
+- Create Rental simply creates a mock rental in local state
+- Show success toast/message
+- Close modal
+- Add rental to mock rentals list
+
+2) PICKUP AND RETURN LOCATIONS
+
+Current issue:
+- Availability currently asks for pickup and return locations.
+
+New business rule:
+- The agency defines its available pickup/return locations in Settings.
+- Users should not manually type random locations.
+
+SETTINGS PAGE CHANGES
+
+Add a new section:
+
+"Locations"
+
+This section manages agency pickup and return locations.
+
+Location card fields:
+- Location Name
+- Address
+- City
+- Notes
+- Active/Inactive status
+
+Actions:
+- Add Location
+- Edit Location
+- Disable Location
+
+UI:
+- table or cards
+- clean management interface
+- consistent with dashboard style
+
+Mock locations examples:
+- Oran Airport
+- Oran City Center
+- Es Senia
+- Ahmed Ben Bella Airport
+- Agency Main Office
+
+3) AVAILABILITY FORM CHANGES
+
+Replace free-text location fields.
+
+Instead use dropdown selectors:
+
+Pickup Location
+Return Location
+
+Data source:
+- locations configured in Settings
+
+UI behavior:
+- dropdown with location name
+- optional address preview
+- same styling as other inputs
+
+4) BOOKING FLOW
+
+Availability Search
+↓
+Available Cars
+↓
+Book Button
+↓
+Create Rental Modal
+↓
+Rental Created (mock)
+↓
+Appears in Rentals section
+
+This creates a complete workflow and makes the Availability page feel connected to the Rentals workspace.
+
+5) UX GOAL
+
+The Availability page should feel like a real reservation assistant:
+
+- Select dates/times
+- Select pickup/return locations
+- Check available cars
+- Open vehicle schedule if needed
+- Book vehicle directly
+- Rental appears in Rentals
+
+Everything should feel connected and professional, even though it uses mock data only.
