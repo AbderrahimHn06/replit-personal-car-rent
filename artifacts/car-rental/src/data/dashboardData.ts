@@ -144,14 +144,6 @@ export const fleet: FleetCar[] = [
     notes: "Reserved by Karima Benali — pickup 2026-06-01.",
   },
   {
-    id: "f-4", brand: "Volkswagen", model: "Golf 8", year: 2022, plate: "VWG-860-31",
-    pricePerDay: 50, transmission: "Automatic", fuel: "Gasoline", type: "Compact",
-    status: "available", image: "https://images.unsplash.com/photo-1617814076668-6f9c3f6a1e72?auto=format&fit=crop&w=600&q=80",
-    mileage: 35800, color: "Silver", seats: 5,
-    lastService: "2026-04-05", nextService: "2026-10-05",
-    notes: "Parking sensors recently calibrated.",
-  },
-  {
     id: "f-5", brand: "Hyundai", model: "Tucson", year: 2023, plate: "HYT-045-31",
     pricePerDay: 60, transmission: "Automatic", fuel: "Diesel", type: "SUV",
     status: "rented", image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=600&q=80",
@@ -236,7 +228,6 @@ export const maintenance: MaintenanceItem[] = [
   { id: "m-3", car: "Renault Clio 5", plate: "RCL-031-31", type: "Brake Pad Replacement", status: "due-soon", scheduledDate: "2026-06-15", notes: "Front brake pads showing wear. Rear pads OK.", mileage: 28100, garage: "Renault Service Center, Oran", estimatedCost: 120 },
   { id: "m-4", car: "Toyota Corolla", plate: "TYC-021-16", type: "Full Service Inspection", status: "completed", scheduledDate: "2026-04-12", completedDate: "2026-04-12", notes: "All checks passed. Oil, filters, tires all replaced.", mileage: 41600, garage: "Toyota Algeria, Oran", estimatedCost: 200 },
   { id: "m-5", car: "Kia Picanto", plate: "KPC-001-31", type: "Tire Rotation & Alignment", status: "due-soon", scheduledDate: "2026-06-20", notes: "Slight pull to right detected. Alignment recommended.", mileage: 15300, garage: "Pneus Express, Oran", estimatedCost: 60 },
-  { id: "m-6", car: "Volkswagen Golf 8", plate: "VWG-860-31", type: "Software Update + Diagnostic", status: "completed", scheduledDate: "2026-04-05", completedDate: "2026-04-05", notes: "ECU software updated. No fault codes.", mileage: 35800, garage: "VW Official Center, Alger", estimatedCost: 150 },
   { id: "m-7", car: "Hyundai Tucson", plate: "HYT-045-31", type: "Coolant System Flush", status: "due-soon", scheduledDate: "2026-07-01", notes: "Coolant change due per manufacturer schedule.", mileage: 22500, garage: "Hyundai Service Center, Oran", estimatedCost: 90 },
 ];
 
@@ -273,7 +264,7 @@ export const kpis = {
   pendingRequests: 4,
   confirmedBookings: 12,
   activeRentals: 2,
-  availableCars: 5,
+  availableCars: 4,
   rentedCars: 2,
   maintenanceCars: 1,
   reservedCars: 1,

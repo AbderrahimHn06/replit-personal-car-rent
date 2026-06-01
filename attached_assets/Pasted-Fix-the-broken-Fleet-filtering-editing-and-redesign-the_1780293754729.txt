@@ -1,0 +1,185 @@
+Fix the broken Fleet filtering/editing and redesign the Availability page.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API calls
+- No real persistence logic
+- Make the UI work smoothly with local state only
+
+1) FIX FLEET FILTERS
+The Fleet filters are not working. Make them functional.
+
+Filters to support:
+- Status: Available, Reserved, Rented, Maintenance
+- Transmission: Automatic, Manual
+- Fuel: Petrol, Diesel, Hybrid, Electric
+- Type: Economy, Compact, Sedan, SUV, Luxury, Van
+
+Behavior:
+- Clicking a filter must immediately update the visible car cards/list
+- Multiple filters can be combined
+- Search must also work with filters
+- Reset/Clear filters button should restore all cars
+- Active filters must be clearly visible in the UI
+
+2) FIX EDIT CAR
+The Edit Car button is not working. Make it functional in UI only.
+
+Behavior:
+- Clicking “Edit Car” opens a modal or drawer
+- The modal must be prefilled with the car data from the selected car
+- Fields should be editable
+- Save button updates the local state only
+- Cancel closes without saving
+
+Edit form fields:
+- Brand
+- Model
+- Year
+- Plate number
+- Color
+- Transmission
+- Fuel
+- Seats
+- Mileage
+- Daily price
+- Status
+- Description
+- Images if needed
+
+Modal UI:
+- White card
+- Rounded corners
+- Proper overlay with dark blur
+- Responsive size
+- Scrollable if content is long
+- Clear title: “Edit Vehicle”
+- Primary save button and secondary cancel button
+
+3) REBUILD AVAILABILITY PAGE
+The current availability page should NOT show a general schedule for all cars across a week by default.
+
+New UX:
+- The user enters:
+  - pickup date and time
+  - return date and time
+- Then the system shows:
+  - which cars are available for that period
+  - which cars are reserved or blocked
+  - each car’s own schedule if the user clicks it
+
+This page is for answering:
+“Which cars are available for these exact dates/times?”
+
+4) AVAILABILITY PAGE STRUCTURE
+Build the page in this order:
+
+A. Header
+- Title: Availability
+- Subtitle: Check available cars for selected dates and times
+- Small actions on the right if needed
+
+B. Search / Availability Form
+Use a clear booking-style form:
+- Pickup date
+- Pickup time
+- Return date
+- Return time
+- Optional pickup location
+- Optional return location
+- Search button
+
+The form must be:
+- horizontal on desktop
+- 2 rows on tablet if needed
+- stacked on mobile
+- clean, compact, premium
+
+C. Result Summary
+After search, show a summary row:
+- Cars available
+- Cars reserved
+- Cars rented
+- Cars in maintenance
+
+D. Available Cars Section
+Show only cars that match the selected dates/times.
+
+Each car card should include:
+- image
+- name
+- plate
+- status badge
+- price/day
+- short specs
+- button: View schedule
+- button: Book / Select
+
+E. Car Schedule Drawer/Modal
+When clicking “View schedule” on one car:
+- open a drawer or modal
+- show ONLY that car’s schedule
+- display a small calendar/timeline for that specific vehicle
+- show booking blocks and maintenance blocks
+- show status labels clearly
+- do not show schedules for all cars in one global grid
+
+5) CAR SCHEDULE UI
+Each car’s schedule should be visual and readable.
+
+For the selected car, show:
+- vehicle name
+- plate
+- current status
+- small timeline/calendar for the chosen range
+- booking blocks spanning dates
+- maintenance blocks
+- free gaps
+- color-coded status chips
+
+The schedule must feel like a vehicle-specific calendar, not a spreadsheet.
+
+6) WHAT TO REMOVE FROM AVAILABILITY
+Remove the big general fleet-wide weekly schedule table.
+Remove the full grid of all cars x all days.
+Remove anything that looks like a spreadsheet of every car in the fleet by default.
+
+The new page should focus on:
+- user-entered dates/times
+- matching available cars
+- per-car schedule only when opened
+
+7) RESPONSIVE BEHAVIOR
+Desktop:
+- booking form horizontal
+- car cards grid 3 or 4 columns
+- schedule drawer on the right or centered modal
+
+Tablet:
+- form can wrap into two rows
+- car grid 2 columns
+
+Mobile:
+- form stacked vertically
+- car cards 1 column
+- schedule drawer becomes full-screen modal or bottom sheet
+
+8) VISUAL STYLE
+Keep the same premium light style:
+- white cards
+- soft gray background
+- subtle borders
+- rounded corners
+- clean shadows
+- readable typography
+- no clutter
+- no generic admin look
+
+9) FINAL GOAL
+- Fleet filters work
+- Edit Car works
+- Availability becomes a date-based car search page
+- Each car has its own schedule only when opened
+- The UI should feel like a real car rental availability tool, simple and practical

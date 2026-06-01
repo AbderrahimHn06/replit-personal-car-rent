@@ -1,192 +1,456 @@
-import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { fleet, rentals } from "@/data/dashboardData";
+import { useState, useMemo } from "react";
+import {
+  Search, CalendarDays, Clock, MapPin, Car, ChevronLeft,
+  ChevronRight, X, CheckCircle, AlertTriangle, Wrench, Info,
+} from "lucide-react";
+import { fleet, rentals, FleetCar, FleetStatus } from "@/data/dashboardData";
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const DAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+/* ─── helpers ──────────────────────────────────────────────────── */
+const STATUS_CFG: Record<FleetStatus, { label: string; dot: string; badge: string }> = {
+  available:   { label: "Available",   dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+  reserved:    { label: "Reserved",    dot: "bg-indigo-500",  badge: "bg-indigo-50 text-indigo-700 border border-indigo-200"   },
+  rented:      { label: "Rented",      dot: "bg-amber-500",   badge: "bg-amber-50 text-amber-700 border border-amber-200"     },
+  maintenance: { label: "Maintenance", dot: "bg-red-500",     badge: "bg-red-50 text-red-700 border border-red-200"           },
+};
 
-function addDays(date: Date, n: number) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + n);
-  return d;
+function StatusBadge({ s }: { s: FleetStatus }) {
+  const { label, dot, badge } = STATUS_CFG[s];
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${badge}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+      {label}
+    </span>
+  );
 }
-function toISO(d: Date) {
-  return d.toISOString().split("T")[0];
-}
-function getMonday(d: Date) {
-  const day = d.getDay() || 7;
-  return addDays(d, 1 - day);
+
+function fmtShort(d: string) {
+  return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-type CellStatus = "free" | "reserved" | "rented" | "maintenance";
-
-function getCarStatus(plateOrName: string, dateStr: string): CellStatus {
-  const car = fleet.find(c => `${c.brand} ${c.model}` === plateOrName);
-  if (car?.status === "maintenance") return "maintenance";
-  const rental = rentals.find(r => {
-    return r.car === plateOrName && dateStr >= r.startDate && dateStr <= r.endDate;
+/* availability logic */
+function isCarAvailable(car: FleetCar, pickupDate: string, returnDate: string): { available: boolean; reason?: string; conflict?: { client: string; from: string; to: string } } {
+  if (car.status === "maintenance") {
+    return { available: false, reason: "In maintenance" };
+  }
+  const overlap = rentals.find(r => {
+    if (r.plate !== car.plate && !r.car.includes(car.model)) return false;
+    if (r.status === "completed") return false;
+    return r.startDate <= returnDate && r.endDate >= pickupDate;
   });
-  if (!rental) return "free";
-  if (rental.status === "reserved") return "reserved";
-  if (rental.status === "active" || rental.status === "overdue") return "rented";
-  return "free";
+  if (overlap) {
+    return {
+      available: false,
+      reason: overlap.status === "reserved" ? "Already reserved" : "Currently rented",
+      conflict: { client: overlap.client, from: overlap.startDate, to: overlap.endDate },
+    };
+  }
+  return { available: true };
 }
 
-const STATUS_CONFIG: Record<CellStatus, { label: string; bg: string; text: string; border: string }> = {
-  free:        { label: "Free",        bg: "bg-emerald-50",  text: "text-emerald-700", border: "border-emerald-100" },
-  reserved:    { label: "Reserved",    bg: "bg-indigo-50",   text: "text-indigo-700",  border: "border-indigo-100" },
-  rented:      { label: "Rented",      bg: "bg-amber-50",    text: "text-amber-700",   border: "border-amber-100" },
-  maintenance: { label: "Maintenance", bg: "bg-red-50",      text: "text-red-600",     border: "border-red-100" },
-};
+/* ─── Car Schedule Modal ───────────────────────────────────────── */
+const RENTAL_COLORS = [
+  "bg-indigo-100 text-indigo-800 border-indigo-300",
+  "bg-amber-100 text-amber-800 border-amber-300",
+  "bg-emerald-100 text-emerald-800 border-emerald-300",
+  "bg-sky-100 text-sky-800 border-sky-300",
+  "bg-violet-100 text-violet-800 border-violet-300",
+];
 
-const LEGEND_COLORS: Record<CellStatus, string> = {
-  free:        "bg-emerald-500",
-  reserved:    "bg-indigo-500",
-  rented:      "bg-amber-400",
-  maintenance: "bg-red-400",
-};
+function CarScheduleModal({ car, onClose, highlightFrom, highlightTo }: {
+  car: FleetCar;
+  onClose: () => void;
+  highlightFrom?: string;
+  highlightTo?: string;
+}) {
+  const [year,  setYear]  = useState(2026);
+  const [month, setMonth] = useState(5);
 
-export function AvailabilitySection() {
-  const [weekStart, setWeekStart] = useState<Date>(getMonday(new Date()));
+  const carRentals  = rentals.filter(r => r.plate === car.plate || r.car.includes(car.model));
+  const monthName   = new Date(year, month, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const firstDay    = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
 
-  const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-  const today = toISO(new Date());
+  const prevMonth = () => { if (month === 0) { setMonth(11); setYear(y => y - 1); } else setMonth(m => m - 1); };
+  const nextMonth = () => { if (month === 11) { setMonth(0); setYear(y => y + 1); } else setMonth(m => m + 1); };
 
-  const prevWeek = () => setWeekStart(d => addDays(d, -7));
-  const nextWeek = () => setWeekStart(d => addDays(d, 7));
-  const goToday = () => setWeekStart(getMonday(new Date()));
-
-  const weekRange = `${days[0].toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${days[6].toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`;
+  function getDayInfo(day: number) {
+    const d = new Date(year, month, day);
+    const iso = d.toISOString().split("T")[0];
+    // highlight search range
+    const inHighlight = highlightFrom && highlightTo && iso >= highlightFrom && iso <= highlightTo;
+    // find rental
+    for (let i = 0; i < carRentals.length; i++) {
+      const start = new Date(carRentals[i].startDate); start.setHours(0,0,0,0);
+      const end   = new Date(carRentals[i].endDate);   end.setHours(23,59,59,999);
+      if (d >= start && d <= end) return { rental: carRentals[i], colorIdx: i % RENTAL_COLORS.length, inHighlight };
+    }
+    return { rental: null, colorIdx: 0, inHighlight };
+  }
 
   return (
-    <div className="p-5 sm:p-7 space-y-5">
-      {/* Header row */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-[15px] font-bold text-[#1a2332]">Availability Schedule</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Weekly vehicle availability — {weekRange}</p>
-        </div>
+    <>
+      <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 pointer-events-none">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden" onClick={e => e.stopPropagation()}>
 
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Legend */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {(["free", "reserved", "rented", "maintenance"] as CellStatus[]).map(s => (
-              <div key={s} className="flex items-center gap-1.5">
-                <div className={`w-2.5 h-2.5 rounded-sm ${LEGEND_COLORS[s]}`} />
-                <span className="text-[11px] text-slate-500 font-medium capitalize">{STATUS_CONFIG[s].label}</span>
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <img src={car.image} alt={car.brand} className="w-12 h-9 object-cover rounded-xl" />
+              <div>
+                <h3 className="text-[16px] font-bold text-[#1a2332]">{car.brand} {car.model}</h3>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-[11.5px] text-slate-400 font-mono">{car.plate}</p>
+                  <StatusBadge s={car.status} />
+                </div>
               </div>
-            ))}
+            </div>
+            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-5 w-5" /></button>
           </div>
 
-          {/* Week nav */}
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={prevWeek}
-              className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 text-slate-500 transition-colors shadow-sm"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={goToday}
-              className="h-8 px-3 rounded-lg border border-slate-200 bg-white text-[12px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors shadow-sm whitespace-nowrap"
-            >
-              This week
-            </button>
-            <button
-              onClick={nextWeek}
-              className="w-8 h-8 rounded-lg border border-slate-200 bg-white flex items-center justify-center hover:bg-slate-50 text-slate-500 transition-colors shadow-sm"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      </div>
+          <div className="flex-1 overflow-y-auto">
+            {/* Month nav */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"><ChevronLeft className="h-4 w-4" /></button>
+              <p className="text-[14px] font-bold text-[#1a2332]">{monthName}</p>
+              <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition-colors"><ChevronRight className="h-4 w-4" /></button>
+            </div>
 
-      {/* Schedule board */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] border-collapse">
-            {/* Header row */}
-            <thead>
-              <tr>
-                {/* Vehicle col header */}
-                <th className="w-44 px-5 py-3 bg-slate-50 border-b border-r border-slate-200 text-left sticky left-0 z-10">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Vehicle</span>
-                </th>
-                {days.map((d, i) => {
-                  const isToday = toISO(d) === today;
+            {/* Legend */}
+            {highlightFrom && highlightTo && (
+              <div className="px-6 py-3 border-b border-slate-100 flex items-center gap-2">
+                <Info className="h-3.5 w-3.5 text-violet-400" />
+                <p className="text-[12px] text-slate-500">Your search period: <span className="font-semibold text-violet-600">{fmtShort(highlightFrom)} → {fmtShort(highlightTo)}</span> is highlighted in violet</p>
+              </div>
+            )}
+
+            <div className="px-6 pb-6 pt-4">
+              <div className="grid grid-cols-7 mb-2">
+                {["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => (
+                  <div key={d} className="text-center text-[10.5px] font-bold text-slate-400 uppercase tracking-wider py-1">{d}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: startOffset }).map((_, i) => <div key={`e${i}`} />)}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day  = i + 1;
+                  const { rental, colorIdx, inHighlight } = getDayInfo(day);
+                  const isToday = year === 2026 && month === 5 && day === 1;
                   return (
-                    <th
-                      key={i}
-                      className={`px-2 py-3 border-b border-r border-slate-200 text-center last:border-r-0 ${
-                        isToday ? "bg-primary/6" : "bg-slate-50"
-                      }`}
-                    >
-                      <span className={`block text-[10px] font-bold uppercase tracking-widest ${isToday ? "text-primary" : "text-slate-400"}`}>
-                        {DAYS_SHORT[i]}
-                      </span>
-                      <span className={`block text-[13px] font-bold mt-0.5 ${isToday ? "text-primary" : "text-slate-600"}`}>
-                        {d.getDate()}
-                      </span>
-                      <span className={`block text-[10px] font-medium ${isToday ? "text-primary/70" : "text-slate-400"}`}>
-                        {d.toLocaleDateString("en-GB", { month: "short" })}
-                      </span>
-                    </th>
+                    <div key={day} className={`min-h-[52px] rounded-xl p-1.5 border transition-colors ${
+                      rental
+                        ? `${RENTAL_COLORS[colorIdx].split(" ").slice(0,2).join(" ")} border-current/20`
+                        : inHighlight
+                          ? "bg-violet-50 border-violet-200"
+                          : "bg-emerald-50/60 border-emerald-100"
+                    }`}>
+                      <span className={`text-[11px] font-bold block ${
+                        isToday ? "w-5 h-5 rounded-full bg-[#1a2332] text-white flex items-center justify-center text-[10px]"
+                                : rental ? "text-inherit" : inHighlight ? "text-violet-600" : "text-emerald-700"
+                      }`}>{day}</span>
+                      {rental && <p className="text-[9px] font-semibold leading-tight mt-0.5 line-clamp-2 opacity-90">{rental.client.split(" ")[0]}</p>}
+                      {!rental && inHighlight && <p className="text-[9px] font-semibold text-violet-500 mt-0.5">free</p>}
+                    </div>
                   );
                 })}
-              </tr>
-            </thead>
+              </div>
 
-            <tbody>
-              {fleet.map((car, ci) => {
-                const carName = `${car.brand} ${car.model}`;
-                return (
-                  <tr
-                    key={car.id}
-                    className="group border-b border-slate-100 last:border-b-0 hover:bg-slate-50/60 transition-colors"
-                  >
-                    {/* Vehicle label — sticky left col */}
-                    <td className="px-5 py-4 border-r border-slate-200 sticky left-0 bg-white group-hover:bg-slate-50/60 transition-colors z-10">
-                      <p className="text-[13px] font-bold text-slate-800 leading-tight">{carName}</p>
-                      <p className="text-[11px] text-slate-400 font-mono mt-0.5">{car.plate}</p>
-                    </td>
-
-                    {/* Day cells */}
-                    {days.map((d, di) => {
-                      const dateStr = toISO(d);
-                      const status = getCarStatus(carName, dateStr);
-                      const cfg = STATUS_CONFIG[status];
-                      const isToday = dateStr === today;
-
-                      return (
-                        <td
-                          key={di}
-                          className={`px-2 py-3 border-r border-slate-100 last:border-r-0 text-center ${
-                            isToday ? "bg-primary/4" : ""
-                          }`}
-                        >
-                          <span
-                            className={`inline-flex items-center justify-center px-3 py-1.5 rounded-lg border text-[11px] font-bold w-full max-w-[90px] mx-auto ${cfg.bg} ${cfg.text} ${cfg.border}`}
-                          >
-                            {cfg.label}
-                          </span>
-                        </td>
-                      );
-                    })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              {/* Bookings list */}
+              {carRentals.length > 0 && (
+                <div className="mt-5 space-y-2">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Existing Bookings</p>
+                  {carRentals.map((r, i) => (
+                    <div key={r.id} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${RENTAL_COLORS[i % RENTAL_COLORS.length]}`}>
+                      <div>
+                        <p className="text-[12.5px] font-semibold">{r.client}</p>
+                        <p className="text-[11px] opacity-75 font-medium">{fmtShort(r.startDate)} → {fmtShort(r.endDate)}</p>
+                      </div>
+                      <span className="text-[11px] font-bold opacity-80 capitalize">{r.status}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {carRentals.length === 0 && (
+                <div className="mt-5 text-center py-6 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <CheckCircle className="h-7 w-7 text-emerald-400 mx-auto mb-2" />
+                  <p className="text-[13px] font-semibold text-emerald-700">No bookings — fully available</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+    </>
+  );
+}
 
-      {/* Footer key */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-slate-400">
-        <span>Data shown reflects confirmed rentals, reservations, and scheduled maintenance.</span>
-        <span>·</span>
-        <span>Today is highlighted in blue.</span>
+/* ─── Main Availability Section ────────────────────────────────── */
+export function AvailabilitySection() {
+  const [pickupDate,    setPickupDate]    = useState("2026-06-10");
+  const [pickupTime,    setPickupTime]    = useState("09:00");
+  const [returnDate,    setReturnDate]    = useState("2026-06-15");
+  const [returnTime,    setReturnTime]    = useState("17:00");
+  const [pickupLoc,     setPickupLoc]     = useState("");
+  const [returnLoc,     setReturnLoc]     = useState("");
+  const [searched,      setSearched]      = useState(false);
+  const [scheduleFor,   setScheduleFor]   = useState<FleetCar | null>(null);
+
+  function handleSearch() {
+    if (!pickupDate || !returnDate || returnDate < pickupDate) return;
+    setSearched(true);
+  }
+
+  const results = useMemo(() => {
+    if (!searched) return [];
+    return fleet.map(car => ({ car, ...isCarAvailable(car, pickupDate, returnDate) }));
+  }, [searched, pickupDate, returnDate]);
+
+  const available   = results.filter(r => r.available);
+  const unavailable = results.filter(r => !r.available);
+
+  const dayCount = useMemo(() => {
+    if (!pickupDate || !returnDate) return 0;
+    return Math.max(1, Math.ceil((new Date(returnDate).getTime() - new Date(pickupDate).getTime()) / 86400000));
+  }, [pickupDate, returnDate]);
+
+  const inp  = "h-10 rounded-xl border border-slate-200 px-3.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition w-full";
+
+  return (
+    <div className="flex flex-col min-h-full bg-[#f8f9fb]">
+
+      {/* Header */}
+      <div className="px-6 sm:px-8 pt-7 pb-0">
+        <div className="mb-6">
+          <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">Availability</h2>
+          <p className="text-[13px] text-slate-400 mt-1 font-medium">Check which vehicles are available for your selected dates and times</p>
+        </div>
+
+        {/* Search form */}
+        <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm px-6 py-5 mb-6">
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">Search Availability</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
+            {/* Pickup */}
+            <div>
+              <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5 text-slate-400" /> Pickup Date
+              </label>
+              <input type="date" className={inp} value={pickupDate} onChange={e => setPickupDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-slate-400" /> Pickup Time
+              </label>
+              <input type="time" className={inp} value={pickupTime} onChange={e => setPickupTime(e.target.value)} />
+            </div>
+            {/* Return */}
+            <div>
+              <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5 text-slate-400" /> Return Date
+              </label>
+              <input type="date" className={inp} value={returnDate} min={pickupDate} onChange={e => setReturnDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-slate-400" /> Return Time
+              </label>
+              <input type="time" className={inp} value={returnTime} onChange={e => setReturnTime(e.target.value)} />
+            </div>
+            {/* Search button */}
+            <button
+              onClick={handleSearch}
+              disabled={!pickupDate || !returnDate || returnDate < pickupDate}
+              className="h-10 px-6 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <Search className="h-4 w-4" /> Check Availability
+            </button>
+          </div>
+
+          {/* Optional locations */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+            <div className="relative">
+              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
+              <input type="text" className={`${inp} pl-10`} placeholder="Pickup location (optional)" value={pickupLoc} onChange={e => setPickupLoc(e.target.value)} />
+            </div>
+            <div className="relative">
+              <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300 pointer-events-none" />
+              <input type="text" className={`${inp} pl-10`} placeholder="Return location (optional)" value={returnLoc} onChange={e => setReturnLoc(e.target.value)} />
+            </div>
+          </div>
+        </div>
+
+        {/* Result summary */}
+        {searched && (
+          <div className="mb-5">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
+              <div className="flex items-center gap-2 bg-slate-100 px-3.5 py-2 rounded-xl">
+                <CalendarDays className="h-4 w-4 text-slate-500" />
+                <span className="text-[12.5px] font-semibold text-slate-700">
+                  {pickupDate && new Date(pickupDate).toLocaleDateString("en-GB", { day:"numeric", month:"short" })}
+                  {" "} → {" "}
+                  {returnDate && new Date(returnDate).toLocaleDateString("en-GB", { day:"numeric", month:"short" })}
+                </span>
+                <span className="text-[11.5px] text-slate-400">({dayCount} day{dayCount !== 1 ? "s" : ""})</span>
+              </div>
+              {(pickupLoc || returnLoc) && (
+                <div className="flex items-center gap-1.5 text-[12px] text-slate-500">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {pickupLoc && <span>{pickupLoc}</span>}
+                  {pickupLoc && returnLoc && <span>→</span>}
+                  {returnLoc && <span>{returnLoc}</span>}
+                </div>
+              )}
+              <button onClick={() => setSearched(false)} className="ml-auto text-[12px] text-slate-400 hover:text-slate-600 flex items-center gap-1">
+                <X className="h-3.5 w-3.5" /> Clear results
+              </button>
+            </div>
+
+            {/* Summary row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              {[
+                { label: "Available",   value: available.length,                                    color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100", icon: CheckCircle  },
+                { label: "Reserved",    value: results.filter(r=>r.conflict?.client && r.conflict).length, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100", icon: CalendarDays },
+                { label: "Unavailable", value: unavailable.length,                                  color: "text-red-600",     bg: "bg-red-50",     border: "border-red-100",     icon: AlertTriangle },
+                { label: "Maintenance", value: fleet.filter(c => c.status === "maintenance").length, color: "text-orange-600", bg: "bg-orange-50",  border: "border-orange-100",  icon: Wrench        },
+              ].map(({ label, value, color, bg, border, icon: Icon }) => (
+                <div key={label} className={`${bg} border ${border} rounded-xl px-4 py-3 flex items-center gap-3`}>
+                  <Icon className={`h-5 w-5 ${color} flex-shrink-0`} />
+                  <div>
+                    <p className={`text-[20px] font-bold ${color} leading-none`}>{value}</p>
+                    <p className="text-[11px] text-slate-500 font-medium mt-0.5">{label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Results content */}
+      {searched && (
+        <div className="px-6 sm:px-8 pb-8 space-y-6">
+
+          {/* Available cars */}
+          {available.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <CheckCircle className="h-4.5 w-4.5 text-emerald-500" />
+                <h3 className="text-[14px] font-bold text-[#1a2332]">Available Cars</h3>
+                <span className="text-[11.5px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">{available.length}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {available.map(({ car }) => (
+                  <div key={car.id} className="bg-white border border-emerald-100 rounded-2xl shadow-sm overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                    <div className="relative h-40 bg-slate-100 overflow-hidden">
+                      <img src={car.image} alt={`${car.brand} ${car.model}`} className="w-full h-full object-cover" loading="lazy" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                      <div className="absolute top-2.5 right-2.5">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-emerald-500 text-white">
+                          <CheckCircle className="h-3 w-3" /> Free
+                        </span>
+                      </div>
+                      <div className="absolute bottom-2.5 left-3">
+                        <p className="text-white text-[13px] font-bold drop-shadow">{car.brand} {car.model}</p>
+                        <p className="text-white/75 text-[10.5px] font-mono">{car.plate}</p>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2 text-[11.5px] text-slate-500 flex-wrap">
+                          <span>{car.transmission}</span><span className="text-slate-200">·</span>
+                          <span>{car.fuel}</span><span className="text-slate-200">·</span>
+                          <span>{car.seats} seats</span>
+                        </div>
+                        <div className="text-right flex-shrink-0 ml-2">
+                          <p className="text-[16px] font-bold text-[#1a2332]">${car.pricePerDay}</p>
+                          <p className="text-[10px] text-slate-400">/day</p>
+                        </div>
+                      </div>
+                      {dayCount > 0 && (
+                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 mb-3 flex items-center justify-between">
+                          <span className="text-[11.5px] text-emerald-700 font-medium">{dayCount} days total</span>
+                          <span className="text-[13px] font-bold text-emerald-700">${car.pricePerDay * dayCount}</span>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <button onClick={() => setScheduleFor(car)} className="flex-1 h-9 bg-slate-100 text-slate-700 rounded-xl text-[12px] font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5">
+                          <CalendarDays className="h-3.5 w-3.5" /> Schedule
+                        </button>
+                        <button className="flex-1 h-9 bg-[#1a2332] text-white rounded-xl text-[12px] font-semibold hover:bg-[#243044] transition-colors">
+                          Book
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Unavailable cars */}
+          {unavailable.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <AlertTriangle className="h-4 w-4 text-slate-400" />
+                <h3 className="text-[14px] font-bold text-slate-500">Unavailable</h3>
+                <span className="text-[11.5px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">{unavailable.length}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {unavailable.map(({ car, reason, conflict }) => (
+                  <div key={car.id} className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden opacity-75">
+                    <div className="relative h-40 bg-slate-100 overflow-hidden">
+                      <img src={car.image} alt={`${car.brand} ${car.model}`} className="w-full h-full object-cover grayscale-[40%]" loading="lazy" />
+                      <div className="absolute inset-0 bg-black/30" />
+                      <div className="absolute top-2.5 right-2.5">
+                        <StatusBadge s={car.status} />
+                      </div>
+                      <div className="absolute bottom-2.5 left-3">
+                        <p className="text-white text-[13px] font-bold">{car.brand} {car.model}</p>
+                        <p className="text-white/75 text-[10.5px] font-mono">{car.plate}</p>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 mb-3">
+                        <p className="text-[11.5px] font-bold text-red-600">{reason}</p>
+                        {conflict && (
+                          <p className="text-[11px] text-red-500 mt-0.5">{conflict.client} · {fmtShort(conflict.from)} → {fmtShort(conflict.to)}</p>
+                        )}
+                        {car.status === "maintenance" && (
+                          <p className="text-[11px] text-red-500 mt-0.5 flex items-center gap-1"><Wrench className="h-3 w-3" /> In service</p>
+                        )}
+                      </div>
+                      <button onClick={() => setScheduleFor(car)} className="w-full h-9 bg-slate-100 text-slate-600 rounded-xl text-[12px] font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5">
+                        <CalendarDays className="h-3.5 w-3.5" /> View Schedule
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Empty state before search */}
+      {!searched && (
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-5">
+            <Car className="h-8 w-8 text-slate-300" />
+          </div>
+          <h3 className="text-[16px] font-bold text-slate-400 mb-2">Select dates to check availability</h3>
+          <p className="text-[13px] text-slate-300 max-w-sm leading-relaxed">Enter pickup and return dates above, then click "Check Availability" to see which vehicles are free for that period.</p>
+        </div>
+      )}
+
+      {/* Schedule modal */}
+      {scheduleFor && (
+        <CarScheduleModal
+          car={scheduleFor}
+          onClose={() => setScheduleFor(null)}
+          highlightFrom={pickupDate}
+          highlightTo={returnDate}
+        />
+      )}
     </div>
   );
 }
