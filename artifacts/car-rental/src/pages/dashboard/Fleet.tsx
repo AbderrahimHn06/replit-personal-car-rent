@@ -737,32 +737,38 @@ export function Fleet() {
           ))}
         </div>
 
-        {/* Active filter chips */}
-        {activeFCount > 0 && (
-          <div className="flex items-center gap-2 mb-4 flex-wrap">
-            <span className="text-[11.5px] text-slate-400 font-medium">Active filters:</span>
-            {filters.status !== "all" && (
-              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#1a2332]/8 border border-[#1a2332]/15 rounded-full text-[11.5px] font-semibold text-[#1a2332]">
-                Status: {filters.status} <button onClick={() => mergeFilters({ status: "all" })} className="hover:text-red-500"><X className="h-3 w-3" /></button>
-              </span>
-            )}
-            {filters.transmission !== "all" && (
-              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#1a2332]/8 border border-[#1a2332]/15 rounded-full text-[11.5px] font-semibold text-[#1a2332]">
-                {filters.transmission} <button onClick={() => mergeFilters({ transmission: "all" })} className="hover:text-red-500"><X className="h-3 w-3" /></button>
-              </span>
-            )}
-            {filters.fuel !== "all" && (
-              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#1a2332]/8 border border-[#1a2332]/15 rounded-full text-[11.5px] font-semibold text-[#1a2332]">
-                {filters.fuel} <button onClick={() => mergeFilters({ fuel: "all" })} className="hover:text-red-500"><X className="h-3 w-3" /></button>
-              </span>
-            )}
-            {filters.type !== "all" && (
-              <span className="flex items-center gap-1.5 px-3 py-1 bg-[#1a2332]/8 border border-[#1a2332]/15 rounded-full text-[11.5px] font-semibold text-[#1a2332]">
-                {filters.type} <button onClick={() => mergeFilters({ type: "all" })} className="hover:text-red-500"><X className="h-3 w-3" /></button>
-              </span>
-            )}
-          </div>
-        )}
+        {/* Active filter chips — fixed height container, no layout shift */}
+        <div className="h-9 flex items-center gap-2 mb-4 overflow-x-auto overflow-y-hidden">
+          {activeFCount > 0 && (
+            <>
+              <span className="text-[11.5px] text-slate-400 font-medium whitespace-nowrap flex-shrink-0">Active:</span>
+              {filters.status !== "all" && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a2332] border border-[#1a2332] rounded-full text-[11.5px] font-semibold text-white whitespace-nowrap flex-shrink-0">
+                  {filters.status}
+                  <button onClick={() => mergeFilters({ status: "all" })} className="opacity-60 hover:opacity-100 ml-0.5"><X className="h-3 w-3" /></button>
+                </span>
+              )}
+              {filters.transmission !== "all" && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a2332] border border-[#1a2332] rounded-full text-[11.5px] font-semibold text-white whitespace-nowrap flex-shrink-0">
+                  {filters.transmission}
+                  <button onClick={() => mergeFilters({ transmission: "all" })} className="opacity-60 hover:opacity-100 ml-0.5"><X className="h-3 w-3" /></button>
+                </span>
+              )}
+              {filters.fuel !== "all" && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a2332] border border-[#1a2332] rounded-full text-[11.5px] font-semibold text-white whitespace-nowrap flex-shrink-0">
+                  {filters.fuel}
+                  <button onClick={() => mergeFilters({ fuel: "all" })} className="opacity-60 hover:opacity-100 ml-0.5"><X className="h-3 w-3" /></button>
+                </span>
+              )}
+              {filters.type !== "all" && (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a2332] border border-[#1a2332] rounded-full text-[11.5px] font-semibold text-white whitespace-nowrap flex-shrink-0">
+                  {filters.type}
+                  <button onClick={() => mergeFilters({ type: "all" })} className="opacity-60 hover:opacity-100 ml-0.5"><X className="h-3 w-3" /></button>
+                </span>
+              )}
+            </>
+          )}
+        </div>
 
         {/* Status pills + view switcher */}
         <div className="flex items-center justify-between gap-3 flex-wrap pb-0">

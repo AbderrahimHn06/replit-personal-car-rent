@@ -2,10 +2,11 @@ import { useState, useMemo, useEffect } from "react";
 import {
   Search, CalendarDays, Clock, MapPin, Car, ChevronLeft,
   ChevronRight, X, CheckCircle, AlertTriangle, Wrench, Info,
-  User, Phone, Mail, FileText, DollarSign, CheckCircle2,
+  CheckCircle2,
 } from "lucide-react";
-import { fleet, rentals as staticRentals, FleetCar, FleetStatus, DashboardRental, clients } from "@/data/dashboardData";
+import { fleet, FleetCar, FleetStatus, DashboardRental } from "@/data/dashboardData";
 import { useActiveLocations, addRental, useRentals } from "@/data/localStore";
+import { RentalCreationModal } from "./RentalCreationModal";
 
 /* ─── helpers ──────────────────────────────────────────────────── */
 const STATUS_CFG: Record<FleetStatus, { label: string; dot: string; badge: string }> = {
@@ -157,237 +158,6 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo, allRentals
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-/* ─── Create Rental Modal ──────────────────────────────────────── */
-interface CreateRentalForm {
-  clientId: string;
-  clientName: string;
-  clientPhone: string;
-  clientEmail: string;
-  licenseNumber: string;
-  pickupLocation: string;
-  returnLocation: string;
-  notes: string;
-  deposit: string;
-}
-
-function CreateRentalModal({ car, pickupDate, pickupTime, returnDate, returnTime, dayCount, onClose, onCreated }: {
-  car: FleetCar;
-  pickupDate: string; pickupTime: string;
-  returnDate: string; returnTime: string;
-  dayCount: number;
-  onClose: () => void;
-  onCreated: () => void;
-}) {
-  const locations = useActiveLocations();
-  const [form, setForm] = useState<CreateRentalForm>({
-    clientId: "", clientName: "", clientPhone: "", clientEmail: "",
-    licenseNumber: "", pickupLocation: "", returnLocation: "",
-    notes: "", deposit: car.depositAmount ? String(car.depositAmount) : "",
-  });
-  const [useExisting, setUseExisting] = useState(true);
-
-  useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
-
-  const set = (k: keyof CreateRentalForm, v: string) => setForm(p => ({ ...p, [k]: v }));
-
-  const totalPrice = car.pricePerDay * Math.max(1, dayCount);
-
-  const handleClientSelect = (id: string) => {
-    if (!id) { set("clientId", ""); set("clientName", ""); set("clientPhone", ""); set("clientEmail", ""); set("licenseNumber", ""); return; }
-    const c = clients.find(c => c.id === id);
-    if (c) {
-      setForm(p => ({ ...p, clientId: id, clientName: c.name, clientPhone: c.phone, clientEmail: c.email, licenseNumber: c.licenseNumber }));
-    }
-  };
-
-  const canSubmit = form.clientName && form.clientPhone && form.licenseNumber && form.pickupLocation && form.returnLocation;
-
-  function handleSubmit() {
-    if (!canSubmit) return;
-    const ref = `RNT-2026-${String(Math.floor(Math.random() * 900) + 100).padStart(4, "0")}`;
-    const newRental: import("@/data/dashboardData").DashboardRental = {
-      id: `r-${Date.now()}`,
-      reference: ref,
-      client: form.clientName,
-      clientPhone: form.clientPhone,
-      car: `${car.brand} ${car.model}`,
-      plate: car.plate,
-      startDate: pickupDate,
-      endDate: returnDate,
-      totalPrice,
-      deposit: Number(form.deposit) || 0,
-      status: "reserved",
-      source: "walk-in",
-      pickupLocation: form.pickupLocation,
-      returnLocation: form.returnLocation,
-      driverLicense: form.licenseNumber,
-      notes: form.notes,
-    };
-    addRental(newRental);
-    onCreated();
-  }
-
-  const inp = "w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
-  const sel = "w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
-
-  return (
-    <>
-      <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 pointer-events-none">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
-
-          {/* Header */}
-          <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
-            <div>
-              <h3 className="text-[18px] font-bold text-[#1a2332]">Create Rental</h3>
-              <p className="text-[12.5px] text-slate-400 mt-0.5">Fill in client details to confirm the booking</p>
-            </div>
-            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-5 w-5" /></button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
-
-            {/* A. Selected Vehicle */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Selected Vehicle</p>
-              <div className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
-                <img src={car.image} alt={car.brand} className="w-20 h-14 object-cover rounded-xl flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-bold text-[#1a2332]">{car.brand} {car.model}</p>
-                  <p className="text-[12px] text-slate-400 font-mono">{car.plate} · {car.year} · {car.color}</p>
-                  <p className="text-[11.5px] text-slate-500 mt-0.5">{car.transmission} · {car.fuel} · {car.seats} seats</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-[20px] font-bold text-[#1a2332]">${car.pricePerDay}</p>
-                  <p className="text-[11px] text-slate-400">/day</p>
-                </div>
-              </div>
-            </div>
-
-            {/* B. Rental Period */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Rental Period</p>
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white rounded-xl border border-slate-200 p-3">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Pickup</p>
-                    <p className="text-[13px] font-semibold text-[#1a2332]">{fmtShort(pickupDate)}</p>
-                    <p className="text-[11.5px] text-slate-400">{pickupTime}</p>
-                  </div>
-                  <div className="bg-white rounded-xl border border-slate-200 p-3">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Return</p>
-                    <p className="text-[13px] font-semibold text-[#1a2332]">{fmtShort(returnDate)}</p>
-                    <p className="text-[11.5px] text-slate-400">{returnTime}</p>
-                  </div>
-                </div>
-                <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-[12px] font-semibold text-emerald-800">{dayCount} day{dayCount !== 1 ? "s" : ""} rental</p>
-                    <p className="text-[11px] text-emerald-600">{car.pricePerDay} × {dayCount} days</p>
-                  </div>
-                  <p className="text-[20px] font-bold text-emerald-700">${totalPrice}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* C. Client Information */}
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Client Information</p>
-                <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
-                  <button onClick={() => setUseExisting(true)} className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${useExisting ? "bg-white text-[#1a2332] shadow-sm" : "text-slate-500"}`}>Existing</button>
-                  <button onClick={() => setUseExisting(false)} className={`px-3 py-1 rounded-md text-[11px] font-semibold transition-all ${!useExisting ? "bg-white text-[#1a2332] shadow-sm" : "text-slate-500"}`}>New</button>
-                </div>
-              </div>
-
-              {useExisting && (
-                <div className="mb-3">
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Select Client</label>
-                  <select className={sel} value={form.clientId} onChange={e => handleClientSelect(e.target.value)}>
-                    <option value="">— Choose existing client —</option>
-                    {clients.filter(c => c.status !== "blocked").map(c => (
-                      <option key={c.id} value={c.id}>{c.name} · {c.phone} · {c.city}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><User className="inline h-3 w-3 mr-1" />Client Name</label>
-                  <input className={inp} placeholder="Full name" value={form.clientName} onChange={e => set("clientName", e.target.value)} readOnly={useExisting && !!form.clientId} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><Phone className="inline h-3 w-3 mr-1" />Phone</label>
-                  <input className={inp} placeholder="Phone number" value={form.clientPhone} onChange={e => set("clientPhone", e.target.value)} readOnly={useExisting && !!form.clientId} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><Mail className="inline h-3 w-3 mr-1" />Email <span className="text-slate-300">(optional)</span></label>
-                  <input className={inp} placeholder="Email address" value={form.clientEmail} onChange={e => set("clientEmail", e.target.value)} readOnly={useExisting && !!form.clientId} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><FileText className="inline h-3 w-3 mr-1" />License Number</label>
-                  <input className={inp} placeholder="DL-XX-XXXX-X" value={form.licenseNumber} onChange={e => set("licenseNumber", e.target.value)} readOnly={useExisting && !!form.clientId} />
-                </div>
-              </div>
-            </div>
-
-            {/* Pickup / Return Location */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Pickup & Return Locations</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><MapPin className="inline h-3 w-3 mr-1" />Pickup Location</label>
-                  <select className={sel} value={form.pickupLocation} onChange={e => set("pickupLocation", e.target.value)}>
-                    <option value="">— Select location —</option>
-                    {locations.map(l => <option key={l.id} value={l.name}>{l.name}{l.city ? ` · ${l.city}` : ""}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><MapPin className="inline h-3 w-3 mr-1" />Return Location</label>
-                  <select className={sel} value={form.returnLocation} onChange={e => set("returnLocation", e.target.value)}>
-                    <option value="">— Select location —</option>
-                    {locations.map(l => <option key={l.id} value={l.name}>{l.name}{l.city ? ` · ${l.city}` : ""}</option>)}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* D. Additional Information */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Additional Information</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Notes <span className="text-slate-300">(optional)</span></label>
-                  <textarea className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition" rows={2} placeholder="Special requests, instructions…" value={form.notes} onChange={e => set("notes", e.target.value)} />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5"><DollarSign className="inline h-3 w-3 mr-1" />Deposit Amount ($)</label>
-                  <input type="number" className={inp} placeholder="0" value={form.deposit} onChange={e => set("deposit", e.target.value)} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="border-t border-slate-100 px-7 py-5 flex gap-3 flex-shrink-0">
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit}
-              className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              <CheckCircle2 className="h-4.5 w-4.5" /> Create Rental
-            </button>
-            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors">
-              Cancel
-            </button>
           </div>
         </div>
       </div>
@@ -708,15 +478,19 @@ export function AvailabilitySection() {
         />
       )}
 
-      {/* Create Rental Modal */}
+      {/* Create Rental Modal — shared component */}
       {bookingCar && (
-        <CreateRentalModal
-          car={bookingCar}
-          pickupDate={pickupDate} pickupTime={pickupTime}
-          returnDate={returnDate} returnTime={returnTime}
-          dayCount={dayCount}
+        <RentalCreationModal
+          prefilledCar={bookingCar}
+          prefilledPickupDate={pickupDate}
+          prefilledPickupTime={pickupTime}
+          prefilledReturnDate={returnDate}
+          prefilledReturnTime={returnTime}
+          prefilledPickupLoc={pickupLoc}
+          prefilledReturnLoc={returnLoc}
           onClose={() => setBookingCar(null)}
-          onCreated={() => {
+          onCreated={rental => {
+            addRental(rental);
             setBookingCar(null);
             setToastMsg(`Rental created for ${bookingCar.brand} ${bookingCar.model} — ${dayCount} days`);
           }}

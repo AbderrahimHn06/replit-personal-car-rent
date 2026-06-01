@@ -1,0 +1,144 @@
+Use this prompt:
+
+```text id="7xmkpq"
+Fix the Availability → Book workflow.
+
+CURRENT ISSUE
+
+On the Availability page, the user:
+
+1. Selects:
+   - Pickup Date
+   - Pickup Time
+   - Return Date
+   - Return Time
+   - Pickup Location
+   - Return Location
+
+2. Clicks:
+   "Check Availability"
+
+3. Gets available cars
+
+4. Clicks:
+   "Book"
+
+The booking modal opens, but the selected Pickup Location and Return Location are NOT automatically filled.
+
+This breaks the workflow because the user already selected these values before searching.
+
+REQUIRED BEHAVIOR
+
+The Availability search form is the source of truth.
+
+When the user clicks "Book" on a vehicle, the RentalCreationModal must automatically receive and prefill:
+
+- selected pickup date
+- selected pickup time
+- selected return date
+- selected return time
+- selected pickup location
+- selected return location
+- selected car
+
+The user should never have to enter these again.
+
+PREFILL REQUIREMENTS
+
+Availability Form
+↓
+Check Availability
+↓
+Available Cars
+↓
+Book
+↓
+RentalCreationModal
+
+Auto-fill:
+
+Rental Period:
+- Pickup Date
+- Pickup Time
+- Return Date
+- Return Time
+
+Locations:
+- Pickup Location
+- Return Location
+
+Vehicle:
+- Selected Vehicle
+
+The modal should open with all these values already selected.
+
+LOCATION DATA
+
+Locations come from:
+Settings → Locations
+
+The selected location object should be passed, not just the text label.
+
+Example:
+
+{
+  id,
+  name,
+  address,
+  city
+}
+
+The modal should display the selected location immediately.
+
+EDITABILITY
+
+The user may still change:
+- dates
+- times
+- locations
+
+inside the modal if needed.
+
+However:
+- the initial values must always be prefilled from Availability.
+
+TECHNICAL REQUIREMENT
+
+The RentalCreationModal already supports:
+- car selection
+- dates
+- times
+- locations
+
+Make sure the Availability page passes all selected search values when opening the modal.
+
+Do not initialize the modal with empty state when opened from Availability.
+
+Instead initialize it using:
+
+selectedCar
+pickupDate
+pickupTime
+returnDate
+returnTime
+pickupLocation
+returnLocation
+
+WORKFLOW GOAL
+
+Availability Search
+↓
+User selects locations and dates
+↓
+Check Availability
+↓
+Select vehicle
+↓
+Book
+↓
+Rental modal opens fully prefilled
+↓
+User only chooses client, deposit, notes, and confirms
+
+The booking process should feel seamless and require the minimum possible data re-entry.
+```

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DashboardRental, rentals as initialRentals } from "./dashboardData";
+import { DashboardRental, rentals as initialRentals, DashboardClient, clients as initialClients } from "./dashboardData";
 
 /* ─── Agency Locations ─────────────────────────────────────────── */
 export interface AgencyLocation {
@@ -62,4 +62,41 @@ export function getRentals(): DashboardRental[] { return _rentals; }
 export function addRental(r: DashboardRental): void {
   _rentals = [r, ..._rentals];
   notifyRentals();
+}
+
+export function updateRental(id: string, changes: Partial<DashboardRental>): void {
+  _rentals = _rentals.map(r => r.id === id ? { ...r, ...changes } : r);
+  notifyRentals();
+}
+
+/* ─── Clients ──────────────────────────────────────────────────── */
+let _clients: DashboardClient[] = [...initialClients];
+const _clientListeners = new Set<() => void>();
+function notifyClients() { _clientListeners.forEach(fn => fn()); }
+
+export function useClients(): DashboardClient[] {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const refresh = () => tick(t => t + 1);
+    _clientListeners.add(refresh);
+    return () => { _clientListeners.delete(refresh); };
+  }, []);
+  return _clients;
+}
+
+export function getClients(): DashboardClient[] { return _clients; }
+
+export function addClientToStore(c: DashboardClient): void {
+  _clients = [c, ..._clients];
+  notifyClients();
+}
+
+export function updateClientInStore(c: DashboardClient): void {
+  _clients = _clients.map(x => x.id === c.id ? c : x);
+  notifyClients();
+}
+
+export function removeClientFromStore(id: string): void {
+  _clients = _clients.filter(x => x.id !== id);
+  notifyClients();
 }

@@ -1,0 +1,127 @@
+Fix the "Add Client" functionality.
+
+CURRENT ISSUE
+The "Add Client" button/modal is not working correctly.
+
+REQUIRED BEHAVIOR
+
+1. OPEN MODAL
+- Clicking "Add Client" must always open the Add Client modal.
+- Modal should appear above a proper overlay.
+- Overlay:
+  - fixed inset-0
+  - bg-black/40
+  - backdrop-blur-sm
+- Modal must be centered.
+- Prevent background scrolling while open.
+
+2. CLIENT FORM
+The modal should contain a complete client form.
+
+Basic Information:
+- Full Name *
+- Phone Number *
+- WhatsApp Number
+- Email
+- City
+- Address
+
+Identity:
+- Driver License Number
+- License Expiry Date
+- National ID Number
+- Date of Birth
+
+Status:
+- Client Type:
+  - Online
+  - Walk-in
+- Status:
+  - Active
+  - VIP
+  - Blocked
+
+Notes:
+- Internal Notes
+
+3. ACTIONS
+
+Buttons:
+- Create Client
+- Cancel
+
+Validation:
+- Full Name required
+- Phone Number required
+
+4. SAVE BEHAVIOR
+
+When clicking "Create Client":
+- Create a new client in local state
+- Close modal
+- Show success toast/message
+- Immediately add the client to:
+  - Clients page
+  - Client selector inside RentalCreationModal
+  - Any client dropdowns across the app
+
+No page refresh required.
+
+5. CLIENT SELECTOR IN RENTALS
+
+After creating a client:
+- The new client must automatically appear in:
+  - Rentals → Create Rental
+  - Availability → Book → Create Rental
+- The selector should update immediately.
+
+6. EDIT CLIENT
+
+Each client row/card should have:
+- View
+- Edit
+
+Edit should:
+- Open the same modal
+- Prefill all fields
+- Save changes to local state
+
+7. DELETE CLIENT (UI ONLY)
+
+Add:
+- Delete action
+- Confirmation modal
+
+Local state only.
+
+8. UX REQUIREMENTS
+
+Modal should:
+- Be responsive
+- Have grouped sections
+- Proper spacing
+- Consistent input heights
+- Clear labels above inputs
+- Same design system as Add Vehicle and Create Rental modals
+
+9. DEBUG
+
+Check why the current Add Client button is failing:
+- Verify click handler
+- Verify modal state
+- Verify component rendering
+- Verify z-index
+- Verify overlay isn't blocking interaction
+- Verify form submit handler
+
+Fix all issues so Add Client works correctly throughout the dashboard.
+
+FINAL GOAL
+
+The Clients page should support:
+- Add Client
+- Edit Client
+- Delete Client
+- Immediate availability in rental creation forms
+
+using local state and the same design system as the rest of the dashboard.

@@ -1,0 +1,197 @@
+Unify the rental creation workflow across the dashboard.
+
+CURRENT SITUATION
+The "Book" action from:
+
+Fleet → Availability → Available Cars
+
+opens a much better rental creation modal than the one used by:
+
+Rentals → New Walk-in Rental
+
+I want ONE shared rental creation experience.
+
+REQUIRED CHANGE
+
+Replace the current "New Walk-in Rental" modal completely.
+
+Instead, reuse the same rental creation modal/component used by the "Book" button in Availability.
+
+Do NOT create two different forms.
+
+There should be a single reusable component:
+
+RentalCreationModal
+
+used by:
+- Availability → Book
+- Rentals → New Walk-in Rental
+- Future Create Rental actions
+
+BEHAVIOR
+
+CASE 1: Opened from Availability
+
+The modal should already be prefilled with:
+- selected car
+- pickup date
+- pickup time
+- return date
+- return time
+- pickup location
+- return location
+
+User only completes:
+- client selection
+- new client creation if needed
+- deposit
+- notes
+- confirmation
+
+CASE 2: Opened from Rentals → New Walk-in Rental
+
+The same modal opens but starts empty.
+
+The user selects:
+- client
+- car
+- dates
+- times
+- locations
+
+The exact same UI and layout must be used.
+
+CLIENT SELECTION
+
+Do not type client names manually.
+
+At the top of the modal:
+
+Client section:
+
+Option A:
+Select existing client
+
+Searchable dropdown showing:
+- name
+- phone
+- city
+
+Option B:
+New Client
+
+Button:
+"Create New Client"
+
+Opens small client form inside modal or nested modal.
+
+After creation:
+- client becomes selected automatically
+
+CAR SELECTION
+
+Do not type car names manually.
+
+Use searchable selector.
+
+Each option shows:
+- image
+- vehicle name
+- plate number
+- daily price
+- current status
+
+Only available cars should be selectable.
+
+RENTAL FORM STRUCTURE
+
+Section 1:
+Client
+
+Section 2:
+Vehicle
+
+Section 3:
+Rental Period
+
+- pickup date
+- pickup time
+- return date
+- return time
+
+Section 4:
+Locations
+
+- pickup location
+- return location
+
+Locations come from Settings → Locations.
+
+Section 5:
+Pricing
+
+Show automatically:
+
+- daily price
+- number of days
+- estimated total
+- deposit
+
+Section 6:
+Notes
+
+- internal notes
+- rental notes
+
+Section 7:
+Summary Card
+
+Display:
+
+Client
+Vehicle
+Dates
+Duration
+Estimated Total
+
+ACTIONS
+
+Primary:
+Create Rental
+
+Secondary:
+Cancel
+
+MODAL DESIGN
+
+Use the exact styling from the Availability booking modal:
+
+- same spacing
+- same width
+- same layout
+- same components
+- same cards
+- same visual hierarchy
+
+The Rentals page and Availability page should feel like they are using the same rental system.
+
+TECHNICAL REQUIREMENT
+
+Create a single reusable component:
+
+RentalCreationModal
+
+and use it everywhere.
+
+Do not duplicate code.
+
+FINAL GOAL
+
+The user should have exactly one rental creation experience in the entire dashboard.
+
+Whether a rental starts from:
+- Availability → Book
+or
+- Rentals → New Walk-in Rental
+
+the same premium modal should appear, with Availability simply pre-filling the relevant fields.

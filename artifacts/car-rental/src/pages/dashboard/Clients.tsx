@@ -1,11 +1,12 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   X, Search, Phone, Mail, MapPin, Key, Star, Shield, Clock,
   Plus, Edit2, Ban, FileText, MessageSquare, CreditCard,
   TrendingUp, Users, Globe, Car, AlertTriangle, CheckCircle,
-  ChevronRight, Calendar, Hash,
+  ChevronRight, Calendar, Hash, Trash2, CheckCircle2,
 } from "lucide-react";
-import { clients as allClients, rentals, DashboardClient, ClientStatus } from "@/data/dashboardData";
+import { rentals, DashboardClient, ClientStatus } from "@/data/dashboardData";
+import { useClients, addClientToStore, updateClientInStore, removeClientFromStore } from "@/data/localStore";
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 function initials(name: string) {
@@ -453,12 +454,258 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
   );
 }
 
+/* ─── Client Modal (Add / Edit) ────────────────────────────────── */
+interface ClientFormState {
+  name: string; phone: string; whatsapp: string; email: string;
+  city: string; address: string; licenseNumber: string;
+  licenseExpiry: string; idNumber: string; dateOfBirth: string;
+  source: "online" | "walk-in"; status: ClientStatus;
+  internalNotes: string; warningNotes: string;
+}
+
+const BLANK_CLIENT_FORM: ClientFormState = {
+  name: "", phone: "", whatsapp: "", email: "", city: "", address: "",
+  licenseNumber: "", licenseExpiry: "", idNumber: "", dateOfBirth: "",
+  source: "walk-in", status: "active", internalNotes: "", warningNotes: "",
+};
+
+function ClientModal({ initial, onSave, onClose }: {
+  initial?: DashboardClient | null;
+  onSave: (c: DashboardClient) => void;
+  onClose: () => void;
+}) {
+  const [f, setF] = useState<ClientFormState>(initial ? {
+    name: initial.name, phone: initial.phone, whatsapp: initial.whatsapp ?? "",
+    email: initial.email ?? "", city: initial.city ?? "", address: initial.address ?? "",
+    licenseNumber: initial.licenseNumber ?? "", licenseExpiry: initial.licenseExpiry ?? "",
+    idNumber: initial.idNumber ?? "", dateOfBirth: initial.dateOfBirth ?? "",
+    source: initial.source as "online" | "walk-in", status: initial.status,
+    internalNotes: initial.internalNotes ?? "", warningNotes: initial.warningNotes ?? "",
+  } : BLANK_CLIENT_FORM);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
+  const set = <K extends keyof ClientFormState>(k: K, v: ClientFormState[K]) =>
+    setF(p => ({ ...p, [k]: v }));
+
+  function validate() {
+    const e: Record<string, string> = {};
+    if (!f.name.trim())  e.name  = "Full name is required";
+    if (!f.phone.trim()) e.phone = "Phone number is required";
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  }
+
+  function handleSave() {
+    if (!validate()) return;
+    const client: DashboardClient = {
+      ...(initial ?? {}),
+      id:            initial?.id ?? `cl-${Date.now()}`,
+      name:          f.name.trim(),
+      phone:         f.phone.trim(),
+      whatsapp:      f.whatsapp || f.phone.trim(),
+      email:         f.email,
+      city:          f.city,
+      address:       f.address,
+      nationality:   initial?.nationality ?? "Algerian",
+      licenseNumber: f.licenseNumber,
+      licenseExpiry: f.licenseExpiry,
+      idNumber:      f.idNumber,
+      dateOfBirth:   f.dateOfBirth,
+      source:        f.source,
+      status:        f.status,
+      joinedDate:    initial?.joinedDate ?? new Date().toISOString().split("T")[0],
+      totalRentals:      initial?.totalRentals      ?? 0,
+      activeRentals:     initial?.activeRentals     ?? 0,
+      completedRentals:  initial?.completedRentals  ?? 0,
+      cancelledRentals:  initial?.cancelledRentals  ?? 0,
+      totalSpend:        initial?.totalSpend        ?? 0,
+      depositHeld:       initial?.depositHeld       ?? 0,
+      trustScore:        initial?.trustScore        ?? 75,
+      internalNotes: f.internalNotes,
+      warningNotes:  f.warningNotes,
+    };
+    onSave(client);
+  }
+
+  const inp = (k: string) =>
+    `w-full h-10 rounded-xl border px-3.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition ${errors[k] ? "border-red-300 bg-red-50/40" : "border-slate-200"}`;
+
+  const isEdit = !!initial;
+
+  return (
+    <>
+      <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 pointer-events-none">
+        <div
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col pointer-events-auto"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
+            <div>
+              <h3 className="text-[18px] font-bold text-[#1a2332]">{isEdit ? "Edit Client" : "Add Client"}</h3>
+              <p className="text-[12.5px] text-slate-400 mt-0.5">{isEdit ? `Editing ${initial!.name}` : "Create a new client profile"}</p>
+            </div>
+            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-7 py-6 space-y-7">
+
+            {/* Basic Info */}
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Basic Information</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="col-span-2">
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Full Name <span className="text-red-400">*</span></label>
+                  <input className={inp("name")} placeholder="e.g. Ahmed Benali" value={f.name} onChange={e => set("name", e.target.value)} />
+                  {errors.name && <p className="text-[11px] text-red-500 mt-1">{errors.name}</p>}
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Phone Number <span className="text-red-400">*</span></label>
+                  <input className={inp("phone")} placeholder="0661 xxx xxx" value={f.phone} onChange={e => set("phone", e.target.value)} />
+                  {errors.phone && <p className="text-[11px] text-red-500 mt-1">{errors.phone}</p>}
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">WhatsApp Number</label>
+                  <input className={inp("")} placeholder="Same as phone if blank" value={f.whatsapp} onChange={e => set("whatsapp", e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Email Address</label>
+                  <input className={inp("")} placeholder="client@email.com" type="email" value={f.email} onChange={e => set("email", e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">City</label>
+                  <input className={inp("")} placeholder="Oran" value={f.city} onChange={e => set("city", e.target.value)} />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Address</label>
+                  <input className={inp("")} placeholder="Street address" value={f.address} onChange={e => set("address", e.target.value)} />
+                </div>
+              </div>
+            </section>
+
+            {/* Identity */}
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Identity Documents</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Driver License Number</label>
+                  <input className={inp("")} placeholder="DL-31-xxxx" value={f.licenseNumber} onChange={e => set("licenseNumber", e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">License Expiry Date</label>
+                  <input type="date" className={inp("")} value={f.licenseExpiry} onChange={e => set("licenseExpiry", e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">National ID Number</label>
+                  <input className={inp("")} placeholder="ID number" value={f.idNumber} onChange={e => set("idNumber", e.target.value)} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Date of Birth</label>
+                  <input type="date" className={inp("")} value={f.dateOfBirth} onChange={e => set("dateOfBirth", e.target.value)} />
+                </div>
+              </div>
+            </section>
+
+            {/* Status */}
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Client Status</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[12px] font-semibold text-slate-600 mb-2">Client Type</p>
+                  <div className="flex gap-2">
+                    {(["walk-in", "online"] as const).map(v => (
+                      <button
+                        key={v}
+                        onClick={() => set("source", v)}
+                        className={`flex-1 h-9 rounded-xl text-[12.5px] font-semibold border transition-all ${f.source === v ? "bg-[#1a2332] text-white border-[#1a2332]" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+                      >
+                        {v === "walk-in" ? "Walk-in" : "Online"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[12px] font-semibold text-slate-600 mb-2">Status</p>
+                  <div className="flex gap-2 flex-wrap">
+                    {(["active", "vip", "blocked"] as ClientStatus[]).map(v => (
+                      <button
+                        key={v}
+                        onClick={() => set("status", v)}
+                        className={`flex-1 h-9 rounded-xl text-[12.5px] font-semibold border transition-all capitalize ${f.status === v ? "bg-[#1a2332] text-white border-[#1a2332]" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}`}
+                      >
+                        {v}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Notes */}
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-4">Notes</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Internal Notes</label>
+                  <textarea
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition bg-white"
+                    rows={2}
+                    placeholder="Internal remarks for staff…"
+                    value={f.internalNotes}
+                    onChange={e => set("internalNotes", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">
+                    Warning Notes <span className="text-slate-300 font-normal">(shown as alert)</span>
+                  </label>
+                  <textarea
+                    className="w-full rounded-xl border border-amber-200 bg-amber-50/30 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 transition"
+                    rows={2}
+                    placeholder="Any warnings or risk flags…"
+                    value={f.warningNotes}
+                    onChange={e => set("warningNotes", e.target.value)}
+                  />
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <div className="border-t border-slate-100 px-7 py-5 flex gap-3 flex-shrink-0">
+            <button
+              onClick={handleSave}
+              className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm flex items-center justify-center gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4" />
+              {isEdit ? "Save Changes" : "Create Client"}
+            </button>
+            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
 /* ─── Main Clients Section ─────────────────────────────────────── */
 export function ClientsSection() {
-  const [tab,      setTab]      = useState<ClientTab>("all");
-  const [search,   setSearch]   = useState("");
-  const [selected, setSelected] = useState<DashboardClient | null>(null);
-  const [localClients] = useState<DashboardClient[]>(allClients);
+  const [tab,           setTab]           = useState<ClientTab>("all");
+  const [search,        setSearch]        = useState("");
+  const [selected,      setSelected]      = useState<DashboardClient | null>(null);
+  const [showAddModal,  setShowAddModal]  = useState(false);
+  const [editingClient, setEditingClient] = useState<DashboardClient | null>(null);
+  const [deleteId,      setDeleteId]      = useState<string | null>(null);
+  const [toast,         setToast]         = useState<string | null>(null);
+  const localClients = useClients();
 
   const filtered = useMemo(() => {
     return localClients.filter(c => {
@@ -506,7 +753,10 @@ export function ClientsSection() {
                 className="pl-10 pr-4 h-10 w-56 rounded-xl border border-slate-200 bg-white text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 shadow-sm transition"
               />
             </div>
-            <button className="h-10 px-5 flex items-center gap-2 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-colors">
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="h-10 px-5 flex items-center gap-2 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-colors"
+            >
               <Plus className="h-4 w-4" /> Add Client
             </button>
           </div>
@@ -600,13 +850,46 @@ export function ClientsSection() {
                       <td className="px-4 py-3.5">
                         <StatusBadge s={c.status} />
                       </td>
-                      <td className="px-4 py-3.5">
-                        <button
-                          onClick={e => { e.stopPropagation(); setSelected(c); }}
-                          className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg border border-slate-200 text-[11.5px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-[#1a2332] transition-colors"
-                        >
-                          View <ChevronRight className="h-3 w-3" />
-                        </button>
+                      <td className="px-4 py-3.5" onClick={e => e.stopPropagation()}>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => setSelected(c)}
+                            className="inline-flex items-center gap-1 h-7 px-2.5 rounded-lg border border-slate-200 text-[11.5px] font-semibold text-slate-500 hover:bg-slate-50 hover:text-[#1a2332] transition-colors"
+                          >
+                            View <ChevronRight className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => setEditingClient(c)}
+                            className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 hover:text-[#1a2332] transition-colors"
+                            title="Edit client"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </button>
+                          {deleteId === c.id ? (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={() => { removeClientFromStore(c.id); setDeleteId(null); setToast(`${c.name} removed`); }}
+                                className="h-7 px-2 rounded-lg bg-red-50 border border-red-200 text-[11px] font-bold text-red-600 hover:bg-red-100 transition-colors"
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => setDeleteId(null)}
+                                className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50 transition-colors"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => setDeleteId(c.id)}
+                              className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-colors"
+                              title="Delete client"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -629,6 +912,43 @@ export function ClientsSection() {
 
       {/* Detail Drawer */}
       {selected && <ClientDrawer client={selected} onClose={() => setSelected(null)} />}
+
+      {/* Add Client Modal */}
+      {showAddModal && (
+        <ClientModal
+          onSave={c => {
+            addClientToStore(c);
+            setShowAddModal(false);
+            setToast(`${c.name} added successfully`);
+          }}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
+
+      {/* Edit Client Modal */}
+      {editingClient && (
+        <ClientModal
+          initial={editingClient}
+          onSave={c => {
+            updateClientInStore(c);
+            setEditingClient(null);
+            if (selected?.id === c.id) setSelected(c);
+            setToast(`${c.name} updated`);
+          }}
+          onClose={() => setEditingClient(null)}
+        />
+      )}
+
+      {/* Success toast */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-[70] flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl">
+          <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+          <p className="text-[13.5px] font-semibold">{toast}</p>
+          <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }

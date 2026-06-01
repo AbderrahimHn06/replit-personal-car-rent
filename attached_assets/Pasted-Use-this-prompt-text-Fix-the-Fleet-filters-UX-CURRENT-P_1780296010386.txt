@@ -1,0 +1,107 @@
+Use this prompt:
+
+```text
+Fix the Fleet filters UX.
+
+CURRENT PROBLEM
+
+When the user selects a filter, an "Active Filters" section appears below the filters bar.
+
+Example:
+
+Active Filters:
+[SUV] [Automatic] [Available]
+
+This section pushes the vehicle grid downward and causes the whole page layout to jump.
+
+This creates a poor user experience because:
+- Content shifts vertically
+- Cards move unexpectedly
+- The page feels unstable
+- The user loses visual focus
+
+REQUIRED SOLUTION
+
+Do NOT create a separate "Active Filters" row that appears and disappears.
+
+Instead use one of these approaches:
+
+OPTION A (Preferred)
+Show active filters directly inside the filter controls.
+
+Examples:
+
+Status:
+[Available ✓]
+
+Type:
+[SUV ✓]
+
+Transmission:
+[Automatic ✓]
+
+Selected filters should visually change state but not create new layout blocks.
+
+OR
+
+OPTION B
+Reserve a fixed-height area for active filters from the beginning.
+
+Requirements:
+- Height must always exist
+- No layout shift when filters appear
+- Vehicle grid position must never move
+
+UI RULES
+
+- The vehicle cards grid must remain in the same position.
+- Applying filters must not push content down.
+- Removing filters must not pull content up.
+- No sudden page jumps.
+- No layout reflow affecting the fleet cards.
+
+ACTIVE FILTER DESIGN
+
+Selected filters should be shown as:
+
+- Small pills/chips
+- Inline with filters
+- Compact
+- Easy to remove with ×
+- Same row as search/filter controls if possible
+
+Example:
+
+Search...
+[Available ×] [SUV ×] [Automatic ×]
+
+instead of:
+
+Search...
+
+Active Filters:
+[Available]
+[SUV]
+[Automatic]
+
+VEHICLE GRID
+
+The vehicle grid should feel anchored.
+
+When filters change:
+- Only the visible cards change
+- The surrounding layout remains stable
+
+ANIMATION
+
+If active filter chips appear:
+- Use a subtle fade
+- No height animation
+- No content jumping
+
+FINAL GOAL
+
+Applying or removing filters should feel instant and stable.
+
+The Fleet page should maintain a fixed visual structure and never push the vehicle cards downward when filters are selected.
+```

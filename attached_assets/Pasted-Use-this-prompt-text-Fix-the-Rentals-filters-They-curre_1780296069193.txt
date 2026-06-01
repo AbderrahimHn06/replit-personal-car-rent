@@ -1,0 +1,120 @@
+Use this prompt:
+
+```text
+Fix the Rentals filters. They currently do not work correctly.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- Use local state
+- No backend
+- No API calls
+
+CURRENT ISSUE
+The filters in the Rentals page are displayed but they do not actually filter the data.
+
+REQUIRED BEHAVIOR
+
+The Rentals page contains statuses:
+
+- All
+- Active
+- Reserved
+- Overdue
+- Completed
+
+When a filter is selected:
+
+- The rentals list must immediately update
+- Only matching rentals should be shown
+- The active filter should be visually highlighted
+- The count of displayed rentals should update
+
+Examples:
+
+All:
+- Show every rental
+
+Active:
+- Show only rentals with status = active
+
+Reserved:
+- Show only rentals with status = reserved
+
+Overdue:
+- Show only rentals with status = overdue
+
+Completed:
+- Show only rentals with status = completed
+
+FILTER COMBINATION
+
+If a search bar exists:
+
+Search + Filter must work together.
+
+Example:
+
+Search = "Ahmed"
+Filter = Active
+
+Result:
+Only active rentals belonging to Ahmed.
+
+Do not apply search and status separately.
+
+Both must be applied to the same filtered dataset.
+
+UI REQUIREMENTS
+
+Active filter:
+- Filled pill
+- Clear visual state
+
+Inactive filters:
+- Outline or light background
+
+Switching filters:
+- Instant update
+- No page refresh
+- No layout jumps
+
+EMPTY STATES
+
+If no rentals match:
+
+Show a proper empty state card:
+
+Icon
+Title:
+"No rentals found"
+
+Description:
+"Try changing filters or search terms."
+
+Button:
+"Clear Filters"
+
+RENTAL COUNTS
+
+Display counts beside filters:
+
+All (24)
+Active (8)
+Reserved (5)
+Overdue (2)
+Completed (9)
+
+Counts should be calculated from the rentals dataset.
+
+DEBUG
+
+Check:
+- Filter state updates
+- Status values consistency
+- Case sensitivity
+- Search + filter interaction
+- Table rendering after filtering
+
+Make sure every Rentals filter actually affects the displayed rentals and works consistently across desktop and mobile.
+```
