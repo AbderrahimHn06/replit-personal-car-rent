@@ -1,0 +1,368 @@
+Redesign the dashboard to feel like a premium, modern, luxury car-rental operations system.
+
+IMPORTANT GLOBAL RULES
+- Frontend only
+- Mock data only
+- Do not build backend logic
+- Do not build real API logic
+- Do not use a generic admin template look
+- Do not make the UI crowded
+- Prioritize readability, spacing, hierarchy, and premium visual quality
+- Keep the dashboard calm, elegant, and very easy to scan
+- Use a light theme only
+- Use white cards on very light gray backgrounds
+- Use soft borders, subtle shadows, rounded corners, and strong spacing
+- All sections must feel custom, not default
+
+SIDEBAR STRUCTURE
+The sidebar should be simplified and grouped logically. Do not split operations into many separate pages if it makes navigation noisy.
+
+Use this sidebar structure:
+
+- Overview
+- Operations
+  - Booking Requests
+  - Walk-in Rentals
+  - Rentals
+- Fleet
+  - Fleet
+  - Availability
+  - Maintenance
+- Clients
+  - Clients
+  - Blocked Clients
+- Insights
+  - Alerts
+  - Reports
+- Settings
+
+Sidebar UX rules:
+- Use small section labels in uppercase with muted color
+- Related items must feel visually grouped
+- Keep the sidebar calm, clean, and not noisy
+- Active item must be very clear with a filled pill background
+- Use consistent icons
+- Reduce clutter and unnecessary visual weight
+- If possible, make “Operations” a single page with internal tabs or subtabs instead of making it feel like 3 disconnected pages
+- The sidebar should support grouping, not overwhelm the user
+
+OVERALL UX GOAL
+The dashboard must feel like a real tool used daily by a car-rental agency owner or operations manager.
+It should feel:
+- readable in 5 seconds
+- premium
+- practical
+- modern
+- spacious
+- professional
+- visually balanced
+
+OVERVIEW PAGE: EXACT UI/UX SPEC
+
+1) PAGE STRUCTURE
+The Overview page must be built in this exact order:
+
+1. Page header
+2. KPI cards grid
+3. Main content row
+   - Recent activity feed
+   - Urgent alerts panel
+   - Fleet status summary
+4. Quick navigation shortcuts
+5. Optional small report blocks
+
+Every section must have breathing room. No dense blocks. No crowded spacing. No default admin look.
+
+2) HEADER SECTION
+Layout:
+- Full-width header inside the main content area
+- Left aligned title and subtitle
+- Right aligned action area
+
+Content:
+- Title: “Overview”
+- Subtitle: “Daily operations snapshot”
+- Right side actions:
+  - date range selector
+  - refresh icon/button
+  - small button like “View reports”
+
+Visual rules:
+- Title large, bold, and clearly dominant
+- Subtitle smaller and muted
+- Header should feel calm and premium
+- No heavy borders
+- No cramped spacing
+
+Alignment:
+- Desktop: title on left, controls on right
+- Mobile: stack vertically, controls below the title
+- Keep the controls aligned and compact
+
+3) KPI CARDS GRID
+This is the most important visual element on the Overview page.
+
+Layout:
+- Desktop: 4 cards per row or 3 + 3 + 3 depending on total count
+- Tablet: 2 per row
+- Mobile: 1 per row
+
+Cards to include:
+- Total bookings
+- Pending requests
+- Confirmed bookings
+- Active rentals
+- Available cars
+- Rented cars
+- Maintenance cars
+- Total clients
+- Blocked clients
+
+KPI card design:
+- White card background
+- Soft border
+- Rounded corners
+- Equal height across the whole row
+- Small icon in a colored circle
+- Label at the top
+- Big value in the middle
+- Small subtitle or trend text below
+- Optional tiny percentage change or status note
+
+Visual hierarchy inside each KPI card:
+- Icon and label at top
+- Big number as the main visual element
+- Supporting metadata at the bottom
+
+Alignment:
+- Keep icon alignment consistent across all cards
+- Use equal padding in every card
+- Numbers should line up visually
+- Do not let icons float or jump vertically
+- Keep all KPI cards visually identical in structure
+
+Styling rules:
+- Number should be the most dominant text
+- Label must be smaller and muted
+- Trend text should be smaller than the label
+- Use subtle colors, not loud colors
+
+4) MAIN CONTENT ROW
+Below KPIs, split the page into a strong dashboard row.
+
+Desktop layout:
+- Two-column layout
+- Left side: Recent Activity Feed
+- Right side: Urgent Alerts Panel
+- Below them, a full-width Fleet Status Summary or shortcut/report block
+
+Mobile layout:
+- Stack everything vertically
+- No side-by-side crowding
+- Keep the order visually logical
+
+5) RECENT ACTIVITY FEED
+This block should feel like a timeline or operations log, not a plain list.
+
+Content:
+Each activity item should include:
+- small icon or status dot
+- action text
+- timestamp
+- optional related car/client name
+- optional status hint
+
+Examples:
+- New booking request received
+- Client confirmed rental
+- Car returned
+- Maintenance scheduled
+- Walk-in rental created
+
+Design:
+- Vertical feed
+- Each item separated by subtle spacing
+- Left icon column + right text column
+- Strong text for the action
+- Muted text for metadata
+- Clean rhythm and clean spacing
+
+Alignment:
+- Icons should align vertically in a neat column
+- Text should align left and stay easy to scan
+- The feed should feel structured, not chaotic
+
+Styling:
+- Slightly elevated card
+- No heavy dividers
+- No dense lines
+- Use soft spacing and consistent line height
+
+6) URGENT ALERTS PANEL
+This block should stand out more than the activity feed.
+
+Content:
+Show 3 to 4 high-priority alert cards such as:
+- Pending request waiting too long
+- Overdue rental
+- Car needs maintenance
+- Blocked client warning
+
+Design:
+Each alert item should include:
+- severity color
+- icon
+- short title
+- short explanation
+- small action button like “Review”
+
+Severity styling:
+- Urgent: red
+- Warning: amber or orange
+- Info: blue
+- Success only if needed
+
+Layout:
+- Alerts stacked vertically
+- Compact but readable
+- Strong contrast between the background and the severity chip/badge
+
+Alignment:
+- Icon or severity badge on the left
+- Text block in the center
+- Action button on the right or under the text on mobile
+
+Important:
+- Do not make alerts look like generic notifications
+- They must feel like real operational issues needing action
+
+7) FLEET STATUS SUMMARY
+This section should show fleet health in a more visual way than plain numbers.
+
+Content:
+Display:
+- available cars
+- rented cars
+- reserved cars
+- maintenance cars
+
+UI style:
+Use either:
+- horizontal progress bars, or
+- compact stat rows inside one card
+
+Each row should have:
+- label on the left
+- number on the right
+- a colored bar below or beside it
+
+Example colors:
+- Available = green
+- Reserved = blue
+- Rented = amber
+- Maintenance = red
+
+Layout:
+- Either one large card with 4 rows
+- Or 4 mini cards inside one grouped block
+
+Alignment:
+- Labels aligned left
+- Counts aligned right
+- Progress bars same height and width
+- Visual rhythm must be consistent
+
+8) QUICK NAVIGATION SHORTCUTS
+This block helps the owner jump to the most used pages.
+
+Content:
+Use small shortcut cards or pill buttons for:
+- Booking Requests
+- Walk-in Rentals
+- Rentals
+- Fleet
+- Availability
+- Alerts
+
+Design:
+- Compact cards with icon + label
+- Hover effect
+- Easy to scan
+- Clear click targets
+
+Layout:
+- Grid of 2 or 3 columns depending on screen size
+- On mobile: 2 columns or stacked buttons
+
+Purpose:
+This block must make the Overview page feel useful, not decorative.
+
+9) OPTIONAL SMALL REPORT BLOCKS
+If the page needs more depth, add 1 or 2 compact metric blocks:
+- bookings by source
+- occupancy rate
+- revenue estimate
+- client growth
+
+Style:
+- Tiny bar chart
+- Donut chart
+- Minimal stat card
+- No chart clutter
+- Keep it visual but simple
+
+10) SPACING AND ALIGNMENT RULES
+This page must feel breathable and premium.
+
+Spacing:
+- Large vertical gaps between main sections
+- Cards must have consistent internal padding
+- No random margins
+- No cramped clusters
+- No default spacing mistakes
+
+Alignment:
+- All cards in the same row must match height
+- Titles must align on the same baseline
+- Icons must be visually centered
+- Text blocks must have clean vertical rhythm
+
+Typography:
+- Page title: large and strong
+- Labels: small and muted
+- Numbers: biggest text on the page
+- Metadata: smallest but still readable
+
+11) VISUAL TONE
+The Overview page must feel:
+- modern
+- premium
+- calm
+- operational
+- readable at a glance
+
+It must NOT feel like:
+- a generic admin dashboard
+- a spreadsheet
+- a cluttered analytics tool
+- a cheap template
+
+12) OPERATIONS PAGES UX DIRECTION
+For Operations, keep the user flow simple and grouped:
+- Booking Requests
+- Walk-in Rentals
+- Rentals
+
+These should feel related and ideally live in one logical area with tabs or sub-navigation inside the Operations section if possible.
+Do not make the navigation feel fragmented.
+
+Keep the whole dashboard coherent:
+- grouped sections
+- spacious cards
+- readable tables
+- elegant modals
+- clean filters
+- strong hierarchy
+- premium light aesthetic
+
+Build it with a custom, polished UI that looks like a real daily operations system for a car rental agency.
