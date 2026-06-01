@@ -44,8 +44,8 @@ export function OperationsSection({ activeTab, onTabChange }: Props) {
       <div className="px-6 sm:px-8 pt-7 pb-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">Operations</h2>
-            <p className="text-[13px] text-slate-400 mt-1 font-medium">Manage bookings, walk-ins, and rentals in one place</p>
+            <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">Rentals</h2>
+            <p className="text-[13px] text-slate-400 mt-1 font-medium">Bookings, walk-ins, and rental lifecycle in one workspace</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">

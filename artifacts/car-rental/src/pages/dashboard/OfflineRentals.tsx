@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, X, Eye, CheckCircle2, Printer, CalendarPlus } from "lucide-react";
 import { rentals as allRentals, DashboardRental, RentalStatus, fleet } from "@/data/dashboardData";
 
@@ -153,6 +153,11 @@ function NewRentalModal({ onClose, onSave }: {
   const [form, setForm]     = useState<FormState>(BLANK);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
 
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
   const set = (k: keyof FormState, v: string) => setForm(prev => ({ ...prev, [k]: v }));
   const total = calcTotal(form.carId, form.pickupDate, form.returnDate, form.dailyPrice);
   const selectedCar = fleet.find(c => c.id === form.carId);
@@ -197,9 +202,9 @@ function NewRentalModal({ onClose, onSave }: {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[92vh] flex flex-col">
+      <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 pointer-events-none">
+        <div className="bg-white rounded-2xl shadow-[0_24px_60px_rgba(0,0,0,0.18)] w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
 
           <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
             <div>

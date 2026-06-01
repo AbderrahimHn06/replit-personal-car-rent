@@ -42,11 +42,11 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: "Operations",
+    label: "Rentals",
     items: [
       { id: "operations", label: "Booking Requests", icon: CalendarCheck, badge: kpis.pendingRequests, opsTab: "bookings" },
       { id: "operations", label: "Walk-in Rentals",  icon: UserPlus,      opsTab: "offline" },
-      { id: "operations", label: "Rentals",          icon: Key,           badge: kpis.activeRentals, opsTab: "rentals" },
+      { id: "operations", label: "All Rentals",      icon: Key,           badge: kpis.activeRentals, opsTab: "rentals" },
     ],
   },
   {
@@ -81,7 +81,7 @@ const NAV_GROUPS: NavGroup[] = [
 
 const LABELS: Record<Section, { title: string; sub: string }> = {
   overview:     { title: "Overview",         sub: "Today's summary and key metrics" },
-  operations:   { title: "Operations",       sub: "Bookings, walk-ins, and active rentals" },
+  operations:   { title: "Rentals",           sub: "Bookings, walk-ins, and rental lifecycle in one workspace" },
   fleet:        { title: "Fleet",            sub: "Vehicle inventory and status" },
   clients:      { title: "Clients",          sub: "Registered client profiles" },
   blocked:      { title: "Blocked Clients",  sub: "Clients restricted from renting" },

@@ -1,0 +1,187 @@
+Refine the Operations area so it behaves like ONE unified Rentals workspace, and fix the modal overlay behavior for “New Walk-in Rental”.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API
+- No real business logic
+- Keep the UI premium, calm, readable, and highly polished
+
+OPERATIONS NAVIGATION CHANGE
+The sidebar should not make Booking Requests, Walk-in Rentals, and Rentals feel like 3 separate pages.
+
+Instead:
+- Keep them grouped under one main business area
+- Make them act like internal tabs or sub-views of one workspace
+- Visually they are separate controls, but logically they belong to the same Rentals / Operations area
+
+Recommended structure:
+- Main page title: “Rentals”
+- Subtitle: “Bookings, walk-ins, and rental lifecycle in one workspace”
+- Internal tabs at the top:
+  - Booking Requests
+  - Walk-in Rentals
+  - Rentals
+
+Sidebar behavior:
+- Keep the Operations group in the sidebar
+- Do not make the experience feel fragmented
+- The sidebar items should navigate to the same workspace and switch the internal tab
+- The whole group should feel like one business workflow, not 3 disconnected pages
+
+PAGE GOAL
+The Rentals workspace must feel like one coherent operational system:
+- review booking requests
+- create walk-in rentals
+- manage active and past rentals
+- open clean detail panels
+- act fast
+- stay organized
+
+FIX THE “NEW WALK-IN RENTAL” MODAL
+The current modal overlay is wrong. It must be fixed so it feels like a real professional dialog.
+
+OVERLAY RULES
+- Use a full-screen fixed overlay:
+  - position fixed
+  - inset-0
+  - z-50
+- Darken the background with a soft black overlay:
+  - bg-black/40 or bg-black/50
+- Add blur:
+  - backdrop-blur-sm
+- The overlay must cover the entire viewport
+- The modal must sit clearly above everything
+- The shadow should be soft and premium, not ugly or too harsh
+- Clicking outside should close the modal if appropriate
+- Prevent background scroll while the modal is open
+
+MODAL SIZE RULES
+The modal is currently taking the wrong size. Fix it with a proper responsive container.
+
+Desktop:
+- width should be around max-w-2xl or max-w-3xl
+- centered horizontally and vertically
+- rounded-2xl
+- shadow-2xl
+- max-h-[90vh]
+- overflow-y-auto
+
+Tablet:
+- keep centered
+- slightly narrower if needed
+- never overflow the viewport
+
+Mobile:
+- do not make it a tiny floating box
+- use a near full-width dialog
+- w-[calc(100%-1.5rem)] or similar spacing from edges
+- max-h-[90vh]
+- if needed, make it behave like a bottom-sheet style modal
+- keep clear spacing and readable touch targets
+
+MODAL CONTENT STRUCTURE
+The modal should be broken into clear sections:
+1. Client information
+2. Car selection
+3. Rental dates
+4. Price and deposit
+5. Notes
+6. Actions
+
+Form layout:
+- labels above inputs
+- consistent input height
+- rounded-lg inputs
+- equal spacing between fields
+- no cramped rows
+- primary button clearly visible
+- secondary cancel button subtle
+
+MODAL VISUAL STYLE
+- White background
+- Soft border
+- Rounded corners
+- Large header title
+- Small subtitle or helper text
+- Close button top-right
+- Strong spacing between sections
+- No cramped content
+- No dark ugly shadow behind the modal
+- The overlay should feel premium, not broken
+
+RENTALS WORKSPACE LAYOUT
+At the top of the page:
+- title
+- subtitle
+- right-side actions
+- search
+- filters
+- “New Walk-in Rental” button
+
+Below that:
+- internal tabs for:
+  - Booking Requests
+  - Walk-in Rentals
+  - Rentals
+
+Each tab should share the same visual system:
+- same header spacing
+- same table style
+- same filter chip style
+- same modal/drawer style
+
+BOOKING REQUESTS TAB
+- Table with booking requests
+- status badges
+- clean row spacing
+- actions: view, contact, confirm, cancel
+- clicking a row opens a detail drawer or modal
+
+WALK-IN RENTALS TAB
+- Table of manual rentals
+- button: “New Walk-in Rental”
+- clicking it opens the fixed modal
+- modal must open above a correct overlay
+- no broken shadow
+- no wrong size
+- no clipped content
+
+RENTALS TAB
+- table of all rentals
+- filters for active, reserved, overdue, completed
+- row click opens detail drawer
+- actions: view, mark returned, extend, print agreement
+
+DESIGN RULES FOR ALL THREE TABS
+- Keep the page spacious
+- Use white cards on light gray background
+- Use rounded-xl or rounded-2xl cards
+- Use subtle borders
+- Use clear table headers
+- Use generous row height
+- Use readable badges
+- Use soft hover states
+- Keep the action buttons compact and elegant
+
+RESPONSIVE BEHAVIOR
+Desktop:
+- full table layout
+- modal centered and medium-large
+
+Tablet:
+- tables remain readable
+- modal stays centered and constrained
+
+Mobile:
+- tabs remain easy to tap
+- tables can scroll horizontally or turn into stacked cards
+- modal must be near full-width and readable
+- no broken overlay
+- no clipped buttons
+- no hidden form fields
+
+FINAL UX GOAL
+Make the Rentals area feel like one polished operational workspace, not separate pages.
+Fix the modal overlay so it appears as a correct premium dialog with proper blur, shading, size, and responsive behavior.
