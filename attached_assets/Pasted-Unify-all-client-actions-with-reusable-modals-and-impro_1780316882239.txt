@@ -1,0 +1,189 @@
+Unify all client actions with reusable modals and improve the Add Client form.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API calls
+- No real persistence
+- Use local state only
+- Keep the UI premium, clean, and consistent with the rest of the dashboard
+
+1) REUSE THE SAME RENTAL MODAL FROM CLIENT PROFILE
+
+Inside the client profile, the button “Create Rent” must open the exact same rental creation modal used everywhere else in the app.
+
+Do not create a separate rent form for the client profile.
+
+Use one shared component:
+RentalCreationModal
+
+It must work from:
+- Availability → Book
+- Rentals → New Walk-in Rental
+- Client profile → Create Rent
+
+When opened from a client profile:
+- the selected client must be prefilled automatically
+- the user should not select the client again
+- the same premium modal layout must be reused
+- only the client context changes
+
+2) REUSE THE SAME CLIENT MODAL FOR EDIT AND CREATE
+
+The client profile actions should use one shared client form modal:
+
+ClientFormModal
+
+Use it for:
+- Add Client
+- Edit Client
+
+When opened in Add mode:
+- empty form
+
+When opened in Edit mode:
+- prefilled form
+
+Do not create separate add/edit forms.
+
+3) CLIENT PROFILE ACTIONS TO FUNCTIONALIZE
+
+From the client profile, these buttons must work using real UI behavior with local state:
+
+- Create Rent → opens RentalCreationModal prefilled with this client
+- Edit Client → opens ClientFormModal in edit mode
+- Block / Unblock → opens confirmation modal
+- Add Note → opens note modal
+
+All of them should feel connected and consistent.
+
+4) BLOCK / UNBLOCK MODAL
+
+Create a reusable confirmation modal for blocking or unblocking a client.
+
+Block modal content:
+- Client name
+- Reason textarea
+- Optional note
+- Confirm button
+- Cancel button
+
+Unblock modal:
+- Show previous block reason
+- Confirm unblock button
+- Cancel button
+
+This should update local state only.
+
+5) ADD NOTE MODAL
+
+Add a clean note modal for client profile.
+
+Fields:
+- Note title
+- Note content
+- Priority if needed
+- Save / Cancel
+
+Saved notes should appear in the client profile notes section.
+
+6) ADD CLIENT FORM: OPTIONAL FILE UPLOADS
+
+The Add Client modal must include optional document uploads.
+
+Add these optional upload fields:
+- Driver License
+- Passport
+- Nationality Document
+
+These are optional, not required.
+
+Upload behavior:
+- allow selecting files from device
+- use local previews / file names only
+- no URL pasting
+- no backend upload yet
+- make the UI ready for future storage integration
+
+Upload field UI:
+- drag and drop area or file picker button
+- show selected file name
+- show file type and size if possible
+- allow remove file
+- keep the design consistent with the rest of the app
+
+Accepted file types:
+- PDF
+- JPG
+- PNG
+- WEBP
+
+7) ADD CLIENT FORM STRUCTURE
+
+The Add Client modal should include:
+
+Basic info:
+- Full Name *
+- Phone Number *
+- WhatsApp Number
+- Email
+- City
+- Address
+
+Identity:
+- Driver License Number
+- License Expiry Date
+- National ID Number
+- Date of Birth
+
+Status:
+- Client Type: Online / Walk-in
+- Status: Active / VIP / Blocked
+
+Optional Documents:
+- Driver License upload
+- Passport upload
+- Nationality document upload
+
+Notes:
+- Internal Notes
+
+8) UI / UX REQUIREMENTS
+
+All modal windows must:
+- have proper overlay
+- use dark blurred background
+- be centered
+- have soft shadows
+- use rounded corners
+- be responsive
+- scroll properly if content is long
+- have consistent spacing
+
+Buttons in all modals:
+- primary action visually strong
+- secondary action subtle
+
+9) CLIENT PROFILE ACTION FLOW
+
+Client Profile:
+- Create Rent → opens shared rental modal prefilled with this client
+- Edit Client → opens shared client form modal
+- Block / Unblock → opens confirmation modal
+- Add Note → opens note modal
+
+The profile should feel like a real CRM control center.
+
+10) FINAL GOAL
+
+Make client actions fully functional in the UI with reusable modals:
+- one shared rental modal
+- one shared client form modal
+- one block/unblock confirmation modal
+- one note modal
+
+Also upgrade Add Client to support optional document uploads for:
+- driver license
+- passport
+- nationality document
