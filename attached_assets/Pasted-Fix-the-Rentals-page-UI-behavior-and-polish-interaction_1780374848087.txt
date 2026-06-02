@@ -1,0 +1,415 @@
+Fix the Rentals page UI behavior and polish interactions across the entire dashboard.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API calls
+- Use local state only
+- Keep the current design system
+- Do not redesign the whole dashboard
+- Focus on fixing functionality, interaction quality, animations, and UX consistency
+
+====================================================
+1) FIX RENTALS FILTERS
+====================================================
+
+Current issue:
+The Rentals filters do not actually filter the displayed rentals.
+
+Required behavior:
+
+Filters:
+- All
+- Active
+- Reserved
+- Overdue
+- Completed
+
+When a filter is selected:
+- The rentals list updates immediately
+- Only matching rentals appear
+- Active filter is visually highlighted
+- Counts update correctly
+
+Search + Filters:
+- Search and filters must work together
+- Example:
+  Search = Ahmed
+  Filter = Active
+  Result = only Ahmed's active rentals
+
+Empty State:
+If no rentals match:
+- Show icon
+- Title:
+  No rentals found
+- Description:
+  Try changing your search or filters
+- Button:
+  Clear Filters
+
+Visual:
+- Active filter pill clearly highlighted
+- Hover states on filter pills
+- cursor-pointer on all pills
+
+====================================================
+2) REMOVE DUPLICATE NEW WALK-IN RENTAL BUTTON
+====================================================
+
+Current issue:
+The Rentals page shows the New Walk-in Rental button twice.
+
+Required:
+- Keep only ONE primary button
+- Place it in the page header action area
+- Remove all duplicate instances
+- Ensure only one obvious entry point exists
+
+====================================================
+3) IMPROVE MODAL OPENING ANIMATIONS
+====================================================
+
+All modals should feel premium.
+
+Overlay:
+- fixed inset-0
+- bg-black/40 or bg-black/50
+- backdrop-blur-sm
+
+Open Animation:
+- opacity 0 → 100
+- scale 95% → 100%
+- duration 200-300ms
+- ease-out
+
+Close Animation:
+- reverse animation
+- smooth fade out
+- no instant disappearance
+
+Modal Quality:
+- centered properly
+- responsive
+- no overflow issues
+- scrollable when needed
+- soft shadow
+- rounded corners
+- proper spacing
+
+Outside Click:
+- closes modal when appropriate
+
+Escape Key:
+- closes modal when appropriate
+
+====================================================
+4) IMPROVE DRAWER ANIMATIONS
+====================================================
+
+All side drawers:
+
+Open:
+- slide from right
+- fade in slightly
+- smooth motion
+
+Close:
+- slide out
+- fade out
+
+No jumpy transitions.
+
+Applies to:
+- Vehicle drawer
+- Client profile drawer
+- Rental details drawer
+- Any side panel
+
+====================================================
+5) BUTTONS AND INTERACTION STATES
+====================================================
+
+Every clickable element must have:
+
+cursor-pointer
+
+Applies to:
+- Buttons
+- Cards
+- Action icons
+- Table rows
+- Filter chips
+- Tabs
+- Search results
+- Navigation items
+
+Hover Effects:
+
+Buttons:
+- slight brightness increase
+- subtle lift
+
+Cards:
+- subtle shadow increase
+- border highlight
+
+Rows:
+- light background highlight
+
+Icons:
+- slight opacity transition
+
+Keep effects elegant and professional.
+
+====================================================
+6) GLOBAL SEARCH EXPERIENCE
+====================================================
+
+This is one of the most important interaction improvements.
+
+The global dashboard search must feel like:
+
+- Linear
+- Raycast
+- Notion
+- Vercel Dashboard
+
+Not like a simple dropdown.
+
+====================================================
+SEARCH OPENING
+====================================================
+
+Open when:
+- Clicking search bar
+- Ctrl + K
+- Cmd + K
+
+Overlay:
+- fixed inset-0
+- bg-black/40
+- backdrop-blur-sm
+
+Prevent page interaction while open.
+
+====================================================
+SEARCH PANEL ANIMATION
+====================================================
+
+Opening:
+- opacity 0 → 100
+- scale 95% → 100%
+- slight translateY:
+  -8px → 0
+
+Duration:
+200-250ms
+
+Easing:
+ease-out
+
+Closing:
+- reverse animation
+
+No abrupt appearance.
+
+====================================================
+SEARCH PANEL DESIGN
+====================================================
+
+Centered command palette.
+
+Width:
+- Desktop: 700-900px
+- Tablet: 90%
+- Mobile: full width with margins
+
+Style:
+- white background
+- large border radius
+- soft premium shadow
+- subtle border
+
+Structure:
+
+Top:
+Search input
+
+Middle:
+Grouped results
+
+Bottom:
+Keyboard shortcuts/help
+
+====================================================
+SEARCH INPUT
+====================================================
+
+Requirements:
+
+- Auto focus on open
+- Search icon left
+- Clear button right
+- Large comfortable height
+- Strong focus state
+
+Placeholder:
+
+Search clients, cars, rentals, bookings...
+
+====================================================
+SEARCH RESULTS
+====================================================
+
+Group results:
+
+Clients
+Vehicles
+Rentals
+Booking Requests
+Locations
+Maintenance
+
+Each result shows:
+
+Icon
+Title
+Subtitle
+Status badge
+
+Example:
+
+Client:
+Ahmed Benali
++213xxxxxxxx
+VIP
+
+Vehicle:
+Renault Clio 5
+123-456-789
+Available
+
+Rental:
+RNT-1023
+Ahmed Benali
+Active
+
+====================================================
+SEARCH RESULT INTERACTIONS
+====================================================
+
+Hover:
+- soft background highlight
+
+Selected:
+- stronger highlight
+
+Click:
+- opens related page or drawer
+
+Examples:
+
+Client:
+Open client profile
+
+Vehicle:
+Open vehicle drawer
+
+Rental:
+Open rental details
+
+Booking:
+Open booking details
+
+====================================================
+SEARCH RESULT ANIMATIONS
+====================================================
+
+Results should animate smoothly.
+
+When typing:
+- fade in results
+- no flashing
+- no layout jumps
+
+Group headers:
+- subtle appearance
+
+Empty State:
+No results found
+
+with helpful message.
+
+====================================================
+7) VISUAL FEEDBACK IMPROVEMENTS
+====================================================
+
+Selected tabs:
+- clearly active
+
+Selected filters:
+- obvious active state
+
+Active navigation:
+- strong indicator
+
+Disabled buttons:
+- clearly disabled
+
+Form validation:
+- visible error states
+
+Success actions:
+- subtle success toast
+
+====================================================
+8) GENERAL TRANSITIONS
+====================================================
+
+Apply smooth transitions globally.
+
+Buttons:
+transition-all duration-200
+
+Cards:
+transition-all duration-200
+
+Tabs:
+transition-all duration-200
+
+Navigation:
+transition-all duration-200
+
+Hover interactions:
+smooth but fast
+
+Avoid:
+- aggressive animations
+- bouncing effects
+- long delays
+
+====================================================
+9) UX GOAL
+====================================================
+
+The dashboard should feel:
+
+- Premium
+- Fast
+- Stable
+- Smooth
+- Professional
+- Easy to understand
+- Easy to navigate
+
+Remove:
+- Broken filters
+- Duplicate buttons
+- Abrupt modal openings
+- Abrupt search opening
+- Missing pointer cursors
+- Jumpy layout changes
+
+The entire dashboard should feel like a polished SaaS product used daily by a professional car rental agency.
