@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, Building2, Phone, Mail, Clock, FileText, Palette, MapPin, Plus, Edit2, X, ToggleLeft, ToggleRight, CheckCircle } from "lucide-react";
-import { useLocations, addLocation, updateLocation, removeLocation, AgencyLocation } from "@/data/localStore";
+import {
+  Save, Building2, Phone, Mail, Clock, FileText, Palette, MapPin,
+  Plus, Edit2, X, ToggleLeft, ToggleRight, CheckCircle, DollarSign, Globe, Languages,
+} from "lucide-react";
+import {
+  useLocations, addLocation, updateLocation, removeLocation, AgencyLocation,
+  useCurrencySettings, updateCurrencySettings, CurrencyCode, CURRENCY_NAMES, CURRENCY_SYMBOLS,
+  useLanguageSettings, updateLanguageSettings, LanguageCode, LANGUAGE_NAMES,
+} from "@/data/localStore";
 
 const INITIAL = {
   agencyName: "EliteRide Car Rental",
@@ -45,7 +52,11 @@ function LocationModal({ initial, onSave, onClose }: {
   onSave: (l: AgencyLocation) => void;
   onClose: () => void;
 }) {
-  const [form, setForm] = useState<Omit<AgencyLocation, "id">>(initial ? { name: initial.name, address: initial.address, city: initial.city, notes: initial.notes, isActive: initial.isActive } : { ...BLANK_LOC });
+  const [form, setForm] = useState<Omit<AgencyLocation, "id">>(
+    initial
+      ? { name: initial.name, address: initial.address, city: initial.city, notes: initial.notes, isActive: initial.isActive }
+      : { ...BLANK_LOC }
+  );
   const set = (k: keyof typeof form, v: string | boolean) => setForm(p => ({ ...p, [k]: v }));
 
   const inp = "w-full h-10 rounded-xl border border-slate-200 px-3.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
@@ -66,7 +77,7 @@ function LocationModal({ initial, onSave, onClose }: {
               <h3 className="text-[16px] font-bold text-[#1a2332]">{initial ? "Edit Location" : "Add Location"}</h3>
               <p className="text-[12px] text-slate-400 mt-0.5">Agency pickup / return point</p>
             </div>
-            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-4 w-4" /></button>
+            <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"><X className="h-4 w-4" /></button>
           </div>
           <div className="px-6 py-5 space-y-4">
             <div>
@@ -93,7 +104,7 @@ function LocationModal({ initial, onSave, onClose }: {
                 <p className="text-[13px] font-semibold text-slate-700">Active</p>
                 <p className="text-[11px] text-slate-400">Show in pickup/return dropdowns</p>
               </div>
-              <button onClick={() => set("isActive", !form.isActive)} className="transition-colors">
+              <button onClick={() => set("isActive", !form.isActive)} className="transition-colors cursor-pointer">
                 {form.isActive
                   ? <ToggleRight className="h-7 w-7 text-emerald-500" />
                   : <ToggleLeft  className="h-7 w-7 text-slate-300"   />}
@@ -130,7 +141,7 @@ function LocationsSection() {
         </div>
         <button
           onClick={() => setAdding(true)}
-          className="flex items-center gap-1.5 h-9 px-4 bg-[#1a2332] text-white rounded-xl text-xs font-semibold hover:bg-[#243044] transition-colors"
+          className="flex items-center gap-1.5 h-9 px-4 bg-[#1a2332] text-white rounded-xl text-xs font-semibold hover:bg-[#243044] transition-colors cursor-pointer"
         >
           <Plus className="h-3.5 w-3.5" /> Add Location
         </button>
@@ -159,21 +170,20 @@ function LocationsSection() {
                   {loc.isActive ? "Active" : "Inactive"}
                 </span>
                 <button
-                  onClick={() => { updateLocation({ ...loc, isActive: !loc.isActive }); }}
-                  className="h-7 px-2.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 transition-colors"
-                  title={loc.isActive ? "Disable" : "Enable"}
+                  onClick={() => updateLocation({ ...loc, isActive: !loc.isActive })}
+                  className="h-7 px-2.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   {loc.isActive ? "Disable" : "Enable"}
                 </button>
                 <button
                   onClick={() => setEditing(loc)}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer"
                 >
                   <Edit2 className="h-3.5 w-3.5" />
                 </button>
                 <button
                   onClick={() => removeLocation(loc.id)}
-                  className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors"
+                  className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors cursor-pointer"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -195,6 +205,238 @@ function LocationsSection() {
   );
 }
 
+/* ─── Currency Section ─────────────────────────────────────────── */
+const ALL_CURRENCIES: CurrencyCode[] = ["DZD", "USD", "EUR"];
+
+function CurrencySection() {
+  const { mainCurrency, supportedCurrencies } = useCurrencySettings();
+  const [saved, setSaved] = useState(false);
+
+  function handleMainChange(c: CurrencyCode) {
+    const newSupported = supportedCurrencies.includes(c)
+      ? supportedCurrencies
+      : [...supportedCurrencies, c];
+    updateCurrencySettings({ mainCurrency: c, supportedCurrencies: newSupported });
+    flash();
+  }
+
+  function toggleSupported(c: CurrencyCode) {
+    if (c === mainCurrency) return;
+    const has = supportedCurrencies.includes(c);
+    updateCurrencySettings({
+      supportedCurrencies: has
+        ? supportedCurrencies.filter(x => x !== c)
+        : [...supportedCurrencies, c],
+    });
+    flash();
+  }
+
+  function flash() { setSaved(true); setTimeout(() => setSaved(false), 2000); }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <DollarSign className="h-4 w-4 text-primary" />
+          <div>
+            <h3 className="text-sm font-bold text-slate-700">Currency</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Set main currency and accepted payment currencies</p>
+          </div>
+        </div>
+        {saved && (
+          <span className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-600">
+            <CheckCircle className="h-3.5 w-3.5" /> Saved
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-5">
+        {/* Main currency */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Main Currency</p>
+          <div className="grid grid-cols-3 gap-2.5">
+            {ALL_CURRENCIES.map(c => {
+              const isMain = mainCurrency === c;
+              return (
+                <button
+                  key={c}
+                  onClick={() => handleMainChange(c)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    isMain
+                      ? "bg-[#1a2332] border-[#1a2332] text-white shadow-sm"
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className={`text-[15px] font-bold ${isMain ? "text-white" : "text-slate-400"}`}>
+                    {CURRENCY_SYMBOLS[c]}
+                  </span>
+                  <div>
+                    <p className={`text-[12.5px] font-bold ${isMain ? "text-white" : "text-slate-800"}`}>{c}</p>
+                    <p className={`text-[10.5px] ${isMain ? "text-white/70" : "text-slate-400"}`}>
+                      {CURRENCY_NAMES[c].split(" (")[0]}
+                    </p>
+                  </div>
+                  {isMain && <CheckCircle className="h-4 w-4 ml-auto text-white/80" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Supported currencies */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Supported Currencies</p>
+          <p className="text-[12px] text-slate-500 mb-3">Enable currencies for multi-currency pricing on your fleet.</p>
+          <div className="space-y-2">
+            {ALL_CURRENCIES.map(c => {
+              const isEnabled = supportedCurrencies.includes(c);
+              const isMain = mainCurrency === c;
+              return (
+                <div key={c} className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/40">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[15px] font-bold text-slate-400 w-6 text-center">{CURRENCY_SYMBOLS[c]}</span>
+                    <div>
+                      <p className="text-[13px] font-semibold text-slate-800">{c} <span className="text-slate-400 font-normal text-[11.5px]">· {CURRENCY_NAMES[c].split(" (")[0]}</span></p>
+                      {isMain && <p className="text-[10.5px] text-violet-600 font-semibold mt-0.5">Main currency</p>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSupported(c)}
+                    disabled={isMain}
+                    className="cursor-pointer disabled:opacity-40 disabled:cursor-default"
+                  >
+                    {isEnabled
+                      ? <ToggleRight className="h-7 w-7 text-emerald-500" />
+                      : <ToggleLeft  className="h-7 w-7 text-slate-300"   />}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Language Section ─────────────────────────────────────────── */
+const ALL_LANGUAGES: LanguageCode[] = ["fr", "en", "ar"];
+const LANG_FLAGS: Record<LanguageCode, string> = { fr: "🇫🇷", en: "🇬🇧", ar: "🇩🇿" };
+
+function LanguageSection() {
+  const { mainLanguage, supportedLanguages } = useLanguageSettings();
+  const [saved, setSaved] = useState(false);
+
+  function handleMainChange(l: LanguageCode) {
+    const newSupported = supportedLanguages.includes(l)
+      ? supportedLanguages
+      : [...supportedLanguages, l];
+    updateLanguageSettings({ mainLanguage: l, supportedLanguages: newSupported });
+    flash();
+  }
+
+  function toggleSupported(l: LanguageCode) {
+    if (l === mainLanguage) return;
+    const has = supportedLanguages.includes(l);
+    updateLanguageSettings({
+      supportedLanguages: has
+        ? supportedLanguages.filter(x => x !== l)
+        : [...supportedLanguages, l],
+    });
+    flash();
+  }
+
+  function flash() { setSaved(true); setTimeout(() => setSaved(false), 2000); }
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <Languages className="h-4 w-4 text-primary" />
+          <div>
+            <h3 className="text-sm font-bold text-slate-700">Language</h3>
+            <p className="text-xs text-slate-400 mt-0.5">Interface and document language preferences</p>
+          </div>
+        </div>
+        {saved && (
+          <span className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-600">
+            <CheckCircle className="h-3.5 w-3.5" /> Saved
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-5">
+        {/* Main language */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Main Language</p>
+          <div className="grid grid-cols-3 gap-2.5">
+            {ALL_LANGUAGES.map(l => {
+              const isMain = mainLanguage === l;
+              return (
+                <button
+                  key={l}
+                  onClick={() => handleMainChange(l)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition-all cursor-pointer ${
+                    isMain
+                      ? "bg-[#1a2332] border-[#1a2332] text-white shadow-sm"
+                      : "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="text-[18px]">{LANG_FLAGS[l]}</span>
+                  <div>
+                    <p className={`text-[12.5px] font-bold ${isMain ? "text-white" : "text-slate-800"}`}>
+                      {l.toUpperCase()}
+                    </p>
+                    <p className={`text-[10.5px] ${isMain ? "text-white/70" : "text-slate-400"}`}>
+                      {LANGUAGE_NAMES[l]}
+                    </p>
+                  </div>
+                  {isMain && <CheckCircle className="h-4 w-4 ml-auto text-white/80" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Supported languages */}
+        <div>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Supported Languages</p>
+          <p className="text-[12px] text-slate-500 mb-3">Enable languages for rental agreements and client communications.</p>
+          <div className="space-y-2">
+            {ALL_LANGUAGES.map(l => {
+              const isEnabled = supportedLanguages.includes(l);
+              const isMain = mainLanguage === l;
+              return (
+                <div key={l} className="flex items-center justify-between px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/40">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[18px]">{LANG_FLAGS[l]}</span>
+                    <div>
+                      <p className="text-[13px] font-semibold text-slate-800">
+                        {LANGUAGE_NAMES[l]}
+                        <span className="text-slate-400 font-normal text-[11.5px]"> ({l.toUpperCase()})</span>
+                      </p>
+                      {isMain && <p className="text-[10.5px] text-violet-600 font-semibold mt-0.5">Main language</p>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => toggleSupported(l)}
+                    disabled={isMain}
+                    className="cursor-pointer disabled:opacity-40 disabled:cursor-default"
+                  >
+                    {isEnabled
+                      ? <ToggleRight className="h-7 w-7 text-emerald-500" />
+                      : <ToggleLeft  className="h-7 w-7 text-slate-300"   />}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main Settings Section ────────────────────────────────────── */
 export function SettingsSection() {
   const [form, setForm] = useState(INITIAL);
@@ -207,12 +449,12 @@ export function SettingsSection() {
     <div className="p-4 sm:p-6 space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-bold text-slate-800">Settings</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Agency configuration and preferences</p>
+          <h2 className="text-[18px] font-bold text-[#1a2332]">Settings</h2>
+          <p className="text-[12.5px] text-slate-400 mt-0.5">Agency configuration and preferences</p>
         </div>
         <button
           onClick={handleSave}
-          className={`flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold transition-all ${saved ? "bg-emerald-600 text-white" : "bg-primary text-white hover:bg-primary/90"}`}
+          className={`flex items-center gap-2 h-9 px-4 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${saved ? "bg-emerald-600 text-white" : "bg-[#1a2332] text-white hover:bg-[#243044]"}`}
         >
           {saved ? <CheckCircle className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
           {saved ? "Saved!" : "Save Changes"}
@@ -264,6 +506,12 @@ export function SettingsSection() {
       {/* Locations */}
       <LocationsSection />
 
+      {/* Currency */}
+      <CurrencySection />
+
+      {/* Language */}
+      <LanguageSection />
+
       {/* Terms & Conditions */}
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
@@ -304,7 +552,7 @@ export function SettingsSection() {
                     <p className="text-xs font-semibold text-slate-600">{label}</p>
                     <p className="text-[11px] text-slate-400 font-mono">{value}</p>
                   </div>
-                  <button className="h-7 px-3 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors">Change</button>
+                  <button className="h-7 px-3 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer">Change</button>
                 </div>
               ))}
             </div>

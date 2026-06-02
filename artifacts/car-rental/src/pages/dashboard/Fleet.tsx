@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, LayoutGrid, List, Search, SlidersHorizontal, Plus,
@@ -9,6 +9,7 @@ import {
   fleet as initialFleet, FleetCar, FleetStatus,
   rentals, maintenance,
 } from "@/data/dashboardData";
+import { useCurrencySettings, CURRENCY_SYMBOLS, CurrencyCode } from "@/data/localStore";
 
 /* ─── helpers ─────────────────────────────────────────────────── */
 const STATUS_CFG: Record<FleetStatus, { label: string; dot: string; badge: string }> = {
@@ -159,10 +160,76 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
   );
 }
 
+/* ─── Image Upload Section ─────────────────────────────────────── */
+function ImageUploadSection({ images, onChange }: {
+  images: string[];
+  onChange: (imgs: string[]) => void;
+}) {
+  const MAX = 5;
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []);
+    const remaining = MAX - images.length;
+    const toLoad = files.slice(0, remaining);
+    const newImgs: string[] = [];
+    let loaded = 0;
+    if (toLoad.length === 0) { e.target.value = ""; return; }
+    toLoad.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        newImgs.push(ev.target?.result as string);
+        loaded++;
+        if (loaded === toLoad.length) onChange([...images, ...newImgs]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  }
+
+  function remove(idx: number) {
+    onChange(images.filter((_, i) => i !== idx));
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-2.5 flex-wrap mb-2">
+        {images.map((src, i) => (
+          <div key={i} className="relative w-20 h-16 rounded-xl overflow-hidden border border-slate-200 group flex-shrink-0">
+            <img src={src} alt={`photo ${i + 1}`} className="w-full h-full object-cover" />
+            <button
+              type="button"
+              onClick={() => remove(i)}
+              className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+            >
+              <X className="h-4 w-4 text-white" />
+            </button>
+            {i === 0 && (
+              <span className="absolute bottom-0.5 left-0.5 text-[9px] bg-black/60 text-white px-1 rounded font-semibold">Cover</span>
+            )}
+          </div>
+        ))}
+        {images.length < MAX && (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="w-20 h-16 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50 transition-colors cursor-pointer flex-shrink-0"
+          >
+            <Upload className="h-4 w-4 mb-0.5" />
+            <span className="text-[9.5px] font-semibold">Add</span>
+          </button>
+        )}
+      </div>
+      <p className="text-[10.5px] text-slate-400">{images.length}/{MAX} photos · First image is the cover</p>
+      <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
+    </div>
+  );
+}
+
 /* ─── Shared vehicle form fields ───────────────────────────────── */
 function VehicleFormFields({ form, set }: {
   form: FleetCar;
-  set: (k: keyof FleetCar, v: string | number | boolean) => void;
+  set: (k: keyof FleetCar, v: string | number | boolean | object) => void;
 }) {
   const inp = "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
   const sel = "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
@@ -213,7 +280,13 @@ function VehicleFormFields({ form, set }: {
               <option value="maintenance">Maintenance</option>
             </select>
           </div>
-          <div><label className={lbl}>Image URL</label><input className={inp} value={form.image} onChange={e => set("image", e.target.value)} placeholder="https://…" /></div>
+          <div className="col-span-2">
+            <label className={lbl}>Vehicle Photos <span className="text-slate-300">(max 5, first is cover)</span></label>
+            <ImageUploadSection
+              images={form.images && form.images.length > 0 ? form.images : (form.image ? [form.image] : [])}
+              onChange={imgs => { set("images", imgs); if (imgs.length > 0) set("image", imgs[0]); }}
+            />
+          </div>
         </div>
       </div>
 
@@ -227,6 +300,23 @@ function VehicleFormFields({ form, set }: {
           <div><label className={lbl}>Deposit Amount ($)</label><input type="number" className={inp} value={form.depositAmount ?? ""} onChange={e => set("depositAmount", parseFloat(e.target.value) || 0)} placeholder="150" /></div>
           <div><label className={lbl}>Late Fee ($/day)</label><input type="number" className={inp} value={form.lateFee ?? ""} onChange={e => set("lateFee", parseFloat(e.target.value) || 0)} placeholder="15" /></div>
           <div><label className={lbl}>Extra Mileage Fee ($/km)</label><input type="number" className={inp} value={form.extraMileageFee ?? ""} onChange={e => set("extraMileageFee", parseFloat(e.target.value) || 0)} placeholder="0.25" /></div>
+          <div className="col-span-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">Per-Currency Daily Rates</p>
+            <div className="grid grid-cols-3 gap-3">
+              {(["DZD", "USD", "EUR"] as CurrencyCode[]).map(c => (
+                <div key={c}>
+                  <label className={lbl}>{CURRENCY_SYMBOLS[c]} {c} /day</label>
+                  <input
+                    type="number"
+                    className={inp}
+                    value={form.prices?.[c] ?? ""}
+                    onChange={e => set("prices", { ...(form.prices ?? {}), [c]: parseFloat(e.target.value) || 0 })}
+                    placeholder={c === "DZD" ? "6075" : c === "USD" ? "45" : "41"}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -299,7 +389,7 @@ function EditVehicleModal({ car, onClose, onSave }: {
 }) {
   const [form, setForm] = useState<FleetCar>({ ...car });
   useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
-  const set = (k: keyof FleetCar, v: string | number | boolean) => setForm(prev => ({ ...prev, [k]: v }));
+  const set = (k: keyof FleetCar, v: string | number | boolean | object) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
     <>
@@ -330,7 +420,7 @@ function EditVehicleModal({ car, onClose, onSave }: {
 function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car: FleetCar) => void }) {
   const [form, setForm] = useState<FleetCar>({ ...BLANK_CAR, id: `f-${Date.now()}` });
   useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
-  const set = (k: keyof FleetCar, v: string | number | boolean) => setForm(prev => ({ ...prev, [k]: v }));
+  const set = (k: keyof FleetCar, v: string | number | boolean | object) => setForm(prev => ({ ...prev, [k]: v }));
 
   const canSubmit = form.brand && form.model && form.plate && form.pricePerDay > 0;
 
@@ -362,6 +452,22 @@ function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car
         </motion.div>
       </div>
     </>
+  );
+}
+
+/* ─── Drawer Price Display ─────────────────────────────────────── */
+function DrawerPrice({ car }: { car: FleetCar }) {
+  const { mainCurrency } = useCurrencySettings();
+  const sym = CURRENCY_SYMBOLS[mainCurrency];
+  const price = car.prices?.[mainCurrency] ?? (mainCurrency === "USD" ? car.pricePerDay : car.pricePerDay);
+  return (
+    <div>
+      <span className="text-[22px] font-bold text-[#1a2332]">{sym}{price}</span>
+      <span className="text-[13px] text-slate-400 font-medium"> / day</span>
+      {mainCurrency !== "USD" && car.prices?.[mainCurrency] && (
+        <span className="ml-2 text-[11px] text-slate-400">(${car.pricePerDay} USD)</span>
+      )}
+    </div>
   );
 }
 
@@ -402,10 +508,7 @@ function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
 
         <div className="flex-1 overflow-y-auto">
           <div className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-b border-slate-100">
-            <div>
-              <span className="text-[22px] font-bold text-[#1a2332]">${car.pricePerDay}</span>
-              <span className="text-[13px] text-slate-400 font-medium"> / day</span>
-            </div>
+            <DrawerPrice car={car} />
             <button onClick={onSchedule} className="flex items-center gap-2 h-9 px-4 bg-[#1a2332] text-white rounded-xl text-[12.5px] font-semibold hover:bg-[#243044] transition-colors">
               <CalendarDays className="h-3.5 w-3.5" /> View Schedule
             </button>
@@ -427,7 +530,7 @@ function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
                   { label: "Fuel",         value: car.fuel },
                   { label: "Seats",        value: `${car.seats}` },
                   { label: "Mileage",      value: `${car.mileage.toLocaleString()} km` },
-                  { label: "Daily Rate",   value: `$${car.pricePerDay}` },
+                  { label: "Daily Rate",   value: (() => { const { mainCurrency: mc } = { mainCurrency: "USD" }; return `$${car.pricePerDay}`; })() },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{label}</p>
@@ -628,6 +731,14 @@ export function Fleet() {
   const [showSchedule, setShowSchedule] = useState(false);
   const [editing,      setEditing]      = useState<FleetCar | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  const { mainCurrency } = useCurrencySettings();
+  const sym = CURRENCY_SYMBOLS[mainCurrency];
+  function displayPrice(car: FleetCar): string {
+    const p = car.prices?.[mainCurrency] ?? (mainCurrency === "USD" ? car.pricePerDay : null);
+    if (p != null) return `${sym}${p}`;
+    return `$${car.pricePerDay}`;
+  }
 
   const counts = useMemo(() => ({
     all:         localFleet.length,
@@ -846,7 +957,7 @@ export function Fleet() {
                       <p className="text-[11.5px] text-slate-400 font-mono mt-0.5">{car.plate}</p>
                     </div>
                     <div className="text-right flex-shrink-0 ml-2">
-                      <p className="text-[17px] font-bold text-[#1a2332]">${car.pricePerDay}</p>
+                      <p className="text-[17px] font-bold text-[#1a2332]">{displayPrice(car)}</p>
                       <p className="text-[10.5px] text-slate-400 font-medium">/day</p>
                     </div>
                   </div>
@@ -895,7 +1006,7 @@ export function Fleet() {
                       <td className="px-5 py-4"><p className="text-[12px] font-mono font-semibold text-slate-600">{car.plate}</p></td>
                       <td className="px-5 py-4"><p className="text-[12.5px] text-slate-600 font-medium">{car.type}</p></td>
                       <td className="px-5 py-4"><p className="text-[12px] text-slate-500">{car.transmission} · {car.fuel} · {car.seats}s</p></td>
-                      <td className="px-5 py-4"><p className="text-[14px] font-bold text-[#1a2332]">${car.pricePerDay}<span className="text-[11px] font-normal text-slate-400">/d</span></p></td>
+                      <td className="px-5 py-4"><p className="text-[14px] font-bold text-[#1a2332]">{displayPrice(car)}<span className="text-[11px] font-normal text-slate-400">/d</span></p></td>
                       <td className="px-5 py-4"><p className="text-[12.5px] text-slate-600">{car.mileage.toLocaleString()} km</p></td>
                       <td className="px-5 py-4"><StatusBadge s={car.status} /></td>
                       <td className="px-5 py-4" onClick={e => e.stopPropagation()}>

@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import {
   LayoutDashboard, CalendarCheck, UserPlus, Key, Car, Users, UserX,
   CalendarDays, Wrench, Bell, BarChart3, Settings, Menu, X, ChevronLeft,
+  AlertTriangle, CalendarCheck2, Clock, ShieldOff, Bike, CheckCircle2,
 } from "lucide-react";
 import { GlobalSearch } from "./dashboard/GlobalSearch";
 import { Booking } from "@/data/mockData";
@@ -18,6 +19,12 @@ import { MaintenanceSection } from "./dashboard/MaintenanceSection";
 import { AlertsSection } from "./dashboard/AlertsSection";
 import { Reports } from "./dashboard/Reports";
 import { SettingsSection } from "./dashboard/SettingsSection";
+import {
+  useNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
+  AppNotification,
+} from "@/data/localStore";
 
 type Section =
   | "overview" | "operations" | "fleet" | "clients"
@@ -87,18 +94,132 @@ const LABELS: Record<Section, { title: string; sub: string }> = {
   blocked:      { title: "Blocked Clients",  sub: "Clients restricted from renting" },
   availability: { title: "Availability",     sub: "Weekly vehicle schedule" },
   maintenance:  { title: "Maintenance",      sub: "Service queue and scheduling" },
-  alerts:       { title: "Alerts",           sub: "Notifications requiring attention" },
+  alerts:       { title: "Alerts",           sub: "Operational alerts requiring attention" },
   reports:      { title: "Reports",          sub: "Business performance summary" },
   settings:     { title: "Settings",         sub: "Agency configuration" },
 };
 
+/* ── Notifications Icon Helper ── */
+function NotifIcon({ type }: { type: AppNotification["type"] }) {
+  const cfgs: Record<AppNotification["type"], { bg: string; text: string; Icon: React.ElementType }> = {
+    rental:      { bg: "bg-emerald-50",  text: "text-emerald-600", Icon: Car           },
+    booking:     { bg: "bg-indigo-50",   text: "text-indigo-600",  Icon: CalendarCheck2 },
+    alert:       { bg: "bg-red-50",      text: "text-red-600",     Icon: AlertTriangle  },
+    client:      { bg: "bg-amber-50",    text: "text-amber-600",   Icon: UserPlus       },
+    maintenance: { bg: "bg-blue-50",     text: "text-blue-600",    Icon: Wrench         },
+  };
+  const { bg, text, Icon } = cfgs[type];
+  return (
+    <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${bg}`}>
+      <Icon className={`h-3.5 w-3.5 ${text}`} />
+    </div>
+  );
+}
+
+/* ── Notifications Modal ── */
+function NotificationsModal({
+  onClose,
+  onNavigateAlerts,
+}: {
+  onClose: () => void;
+  onNavigateAlerts: () => void;
+}) {
+  const notifications = useNotifications();
+  const unread = notifications.filter(n => !n.read).length;
+
+  return (
+    <>
+      <div className="fixed inset-0 z-[45]" onClick={onClose} />
+      <motion.div
+        initial={{ opacity: 0, y: -8, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+        transition={{ duration: 0.17, ease: "easeOut" }}
+        className="absolute right-0 top-12 z-[46] w-[340px] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-slate-500" />
+            <p className="text-[13.5px] font-bold text-[#1a2332]">Notifications</p>
+            {unread > 0 && (
+              <span className="bg-red-500 text-white text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{unread}</span>
+            )}
+          </div>
+          {unread > 0 && (
+            <button
+              onClick={markAllNotificationsRead}
+              className="text-[11.5px] font-semibold text-violet-600 hover:text-violet-700 transition-colors cursor-pointer"
+            >
+              Mark all read
+            </button>
+          )}
+        </div>
+
+        {/* List */}
+        <div className="max-h-[380px] overflow-y-auto">
+          {notifications.length === 0 ? (
+            <div className="py-12 text-center">
+              <CheckCircle2 className="h-7 w-7 text-slate-200 mx-auto mb-2.5" />
+              <p className="text-[12.5px] font-semibold text-slate-400">No notifications</p>
+              <p className="text-[11.5px] text-slate-300 mt-1">You're all caught up!</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-50">
+              {notifications.map(n => (
+                <button
+                  key={n.id}
+                  onClick={() => {
+                    markNotificationRead(n.id);
+                    if (n.type === "alert" || n.type === "maintenance") {
+                      onNavigateAlerts();
+                    }
+                    onClose();
+                  }}
+                  className={`w-full text-left px-4 py-3.5 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer ${!n.read ? "bg-violet-50/40" : ""}`}
+                >
+                  <NotifIcon type={n.type} />
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-[12.5px] font-semibold leading-tight ${!n.read ? "text-slate-900" : "text-slate-700"}`}>
+                      {n.title}
+                    </p>
+                    <p className="text-[11.5px] text-slate-500 mt-0.5 line-clamp-2 leading-relaxed">{n.message}</p>
+                    <p className="text-[10.5px] text-slate-400 mt-1">{n.time}</p>
+                  </div>
+                  {!n.read && (
+                    <div className="w-2 h-2 rounded-full bg-violet-500 flex-shrink-0 mt-1.5" />
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="border-t border-slate-100 px-4 py-3 bg-slate-50/60">
+          <button
+            onClick={() => { onNavigateAlerts(); onClose(); }}
+            className="w-full text-center text-[12px] font-semibold text-violet-600 hover:text-violet-700 transition-colors cursor-pointer"
+          >
+            View all alerts →
+          </button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 export function Dashboard({ bookings }: { bookings: Booking[] }) {
-  const [section, setSection]         = useState<Section>("overview");
-  const [opsTab, setOpsTab]           = useState<OperationsTab>("bookings");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [section, setSection]             = useState<Section>("overview");
+  const [opsTab, setOpsTab]               = useState<OperationsTab>("bookings");
+  const [sidebarOpen, setSidebarOpen]     = useState(false);
+  const [showNotifications, setShowNotif] = useState(false);
+
+  const notifications = useNotifications();
+  const unreadCount   = notifications.filter(n => !n.read).length;
 
   const navigate = (s: string, opsTabOverride?: OperationsTab) => {
-    // Map legacy / shorthand names to the unified Operations section
     const OPS_TAB_MAP: Record<string, OperationsTab> = {
       bookings: "bookings",
       offline:  "offline",
@@ -167,7 +288,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
                     <button
                       key={`${id}-${ii}`}
                       onClick={() => navigate(id, tabTarget)}
-                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12.5px] font-medium transition-all ${
+                      className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12.5px] font-medium transition-all cursor-pointer ${
                         active
                           ? "bg-primary text-white shadow-sm"
                           : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
@@ -195,7 +316,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
         {/* Footer */}
         <div className="border-t border-slate-100 p-3 space-y-1 flex-shrink-0">
           <Link href="/">
-            <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors">
+            <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer">
               <ChevronLeft className="h-4 w-4" />
               <span>Back to Website</span>
             </button>
@@ -218,7 +339,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
         <header className="h-[60px] bg-white border-b border-slate-200/80 flex items-center justify-between px-5 flex-shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             <button
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500"
+              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 cursor-pointer"
               onClick={() => setSidebarOpen(true)}
             >
               <Menu className="h-4 w-4" />
@@ -230,15 +351,29 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
           </div>
           <div className="flex items-center gap-2.5">
             <GlobalSearch onNavigate={navigate} />
-            <button
-              className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500"
-              onClick={() => navigate("alerts")}
-            >
-              <Bell className="h-4 w-4" />
-              {urgentCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
-              )}
-            </button>
+
+            {/* Bell / Notifications */}
+            <div className="relative">
+              <button
+                className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition-colors cursor-pointer"
+                onClick={() => setShowNotif(p => !p)}
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full border border-white" />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {showNotifications && (
+                  <NotificationsModal
+                    onClose={() => setShowNotif(false)}
+                    onNavigateAlerts={() => navigate("alerts")}
+                  />
+                )}
+              </AnimatePresence>
+            </div>
+
             <div className="w-7 h-7 rounded-full bg-primary/12 flex items-center justify-center">
               <span className="text-[10px] font-bold text-primary">AG</span>
             </div>

@@ -1,0 +1,375 @@
+Fix and upgrade the dashboard behavior, data model, and settings without redesigning the UI.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API calls
+- Use local state only
+- Keep the current design system and layout
+- Do not redesign the whole dashboard, only fix behavior and improve the workflow
+- Keep the UI premium, clean, and practical
+
+====================================================
+1) RENTALS FILTERS MUST WORK
+====================================================
+
+Current issue:
+The Rentals page filters are displayed but do not actually filter the list.
+
+Required behavior:
+- Filters must work for the actual rentals dataset
+- Filters:
+  - All
+  - Active
+  - Reserved
+  - Overdue
+  - Completed
+- Clicking a filter updates the displayed rentals immediately
+- Search and filters must work together
+- Active filter must be visually highlighted
+- Counts next to filters must update correctly
+- If no results match, show a clean empty state with a Clear Filters button
+
+Make sure the Rentals list is filtered from real local mock state, not only visually selected.
+
+====================================================
+2) PRINT AGREEMENT MUST EXPORT A PDF
+====================================================
+
+Current issue:
+The “Print Agreement” action on rentals should not just open a preview. It must export or download a PDF with the rental details.
+
+Required behavior:
+- Clicking “Print Agreement” generates a PDF file
+- The PDF must include:
+  - rental reference
+  - client name
+  - car name
+  - plate number
+  - pickup date/time
+  - return date/time
+  - pickup location
+  - return location
+  - pricing
+  - deposit
+  - status
+  - notes if any
+- Use the current rental data and mock state
+- The PDF should be clean and professional
+- The action should feel like a real agreement export
+
+Frontend-only solution is fine:
+- use a client-side PDF library if needed
+- generate download directly from the browser
+
+====================================================
+3) SETTINGS: MULTI-CURRENCY SUPPORT
+====================================================
+
+Add support for multiple currencies in Settings.
+
+Business rule:
+The agency chooses the main currency in the store, and each car can have prices in multiple currencies.
+
+Required currencies for now:
+- DZD
+- USD
+- EUR
+
+Default main currency:
+- DZD
+
+SETTINGS PAGE:
+Add a new section:
+
+Currency Settings
+
+Fields:
+- Main currency selector
+- Supported currencies list
+- Currency toggle / enable-disable
+- Optional exchange rate preview if needed
+
+CAR PRICE MODEL:
+Each car must store prices per currency dynamically.
+
+Example:
+- priceDZD
+- priceUSD
+- priceEUR
+
+Or a structured object like:
+prices: {
+  DZD: ...,
+  USD: ...,
+  EUR: ...
+}
+
+Behavior:
+- In the UI, prices should display according to the selected main currency
+- The user should be able to edit all 3 currency prices when adding/editing a car
+- Default currency displayed in the app is DZD
+- All car cards, rental summaries, availability cards, and details should use the selected display currency
+
+UI:
+- Show currency symbol/code clearly
+- Allow switching main currency in settings
+- Keep the layout simple and clean
+
+====================================================
+4) SETTINGS: MULTI-LANGUAGE SUPPORT
+====================================================
+
+Add language support for the app.
+
+Languages:
+- French (main)
+- English
+- Arabic
+
+Default main language:
+- French
+
+SETTINGS PAGE:
+Add a new section:
+
+Language Settings
+
+Fields:
+- Main language selector
+- Available languages list
+- Toggle enable-disable if needed
+
+Behavior:
+- The app should be structured so the display language can later switch
+- For now, keep French as default
+- Prepare the UI and data structure for translations
+- Main language shown in the UI should be French
+
+Important:
+- Do not redesign everything into a fully translated app right now
+- Just make the language system ready and coherent
+- Store language choice in local state
+
+====================================================
+5) AVAILABILITY PAGE: AUTO-FILL LOCATIONS IN BOOK MODAL
+====================================================
+
+Current behavior:
+The Availability page already shows available cars for a selected period.
+
+New required behavior:
+When the user searches availability with pickup and return locations, then clicks “Book” on a car, the booking modal must auto-fill the location fields.
+
+Required flow:
+- User enters:
+  - pickup date
+  - pickup time
+  - return date
+  - return time
+  - pickup location
+  - return location
+- User clicks “Check Availability”
+- Available cars appear
+- User clicks “Book” on a car
+- The RentalCreationModal opens with:
+  - selected car
+  - pickup date
+  - pickup time
+  - return date
+  - return time
+  - pickup location
+  - return location
+
+The locations must be filled automatically from the filter/search inputs.
+
+Important:
+- The book modal should not ask the user to re-enter pickup and return location
+- The selected locations from the Availability form must be passed into the modal
+- The user can still edit them inside the modal if needed
+- This must work for walk-in rental creation from Availability
+
+====================================================
+6) MAINTENANCE SHOULD BE SIMPLER
+====================================================
+
+Maintenance is not a critical workflow, so reduce its complexity.
+
+Required changes:
+- Make Maintenance less heavy and less detailed
+- Use a simple maintenance queue or simple cards
+- Show only the important information:
+  - car
+  - status
+  - next service
+  - last service
+  - short note
+- Remove unnecessary complexity such as deep scheduling logic or too many subpanels
+- Keep the UI clean and lightweight
+- It should feel like a simple service reminder section, not a complex operations module
+
+====================================================
+7) ADD CAR: UPLOAD IMAGES, NOT IMAGE URLS
+====================================================
+
+Current issue:
+Car creation uses image URLs, which is bad UX.
+
+Required change:
+When adding or editing a car, the user must upload up to 5 images directly from their device.
+
+Rules:
+- Maximum 5 images per car
+- Max size per image: 10 MB
+- Allowed formats: JPG, JPEG, PNG, WEBP
+- No direct image URL input
+- No pasting image links
+- Use file upload only
+
+UI requirements:
+- Drag and drop or file picker
+- Show previews immediately
+- Allow remove image
+- Allow set cover image
+- The first image or selected cover image should be used in fleet cards and availability cards
+- Keep the upload UI premium and simple
+
+Car image data should be stored in local state with preview URLs for now.
+
+====================================================
+8) NOTIFICATIONS MUST BE SEPARATE FROM ALERTS
+====================================================
+
+Current issue:
+Notifications and Alerts should not feel like the same thing.
+
+Required behavior:
+- The notifications button in the navbar must open a notifications modal
+- This modal is separate from the Alerts page
+- Notifications are for quick updates and recent activity
+- Alerts page is for operational warnings and important issues
+
+NOTIFICATIONS BUTTON:
+- On click, open a modal
+- Modal should list recent notifications
+- Modal design:
+  - clean
+  - compact
+  - premium
+  - scrollable if needed
+  - with soft overlay
+  - smooth opening animation
+
+NOTIFICATION ITEM BEHAVIOR:
+- Clicking a notification should redirect the user to the Alerts page
+- If relevant, the app should highlight or focus the related alert section
+- Notifications are only entry points or quick updates
+
+====================================================
+9) ALERTS PAGE SHOULD BE LESS COMPLEX
+====================================================
+
+Current issue:
+The Alerts page is too complicated.
+
+Required changes:
+- Simplify the Alerts page
+- Make it readable and direct
+- Focus only on important operational issues
+
+Keep only:
+- urgent booking issues
+- overdue rentals
+- cars needing attention
+- blocked client warnings
+- important reminders
+
+Remove unnecessary complexity:
+- too many sections
+- too many visual blocks
+- too many subcategories
+
+Suggested layout:
+- Page header
+- 3 simple severity sections:
+  - Urgent
+  - Warning
+  - Info
+- Each section contains clean alert cards
+- Each alert card includes:
+  - icon
+  - title
+  - short description
+  - related item
+  - action button
+
+Design:
+- light dashboard
+- compact alert cards
+- readable spacing
+- not overwhelming
+- easy to scan quickly
+
+====================================================
+10) GENERAL DATA MODEL COHERENCE
+====================================================
+
+Make sure the data structure stays coherent across the app:
+
+Cars:
+- include images array
+- cover image
+- price per currency
+- documents
+- maintenance info
+
+Rentals:
+- include selected car object
+- selected client object
+- selected pickup/return locations
+- all dates and times
+- total price
+- currency
+
+Clients:
+- keep the same client object everywhere
+
+Availability:
+- selected search values must pass into rental creation modal
+
+Notifications:
+- separate from alerts
+
+Alerts:
+- operational issues only
+
+====================================================
+11) UI / UX POLISH
+====================================================
+
+Also improve overall interaction quality:
+- add cursor-pointer to clickable elements
+- modal opening should be smooth
+- drawer opening should be smooth
+- routing transitions should feel soft
+- selected tabs and filters should be clearly visible
+- hover states should be consistent
+- no layout jumps when showing active filters or modal overlays
+
+Use the current visual style already in the app.
+
+====================================================
+12) FINAL GOAL
+====================================================
+
+Make the dashboard feel more realistic and coherent:
+- Rentals filters work
+- Print Agreement exports PDF
+- Settings support 3 currencies and 3 languages
+- Availability booking modal auto-fills locations
+- Maintenance becomes simpler
+- Add Car uses image uploads with up to 5 photos
+- Notifications are separate from Alerts
+- Alerts page is simpler and clearer
+- The whole app data model stays consistent and professional

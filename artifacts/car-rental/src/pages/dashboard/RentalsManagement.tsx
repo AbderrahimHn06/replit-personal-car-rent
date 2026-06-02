@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, AlertTriangle, Eye, Printer, CalendarPlus, Phone, Search } from "lucide-react";
 import { DashboardRental, RentalStatus } from "@/data/dashboardData";
 import { useRentals, updateRental } from "@/data/localStore";
+import jsPDF from "jspdf";
 
 const STATUS_CFG: Record<RentalStatus, { cls: string; label: string; dot: string }> = {
   active:    { cls: "bg-emerald-50 text-emerald-700 border border-emerald-100", label: "Active",    dot: "bg-emerald-500" },
@@ -38,6 +39,132 @@ const FILTERS: { id: FilterId; label: string }[] = [
   { id: "overdue",   label: "Overdue"   },
   { id: "completed", label: "Completed" },
 ];
+
+/* ── PDF Generation ── */
+function generateAgreementPDF(rental: DashboardRental) {
+  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const pw = 210;
+  const ph = 297;
+  const ml = 20;
+  const cw = pw - ml * 2;
+
+  // Header bar
+  doc.setFillColor(26, 35, 50);
+  doc.rect(0, 0, pw, 38, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(17);
+  doc.setFont("helvetica", "bold");
+  doc.text("ELITERIDE", ml, 14);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(160, 180, 210);
+  doc.text("Car Rental · Rental Agreement", ml, 22);
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(9);
+  doc.text(`Ref: ${rental.reference}`, ml, 30);
+  doc.text(`Date: ${new Date().toLocaleDateString("en-GB")}`, ml + cw, 30, { align: "right" });
+
+  let y = 52;
+
+  const drawSection = (title: string, rows: [string, string][]) => {
+    // Section label
+    doc.setFillColor(245, 247, 250);
+    doc.roundedRect(ml, y - 5, cw, 8, 1, 1, "F");
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(80, 100, 130);
+    doc.text(title.toUpperCase(), ml + 3, y + 1);
+    y += 9;
+    doc.setFont("helvetica", "normal");
+    for (const [label, value] of rows) {
+      if (y > ph - 30) { doc.addPage(); y = 25; }
+      doc.setFontSize(9);
+      doc.setTextColor(130, 140, 160);
+      doc.text(label, ml + 3, y);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(26, 35, 50);
+      const maxW = cw - 60;
+      const lines = doc.splitTextToSize(value || "—", maxW);
+      doc.text(lines, ml + 58, y);
+      doc.setFont("helvetica", "normal");
+      y += Math.max(7, lines.length * 5);
+    }
+    y += 5;
+  };
+
+  // Status badge line
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  const stCfg: Record<string, [number, number, number]> = {
+    active: [5, 150, 105], reserved: [79, 70, 229], overdue: [220, 38, 38], completed: [100, 116, 139]
+  };
+  const [r2, g2, b2] = stCfg[rental.status] ?? [100, 116, 139];
+  doc.setFillColor(r2, g2, b2);
+  doc.roundedRect(ml, y - 4, 22, 7, 2, 2, "F");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.text(rental.status.toUpperCase(), ml + 11, y + 1, { align: "center" });
+  doc.setTextColor(100, 100, 100);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Source: ${SOURCE_LABEL[rental.source] ?? rental.source}`, ml + 28, y + 1);
+  y += 12;
+
+  drawSection("Client Information", [
+    ["Full Name", rental.client],
+    ["Phone", rental.clientPhone],
+    ["Driver's License", rental.driverLicense],
+  ]);
+
+  drawSection("Vehicle", [
+    ["Car Model", rental.car],
+    ["Plate Number", rental.plate],
+  ]);
+
+  drawSection("Rental Period", [
+    ["Pickup Date", fmt(rental.startDate)],
+    ["Return Date", fmt(rental.endDate)],
+    ["Pickup Location", rental.pickupLocation],
+    ["Return Location", rental.returnLocation ?? "Same as pickup"],
+  ]);
+
+  drawSection("Payment Summary", [
+    ["Total Price", `$${rental.totalPrice}`],
+    ["Deposit Held", `$${rental.deposit}`],
+    ["Balance Due", `$${Math.max(0, rental.totalPrice - rental.deposit)}`],
+  ]);
+
+  if (rental.notes) {
+    drawSection("Notes", [["", rental.notes]]);
+  }
+
+  // Signature section
+  y += 8;
+  if (y > ph - 55) { doc.addPage(); y = 25; }
+  doc.setDrawColor(200, 210, 220);
+  doc.setLineWidth(0.4);
+  doc.line(ml, y, ml + 65, y);
+  doc.line(ml + 85, y, ml + cw, y);
+  y += 5;
+  doc.setFontSize(8);
+  doc.setTextColor(150, 160, 170);
+  doc.setFont("helvetica", "normal");
+  doc.text("Client Signature & Date", ml, y);
+  doc.text("Agent Signature & Date", ml + 85, y);
+
+  // Footer
+  doc.setFillColor(26, 35, 50);
+  doc.rect(0, ph - 14, pw, 14, "F");
+  doc.setTextColor(160, 180, 210);
+  doc.setFontSize(7.5);
+  doc.text(
+    "EliteRide Car Rental  ·  Rue Ahmed Zabana, Oran 31000  ·  +213 41 234 567  ·  contact@eliteride.dz",
+    pw / 2, ph - 5.5, { align: "center" }
+  );
+
+  doc.save(`agreement-${rental.reference}.pdf`);
+}
 
 /* ── Detail Drawer ── */
 function RentalDrawer({ rental, onClose, onReturn }: {
@@ -183,7 +310,9 @@ function RentalDrawer({ rental, onClose, onReturn }: {
               </a>
             </>
           )}
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-200 transition-all duration-200 cursor-pointer">
+          <button
+            onClick={() => generateAgreementPDF(rental)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-200 transition-all duration-200 cursor-pointer">
             <Printer className="h-4 w-4" /> Print Agreement
           </button>
           <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-all duration-200 cursor-pointer">
@@ -342,7 +471,9 @@ export function RentalsManagement({ search = "" }: { search?: string }) {
                           className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 hover:bg-sky-100 transition-all duration-200 cursor-pointer">
                           <CalendarPlus className="h-3.5 w-3.5" />
                         </button>
-                        <button title="Print agreement"
+                        <button
+                          onClick={e => { e.stopPropagation(); generateAgreementPDF(r); }}
+                          title="Download PDF agreement"
                           className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-all duration-200 cursor-pointer">
                           <Printer className="h-3.5 w-3.5" />
                         </button>

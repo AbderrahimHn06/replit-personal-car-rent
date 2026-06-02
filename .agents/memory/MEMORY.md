@@ -1,2 +1,5 @@
 - [EliteRide local store pattern](eliteride-localstore.md) — module-level mutable arrays + Set<listener> + useState tick hooks; no Context needed for cross-component reactive state
-- [EliteRide port & routing](eliteride-setup.md) — runs on port 22460; sections use internal state not URL routing
+- [EliteRide port & routing](eliteride-setup.md) — runs on port 5000 (workflow) not 22460; sections use internal state not URL routing
+- [EliteRide multi-currency & language](eliteride-currency-language.md) — CurrencyCode (DZD/USD/EUR), LanguageCode (fr/en/ar) in localStore; CURRENCY_SYMBOLS/CURRENCY_NAMES/LANGUAGE_NAMES exported; FleetCar.prices stores per-currency daily rates
+- [EliteRide notifications pattern](eliteride-notifications.md) — AppNotification store in localStore; Bell in Dashboard.tsx opens NotificationsModal (not Alerts page); markNotificationRead/markAllNotificationsRead exported
+- [EliteRide Fleet image upload](eliteride-fleet-images.md) — FleetCar.images: string[] stores up to 5 data-URL images via FileReader; first image auto-synced to FleetCar.image (cover); VehicleFormFields set() accepts string|number|boolean|object for prices/images fields

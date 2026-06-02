@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DashboardRental, rentals as initialRentals, DashboardClient, clients as initialClients } from "./dashboardData";
+import { DashboardRental, rentals as initialRentals, DashboardClient, clients as initialClients, FleetCar } from "./dashboardData";
 
 /* ─── Agency Locations ─────────────────────────────────────────── */
 export interface AgencyLocation {
@@ -99,4 +99,118 @@ export function updateClientInStore(c: DashboardClient): void {
 export function removeClientFromStore(id: string): void {
   _clients = _clients.filter(x => x.id !== id);
   notifyClients();
+}
+
+/* ─── Currency Settings ────────────────────────────────────────── */
+export type CurrencyCode = "DZD" | "USD" | "EUR";
+export const CURRENCY_SYMBOLS: Record<CurrencyCode, string> = { DZD: "DA", USD: "$", EUR: "€" };
+export const CURRENCY_NAMES: Record<CurrencyCode, string> = { DZD: "Algerian Dinar (DZD)", USD: "US Dollar (USD)", EUR: "Euro (EUR)" };
+export const CURRENCY_RATES: Record<CurrencyCode, number> = { DZD: 135, USD: 1, EUR: 0.92 };
+
+export interface CurrencySettings {
+  mainCurrency: CurrencyCode;
+  supportedCurrencies: CurrencyCode[];
+}
+
+let _currencySettings: CurrencySettings = {
+  mainCurrency: "DZD",
+  supportedCurrencies: ["DZD", "USD", "EUR"],
+};
+const _currencyListeners = new Set<() => void>();
+function notifyCurrency() { _currencyListeners.forEach(fn => fn()); }
+
+export function useCurrencySettings(): CurrencySettings {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const refresh = () => tick(t => t + 1);
+    _currencyListeners.add(refresh);
+    return () => { _currencyListeners.delete(refresh); };
+  }, []);
+  return _currencySettings;
+}
+
+export function updateCurrencySettings(s: Partial<CurrencySettings>): void {
+  _currencySettings = { ..._currencySettings, ...s };
+  notifyCurrency();
+}
+
+export function getCarPriceInCurrency(car: FleetCar, currency: CurrencyCode): number {
+  const p = car.prices?.[currency];
+  if (p != null) return p;
+  return Math.round(car.pricePerDay * CURRENCY_RATES[currency]);
+}
+
+/* ─── Language Settings ────────────────────────────────────────── */
+export type LanguageCode = "fr" | "en" | "ar";
+export const LANGUAGE_NAMES: Record<LanguageCode, string> = { fr: "Français", en: "English", ar: "العربية" };
+
+export interface LanguageSettings {
+  mainLanguage: LanguageCode;
+  supportedLanguages: LanguageCode[];
+}
+
+let _languageSettings: LanguageSettings = {
+  mainLanguage: "fr",
+  supportedLanguages: ["fr", "en", "ar"],
+};
+const _langListeners = new Set<() => void>();
+function notifyLanguage() { _langListeners.forEach(fn => fn()); }
+
+export function useLanguageSettings(): LanguageSettings {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const refresh = () => tick(t => t + 1);
+    _langListeners.add(refresh);
+    return () => { _langListeners.delete(refresh); };
+  }, []);
+  return _languageSettings;
+}
+
+export function updateLanguageSettings(s: Partial<LanguageSettings>): void {
+  _languageSettings = { ..._languageSettings, ...s };
+  notifyLanguage();
+}
+
+/* ─── Notifications ────────────────────────────────────────────── */
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+  type: "rental" | "booking" | "alert" | "client" | "maintenance";
+}
+
+const INITIAL_NOTIFICATIONS: AppNotification[] = [
+  { id: "n-1", title: "Rental Overdue", message: "Fatima Ziani — Kia Picanto overdue since 31 May", time: "2 hours ago", read: false, type: "alert" },
+  { id: "n-2", title: "New Booking Request", message: "Aissa Rahmani — Hyundai Tucson, 14–18 Jun", time: "4 hours ago", read: false, type: "booking" },
+  { id: "n-3", title: "New Booking Request", message: "Nadia Berkouk — Renault Clio 5, 8–12 Jun", time: "5 hours ago", read: false, type: "booking" },
+  { id: "n-4", title: "Rental Confirmed", message: "Karima Benali picked up Peugeot 208 — RNT-2026-0069", time: "Yesterday", read: true, type: "rental" },
+  { id: "n-5", title: "Vehicle Needs Attention", message: "Mercedes C-Class — AC compressor replacement in progress", time: "Yesterday", read: true, type: "maintenance" },
+  { id: "n-6", title: "Client Blocked Alert", message: "Reda Chaouch attempted to book — access denied", time: "2 days ago", read: true, type: "alert" },
+  { id: "n-7", title: "Rental Completed", message: "Sarah Johnson returned Dacia Duster on time", time: "3 days ago", read: true, type: "rental" },
+];
+
+let _notifications: AppNotification[] = [...INITIAL_NOTIFICATIONS];
+const _notifListeners = new Set<() => void>();
+function notifyNotifications() { _notifListeners.forEach(fn => fn()); }
+
+export function useNotifications(): AppNotification[] {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const refresh = () => tick(t => t + 1);
+    _notifListeners.add(refresh);
+    return () => { _notifListeners.delete(refresh); };
+  }, []);
+  return _notifications;
+}
+
+export function markNotificationRead(id: string): void {
+  _notifications = _notifications.map(n => n.id === id ? { ...n, read: true } : n);
+  notifyNotifications();
+}
+
+export function markAllNotificationsRead(): void {
+  _notifications = _notifications.map(n => ({ ...n, read: true }));
+  notifyNotifications();
 }

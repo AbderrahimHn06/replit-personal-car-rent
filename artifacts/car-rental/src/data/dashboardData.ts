@@ -26,6 +26,7 @@ export interface FleetCar {
   status: FleetStatus;
   image: string;
   images?: string[];
+  coverImageIndex?: number;
   description?: string;
   notes: string;
   internalNotes?: string;
@@ -35,6 +36,7 @@ export interface FleetCar {
   pricePerDay: number;
   pricePerWeek?: number;
   pricePerMonth?: number;
+  prices?: { DZD?: number; USD?: number; EUR?: number };
   depositAmount?: number;
   lateFee?: number;
   extraMileageFee?: number;
@@ -182,6 +184,7 @@ export const fleet: FleetCar[] = [
     notes: "Well maintained. Minor scratch on rear bumper.", internalNotes: "Regular client favorite.",
     isActive: true, isFeatured: true,
     pricePerDay: 45, pricePerWeek: 280, pricePerMonth: 900,
+    prices: { DZD: 6075, USD: 45, EUR: 41 },
     depositAmount: 150, lateFee: 15, extraMileageFee: 0.25,
     insuranceProvider: "AXA Algeria", insuranceNumber: "AXA-2024-DAD-001",
     insuranceStart: "2024-01-01", insuranceEnd: "2026-12-31",
@@ -201,6 +204,7 @@ export const fleet: FleetCar[] = [
     notes: "New tires installed Feb 2026.", internalNotes: "Popular for city rentals.",
     isActive: true, isFeatured: false,
     pricePerDay: 30, pricePerWeek: 185, pricePerMonth: 620,
+    prices: { DZD: 4050, USD: 30, EUR: 28 },
     depositAmount: 100, lateFee: 10, extraMileageFee: 0.20,
     insuranceProvider: "CAAT Algeria", insuranceNumber: "CAAT-2024-RCL-002",
     insuranceStart: "2024-01-01", insuranceEnd: "2026-12-31",
@@ -219,6 +223,7 @@ export const fleet: FleetCar[] = [
     notes: "Reserved by Karima Benali — pickup 2026-06-01.", internalNotes: "VIP client. Ensure AC serviced.",
     isActive: true, isFeatured: true,
     pricePerDay: 32, pricePerWeek: 200, pricePerMonth: 680,
+    prices: { DZD: 4320, USD: 32, EUR: 29 },
     depositAmount: 120, lateFee: 12, extraMileageFee: 0.22,
     insuranceProvider: "SAA Algeria", insuranceNumber: "SAA-2024-PGT-003",
     insuranceStart: "2024-03-01", insuranceEnd: "2027-02-28",
@@ -237,6 +242,7 @@ export const fleet: FleetCar[] = [
     notes: "Currently rented to Youcef Mebarki. Return 2026-06-07.",
     isActive: true, isFeatured: true,
     pricePerDay: 60, pricePerWeek: 370, pricePerMonth: 1200,
+    prices: { DZD: 8100, USD: 60, EUR: 55 },
     depositAmount: 200, lateFee: 20, extraMileageFee: 0.30,
     insuranceProvider: "AXA Algeria", insuranceNumber: "AXA-2024-HYT-005",
     insuranceStart: "2024-04-01", insuranceEnd: "2027-03-31",
@@ -256,6 +262,7 @@ export const fleet: FleetCar[] = [
     internalNotes: "Only available for VIP/corporate clients.",
     isActive: true, isFeatured: true,
     pricePerDay: 85, pricePerWeek: 520, pricePerMonth: 1800,
+    prices: { DZD: 11475, USD: 85, EUR: 78 },
     depositAmount: 300, lateFee: 30, extraMileageFee: 0.40,
     insuranceProvider: "AXA Algeria", insuranceNumber: "AXA-2021-MBC-006",
     insuranceStart: "2021-06-01", insuranceEnd: "2027-05-31",
@@ -275,6 +282,7 @@ export const fleet: FleetCar[] = [
     notes: "Full service done April 2026. Clean interior.", internalNotes: "Often requested by corporate clients.",
     isActive: true, isFeatured: false,
     pricePerDay: 40, pricePerWeek: 245, pricePerMonth: 820,
+    prices: { DZD: 5400, USD: 40, EUR: 37 },
     depositAmount: 130, lateFee: 15, extraMileageFee: 0.22,
     insuranceProvider: "CAAT Algeria", insuranceNumber: "CAAT-2023-TYC-007",
     insuranceStart: "2023-08-01", insuranceEnd: "2027-07-31",
@@ -293,6 +301,7 @@ export const fleet: FleetCar[] = [
     notes: "Currently rented to Fatima Ziani. Return today.",
     isActive: true, isFeatured: false,
     pricePerDay: 25, pricePerWeek: 155, pricePerMonth: 520,
+    prices: { DZD: 3375, USD: 25, EUR: 23 },
     depositAmount: 80, lateFee: 8, extraMileageFee: 0.18,
     insuranceProvider: "SAA Algeria", insuranceNumber: "SAA-2022-KPC-008",
     insuranceStart: "2022-11-01", insuranceEnd: "2026-10-31",
