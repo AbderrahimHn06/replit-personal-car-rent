@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Eye, CheckCircle2, Printer, CalendarPlus } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Eye, CheckCircle2, Printer, CalendarPlus, X } from "lucide-react";
 import { DashboardRental, RentalStatus } from "@/data/dashboardData";
 import { useRentals, updateRental, addRental } from "@/data/localStore";
 import { RentalCreationModal } from "./RentalCreationModal";
@@ -33,9 +34,22 @@ function DetailDrawer({ rental, onClose, onReturn }: {
 }) {
   const isOverdue = rental.status === "overdue";
   return (
-    <>
-      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
-      <aside className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white shadow-2xl flex flex-col">
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+      <motion.aside
+        className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white shadow-2xl flex flex-col"
+        initial={{ x: "100%", opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: "100%", opacity: 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+      >
         <div className={`flex items-start justify-between px-7 py-6 border-b flex-shrink-0 ${isOverdue ? "bg-red-50 border-red-100" : "border-slate-100"}`}>
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -48,8 +62,8 @@ function DetailDrawer({ rental, onClose, onReturn }: {
               <p className="text-[11.5px] text-red-600 font-semibold mt-1.5">⚠ Vehicle overdue — contact client immediately</p>
             )}
           </div>
-          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/80 text-slate-400 transition-colors">
-            <Plus className="h-5 w-5 rotate-45" />
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-all duration-200 cursor-pointer">
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -113,19 +127,19 @@ function DetailDrawer({ rental, onClose, onReturn }: {
         <div className="border-t border-slate-100 px-7 py-5 flex flex-wrap gap-2.5 flex-shrink-0 bg-slate-50/60">
           {(rental.status === "active" || rental.status === "overdue") && (
             <button onClick={() => { onReturn(rental.id); onClose(); }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-[12.5px] font-semibold hover:bg-emerald-100 transition-colors">
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-[12.5px] font-semibold hover:bg-emerald-100 transition-all duration-200 cursor-pointer">
               <CheckCircle2 className="h-4 w-4" /> Mark Returned
             </button>
           )}
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-200 transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-200 transition-all duration-200 cursor-pointer">
             <Printer className="h-4 w-4" /> Print Agreement
           </button>
-          <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-colors">
+          <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-all duration-200 cursor-pointer">
             Close
           </button>
         </div>
-      </aside>
-    </>
+      </motion.aside>
+    </AnimatePresence>
   );
 }
 
@@ -155,7 +169,7 @@ export function OfflineRentals({ search = "" }: { search?: string }) {
         </p>
         <button
           onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 h-10 px-5 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-colors"
+          className="flex items-center gap-2 h-10 px-5 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-all duration-200 cursor-pointer"
         >
           <Plus className="h-4 w-4" /> New Walk-in Rental
         </button>
@@ -186,7 +200,7 @@ export function OfflineRentals({ search = "" }: { search?: string }) {
                 return (
                   <tr key={r.id}
                     onClick={() => setSelected(r)}
-                    className={`hover:bg-slate-50/80 cursor-pointer transition-colors group ${isOverdue ? "bg-red-50/20" : ""}`}>
+                    className={`hover:bg-slate-50 cursor-pointer transition-all duration-150 group ${isOverdue ? "bg-red-50/20" : ""}`}>
                     <td className="px-5 py-4">
                       <p className="text-[12px] font-mono font-semibold text-slate-600">{r.reference}</p>
                     </td>
@@ -214,17 +228,17 @@ export function OfflineRentals({ search = "" }: { search?: string }) {
                     <td className="px-5 py-4" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5">
                         <button onClick={() => setSelected(r)} title="View"
-                          className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+                          className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-all duration-200 cursor-pointer">
                           <Eye className="h-3.5 w-3.5" />
                         </button>
                         {(r.status === "active" || r.status === "overdue") && (
                           <button onClick={() => markReturned(r.id)} title="Mark returned"
-                            className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 transition-colors">
+                            className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 transition-all duration-200 cursor-pointer">
                             <CheckCircle2 className="h-3.5 w-3.5" />
                           </button>
                         )}
                         <button title="Extend"
-                          className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 hover:bg-sky-100 transition-colors">
+                          className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 hover:bg-sky-100 transition-all duration-200 cursor-pointer">
                           <CalendarPlus className="h-3.5 w-3.5" />
                         </button>
                       </div>
@@ -261,15 +275,23 @@ export function OfflineRentals({ search = "" }: { search?: string }) {
         />
       )}
 
-      {toastMsg && (
-        <div className="fixed bottom-6 right-6 z-[70] flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl">
-          <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
-          <p className="text-[13.5px] font-semibold">{toastMsg}</p>
-          <button onClick={() => setToastMsg(null)} className="ml-2 opacity-70 hover:opacity-100">
-            <Plus className="h-4 w-4 rotate-45" />
-          </button>
-        </div>
-      )}
+      <AnimatePresence>
+        {toastMsg && (
+          <motion.div
+            className="fixed bottom-6 right-6 z-[70] flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl"
+            initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+            <p className="text-[13.5px] font-semibold">{toastMsg}</p>
+            <button onClick={() => setToastMsg(null)} className="ml-2 opacity-70 hover:opacity-100 cursor-pointer transition-opacity">
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

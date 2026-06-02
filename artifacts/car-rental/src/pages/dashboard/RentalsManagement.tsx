@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, AlertTriangle, Eye, Printer, CalendarPlus, Phone, Search } from "lucide-react";
 import { DashboardRental, RentalStatus } from "@/data/dashboardData";
 import { useRentals, updateRental } from "@/data/localStore";
@@ -47,10 +48,22 @@ function RentalDrawer({ rental, onClose, onReturn }: {
   const isOverdue = rental.status === "overdue";
 
   return (
-    <>
-      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
-      <aside className="fixed inset-y-0 right-0 z-50 w-full sm:w-[500px] bg-white shadow-2xl flex flex-col">
-
+    <AnimatePresence>
+      <motion.div
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
+      <motion.aside
+        className="fixed inset-y-0 right-0 z-50 w-full sm:w-[500px] bg-white shadow-2xl flex flex-col"
+        initial={{ x: "100%", opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: "100%", opacity: 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+      >
         <div className={`flex items-start justify-between px-7 py-6 border-b flex-shrink-0 ${isOverdue ? "bg-red-50 border-red-100" : "border-slate-100"}`}>
           <div>
             <div className="flex items-center gap-2 mb-2">
@@ -67,13 +80,12 @@ function RentalDrawer({ rental, onClose, onReturn }: {
               </div>
             )}
           </div>
-          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-white/80 text-slate-400 transition-colors">
+          <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-all duration-200 cursor-pointer">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-7 py-6 space-y-6">
-
           <section>
             <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Client Details</p>
             <div className="bg-slate-50 border border-slate-100 rounded-2xl divide-y divide-slate-100">
@@ -160,26 +172,26 @@ function RentalDrawer({ rental, onClose, onReturn }: {
           {(rental.status === "active" || rental.status === "overdue") && (
             <>
               <button onClick={() => { onReturn(rental.id); onClose(); }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-[12.5px] font-semibold hover:bg-emerald-100 transition-colors">
+                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-[12.5px] font-semibold hover:bg-emerald-100 transition-all duration-200 cursor-pointer">
                 <CheckCircle2 className="h-4 w-4" /> Mark Returned
               </button>
-              <button className="flex items-center gap-2 px-4 py-2.5 bg-sky-50 border border-sky-100 text-sky-700 rounded-xl text-[12.5px] font-semibold hover:bg-sky-100 transition-colors">
+              <button className="flex items-center gap-2 px-4 py-2.5 bg-sky-50 border border-sky-100 text-sky-700 rounded-xl text-[12.5px] font-semibold hover:bg-sky-100 transition-all duration-200 cursor-pointer">
                 <CalendarPlus className="h-4 w-4" /> Extend
               </button>
-              <a href={`tel:${rental.clientPhone}`} className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 text-amber-700 rounded-xl text-[12.5px] font-semibold hover:bg-amber-100 transition-colors">
+              <a href={`tel:${rental.clientPhone}`} className="flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-100 text-amber-700 rounded-xl text-[12.5px] font-semibold hover:bg-amber-100 transition-all duration-200 cursor-pointer">
                 <Phone className="h-4 w-4" /> Call Client
               </a>
             </>
           )}
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-200 transition-colors">
+          <button className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-200 transition-all duration-200 cursor-pointer">
             <Printer className="h-4 w-4" /> Print Agreement
           </button>
-          <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-colors">
+          <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-all duration-200 cursor-pointer">
             Close
           </button>
         </div>
-      </aside>
-    </>
+      </motion.aside>
+    </AnimatePresence>
   );
 }
 
@@ -218,8 +230,10 @@ export function RentalsManagement({ search = "" }: { search?: string }) {
             const isAlert = f.id === "overdue" && count > 0 && !active;
             return (
               <button key={f.id} onClick={() => setFilter(f.id)}
-                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold transition-all ${
-                  active ? "bg-[#1a2332] text-white shadow-sm" : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold transition-all duration-200 cursor-pointer ${
+                  active
+                    ? "bg-[#1a2332] text-white shadow-sm"
+                    : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-700"
                 }`}>
                 {f.label}
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full min-w-[20px] text-center font-bold ${
@@ -261,12 +275,12 @@ export function RentalsManagement({ search = "" }: { search?: string }) {
                       </div>
                       <div>
                         <p className="text-[14px] font-semibold text-slate-500">No rentals found</p>
-                        <p className="text-[12.5px] text-slate-400 mt-1">Try changing filters or search terms.</p>
+                        <p className="text-[12.5px] text-slate-400 mt-1">Try changing your search or filters.</p>
                       </div>
                       {(filter !== "all" || search) && (
                         <button
                           onClick={() => setFilter("all")}
-                          className="h-8 px-4 bg-[#1a2332] text-white rounded-xl text-[12px] font-semibold hover:bg-[#243044] transition-colors"
+                          className="h-8 px-4 bg-[#1a2332] text-white rounded-xl text-[12px] font-semibold hover:bg-[#243044] transition-all duration-200 cursor-pointer"
                         >
                           Clear Filters
                         </button>
@@ -279,7 +293,7 @@ export function RentalsManagement({ search = "" }: { search?: string }) {
                 return (
                   <tr key={r.id}
                     onClick={() => setSelected(r)}
-                    className={`hover:bg-slate-50/80 cursor-pointer transition-colors group ${isOverdue ? "bg-red-50/30" : ""}`}>
+                    className={`hover:bg-slate-50 cursor-pointer transition-all duration-150 group ${isOverdue ? "bg-red-50/30" : ""}`}>
                     <td className="px-5 py-4">
                       <p className="text-[12px] font-mono font-semibold text-slate-600">{r.reference}</p>
                       <p className="text-[11px] text-slate-400 mt-0.5">{SOURCE_LABEL[r.source]}</p>
@@ -315,21 +329,21 @@ export function RentalsManagement({ search = "" }: { search?: string }) {
                     <td className="px-5 py-4" onClick={e => e.stopPropagation()}>
                       <div className="flex items-center gap-1.5">
                         <button onClick={() => setSelected(r)} title="View details"
-                          className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors">
+                          className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-all duration-200 cursor-pointer">
                           <Eye className="h-3.5 w-3.5" />
                         </button>
                         {(r.status === "active" || r.status === "overdue") && (
                           <button onClick={() => markReturned(r.id)} title="Mark returned"
-                            className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 transition-colors">
+                            className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 hover:bg-emerald-100 transition-all duration-200 cursor-pointer">
                             <CheckCircle2 className="h-3.5 w-3.5" />
                           </button>
                         )}
                         <button title="Extend rental"
-                          className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 hover:bg-sky-100 transition-colors">
+                          className="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 hover:bg-sky-100 transition-all duration-200 cursor-pointer">
                           <CalendarPlus className="h-3.5 w-3.5" />
                         </button>
                         <button title="Print agreement"
-                          className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+                          className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-all duration-200 cursor-pointer">
                           <Printer className="h-3.5 w-3.5" />
                         </button>
                       </div>

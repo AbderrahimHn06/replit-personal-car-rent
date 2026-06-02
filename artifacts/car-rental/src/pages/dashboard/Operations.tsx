@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  Search, SlidersHorizontal, Plus,
+  Search, SlidersHorizontal,
   CalendarCheck, UserPlus, Key, Clock, CheckCircle2, AlertTriangle,
 } from "lucide-react";
 import { bookingRequests, rentals, kpis } from "@/data/dashboardData";
@@ -58,16 +58,9 @@ export function OperationsSection({ activeTab, onTabChange }: Props) {
                 className="pl-10 pr-4 h-10 w-52 rounded-xl border border-slate-200 bg-white text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 shadow-sm transition"
               />
             </div>
-            <button className="h-10 px-3.5 flex items-center gap-2 bg-white border border-slate-200 rounded-xl text-[13px] font-medium text-slate-600 hover:bg-slate-50 shadow-sm transition-colors">
+            <button className="h-10 px-3.5 flex items-center gap-2 bg-white border border-slate-200 rounded-xl text-[13px] font-medium text-slate-600 hover:bg-slate-50 shadow-sm transition-all duration-200 cursor-pointer">
               <SlidersHorizontal className="h-4 w-4" />
               <span className="hidden sm:inline">Filter</span>
-            </button>
-            <button
-              onClick={() => { onTabChange("offline"); }}
-              className="h-10 px-5 flex items-center gap-2 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              New Walk-in
             </button>
           </div>
         </div>

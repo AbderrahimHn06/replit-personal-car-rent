@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
 import {
   X, User, Car, Calendar, Clock, MapPin, DollarSign,
   FileText, CheckCircle2, Search,
@@ -284,10 +285,21 @@ export function RentalCreationModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+      />
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 pointer-events-none">
-        <div
+        <motion.div
           className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col pointer-events-auto"
+          initial={{ opacity: 0, scale: 0.95, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 8 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
@@ -598,7 +610,7 @@ export function RentalCreationModal({
               Cancel
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );

@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, X, User, Car, Key, MapPin, Wrench, CalendarCheck,
   ChevronRight, AlertTriangle,
 } from "lucide-react";
-import { fleet, bookingRequests, maintenance, DashboardRental } from "@/data/dashboardData";
+import { fleet, bookingRequests, maintenance } from "@/data/dashboardData";
 import { useClients, useRentals, useActiveLocations } from "@/data/localStore";
 
 type ResultType = "client" | "vehicle" | "rental" | "booking" | "location" | "maintenance";
@@ -55,6 +56,18 @@ const GROUP_CFG: Record<ResultType, { label: string; Icon: React.ElementType; co
 const GROUP_ORDER: ResultType[] = ["client", "vehicle", "rental", "booking", "location", "maintenance"];
 const MAX = 4;
 
+const overlayVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1 },
+  exit: { opacity: 0 },
+};
+
+const panelVariants = {
+  hidden: { opacity: 0, scale: 0.95, y: -8 },
+  visible: { opacity: 1, scale: 1, y: 0 },
+  exit: { opacity: 0, scale: 0.95, y: -8 },
+};
+
 export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
   const [open,      setOpen]      = useState(false);
   const [query,     setQuery]     = useState("");
@@ -82,7 +95,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
-      setTimeout(() => inputRef.current?.focus(), 30);
+      setTimeout(() => inputRef.current?.focus(), 50);
     } else {
       document.body.style.overflow = "";
       setQuery("");
@@ -184,7 +197,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
       {/* ── Top-bar trigger (desktop) ── */}
       <button
         onClick={() => setOpen(true)}
-        className="hidden sm:flex items-center gap-2.5 h-9 pl-3.5 pr-3 rounded-xl border border-slate-200 bg-slate-50/80 text-[12.5px] text-slate-400 hover:bg-white hover:border-slate-300 transition-all w-[300px] lg:w-[360px] text-left"
+        className="hidden sm:flex items-center gap-2.5 h-9 pl-3.5 pr-3 rounded-xl border border-slate-200 bg-slate-50/80 text-[12.5px] text-slate-400 hover:bg-white hover:border-slate-300 transition-all duration-200 w-[300px] lg:w-[360px] text-left cursor-pointer"
       >
         <Search className="h-3.5 w-3.5 flex-shrink-0" />
         <span className="flex-1 truncate">Search clients, cars, rentals…</span>
@@ -196,143 +209,162 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
       {/* ── Mobile icon ── */}
       <button
         onClick={() => setOpen(true)}
-        className="sm:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500"
+        className="sm:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500 transition-all duration-200 cursor-pointer"
       >
         <Search className="h-4 w-4" />
       </button>
 
       {/* ── Command palette overlay ── */}
-      {open && (
-        <>
-          <div className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm" onClick={() => setOpen(false)} />
-          <div className="fixed inset-0 z-[90] flex items-start justify-center px-4 pt-[8vh] pointer-events-none">
-            <div
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[72vh] flex flex-col pointer-events-auto overflow-hidden border border-slate-200"
-              onClick={e => e.stopPropagation()}
-            >
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              key="search-overlay"
+              className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm"
+              variants={overlayVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              onClick={() => setOpen(false)}
+            />
+            <div className="fixed inset-0 z-[90] flex items-start justify-center px-4 pt-[8vh] pointer-events-none">
+              <motion.div
+                key="search-panel"
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[72vh] flex flex-col pointer-events-auto overflow-hidden border border-slate-200/80"
+                variants={panelVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                transition={{ duration: 0.22, ease: "easeOut" }}
+                onClick={e => e.stopPropagation()}
+              >
+                {/* Search field */}
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 flex-shrink-0">
+                  <Search className="h-[18px] w-[18px] text-slate-400 flex-shrink-0" />
+                  <input
+                    ref={inputRef}
+                    value={query}
+                    onChange={e => { setQuery(e.target.value); setActiveIdx(0); }}
+                    onKeyDown={handleKey}
+                    placeholder="Search clients, cars, rentals, bookings…"
+                    className="flex-1 text-[14.5px] text-slate-800 placeholder-slate-400 outline-none bg-transparent"
+                  />
+                  {query ? (
+                    <button
+                      onClick={() => { setQuery(""); setActiveIdx(0); inputRef.current?.focus(); }}
+                      className="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <kbd className="px-2 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-400 leading-none">ESC</kbd>
+                  )}
+                </div>
 
-              {/* Search field */}
-              <div className="flex items-center gap-3 px-5 py-4 border-b border-slate-100 flex-shrink-0">
-                <Search className="h-4.5 w-4.5 text-slate-400 flex-shrink-0 h-[18px] w-[18px]" />
-                <input
-                  ref={inputRef}
-                  value={query}
-                  onChange={e => { setQuery(e.target.value); setActiveIdx(0); }}
-                  onKeyDown={handleKey}
-                  placeholder="Search clients, cars, rentals, locations…"
-                  className="flex-1 text-[14.5px] text-slate-800 placeholder-slate-400 outline-none bg-transparent"
-                />
-                {query ? (
-                  <button onClick={() => { setQuery(""); setActiveIdx(0); inputRef.current?.focus(); }} className="text-slate-400 hover:text-slate-600 transition-colors">
-                    <X className="h-4 w-4" />
-                  </button>
-                ) : (
-                  <kbd className="px-2 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-400 leading-none">ESC</kbd>
-                )}
-              </div>
-
-              {/* Results */}
-              <div className="flex-1 overflow-y-auto">
-                {!query && (
-                  <div className="flex flex-col items-center justify-center py-14 text-center px-6">
-                    <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
-                      <Search className="h-6 w-6 text-slate-300" />
+                {/* Results */}
+                <div className="flex-1 overflow-y-auto">
+                  {!query && (
+                    <div className="flex flex-col items-center justify-center py-14 text-center px-6">
+                      <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+                        <Search className="h-6 w-6 text-slate-300" />
+                      </div>
+                      <p className="text-[13.5px] font-semibold text-slate-500">Search across the dashboard</p>
+                      <p className="text-[12px] text-slate-400 mt-1.5 max-w-sm">
+                        Find clients, vehicles, rentals, booking requests, locations, and maintenance records instantly.
+                      </p>
+                      <div className="flex items-center gap-3 mt-5 flex-wrap justify-center">
+                        {[{ icon: User, label: "Clients" }, { icon: Car, label: "Vehicles" }, { icon: Key, label: "Rentals" }, { icon: MapPin, label: "Locations" }].map(({ icon: Icon, label }) => (
+                          <span key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-[11.5px] font-medium text-slate-500">
+                            <Icon className="h-3 w-3" /> {label}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <p className="text-[13.5px] font-semibold text-slate-500">Search across the dashboard</p>
-                    <p className="text-[12px] text-slate-400 mt-1.5 max-w-sm">
-                      Find clients, vehicles, rentals, booking requests, locations, and maintenance records instantly.
-                    </p>
-                    <div className="flex items-center gap-3 mt-5 flex-wrap justify-center">
-                      {[{ icon: User, label: "Clients" }, { icon: Car, label: "Vehicles" }, { icon: Key, label: "Rentals" }, { icon: MapPin, label: "Locations" }].map(({ icon: Icon, label }) => (
-                        <span key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-[11.5px] font-medium text-slate-500">
-                          <Icon className="h-3 w-3" /> {label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  )}
 
-                {query && results.length === 0 && (
-                  <div className="flex flex-col items-center justify-center py-14 text-center px-6">
-                    <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
-                      <AlertTriangle className="h-6 w-6 text-slate-300" />
+                  {query && results.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-14 text-center px-6">
+                      <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+                        <AlertTriangle className="h-6 w-6 text-slate-300" />
+                      </div>
+                      <p className="text-[13.5px] font-semibold text-slate-500">No results for "{query}"</p>
+                      <p className="text-[12px] text-slate-400 mt-1.5">Try different keywords or check the spelling.</p>
                     </div>
-                    <p className="text-[13.5px] font-semibold text-slate-500">No results for "{query}"</p>
-                    <p className="text-[12px] text-slate-400 mt-1.5">Try different keywords or check the spelling.</p>
-                  </div>
-                )}
+                  )}
 
-                {query && results.length > 0 && (
-                  <div className="py-2">
-                    {GROUP_ORDER.map(type => {
-                      const group = grouped[type];
-                      if (!group.length) return null;
-                      const { label, Icon: GIcon, color } = GROUP_CFG[type];
-                      return (
-                        <div key={type} className="mb-1">
-                          <div className="flex items-center gap-2 px-5 py-2">
-                            <GIcon className={`h-3 w-3 ${color}`} />
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
+                  {query && results.length > 0 && (
+                    <div className="py-2">
+                      {GROUP_ORDER.map(type => {
+                        const group = grouped[type];
+                        if (!group.length) return null;
+                        const { label, Icon: GIcon, color } = GROUP_CFG[type];
+                        return (
+                          <div key={type} className="mb-1">
+                            <div className="flex items-center gap-2 px-5 py-2">
+                              <GIcon className={`h-3 w-3 ${color}`} />
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{label}</p>
+                            </div>
+                            {group.map(r => {
+                              const flatIdx = results.indexOf(r);
+                              const isActive = flatIdx === activeIdx;
+                              return (
+                                <button
+                                  key={r.id}
+                                  onMouseEnter={() => setActiveIdx(flatIdx)}
+                                  onClick={() => handleSelect(r)}
+                                  className={`w-full flex items-center gap-3 px-5 py-2.5 text-left transition-all duration-150 cursor-pointer ${
+                                    isActive ? "bg-slate-100" : "hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-150 ${
+                                    isActive ? "bg-[#1a2332]" : "bg-slate-100"
+                                  }`}>
+                                    <r.Icon className={`h-3.5 w-3.5 ${isActive ? "text-white" : "text-slate-500"}`} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[13px] font-semibold text-slate-800 leading-tight truncate">{r.title}</p>
+                                    <p className="text-[11.5px] text-slate-400 truncate mt-0.5">{r.subtitle}</p>
+                                  </div>
+                                  {r.badge && (
+                                    <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[10.5px] font-semibold capitalize ${r.badgeCls}`}>
+                                      {r.badge}
+                                    </span>
+                                  )}
+                                  <ChevronRight className={`h-3.5 w-3.5 flex-shrink-0 transition-colors ${isActive ? "text-slate-400" : "text-slate-200"}`} />
+                                </button>
+                              );
+                            })}
                           </div>
-                          {group.map(r => {
-                            const flatIdx = results.indexOf(r);
-                            const isActive = flatIdx === activeIdx;
-                            return (
-                              <button
-                                key={r.id}
-                                onMouseEnter={() => setActiveIdx(flatIdx)}
-                                onClick={() => handleSelect(r)}
-                                className={`w-full flex items-center gap-3 px-5 py-2.5 text-left transition-colors ${
-                                  isActive ? "bg-slate-100" : "hover:bg-slate-50"
-                                }`}
-                              >
-                                <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
-                                  isActive ? "bg-[#1a2332]" : "bg-slate-100"
-                                }`}>
-                                  <r.Icon className={`h-3.5 w-3.5 ${isActive ? "text-white" : "text-slate-500"}`} />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-[13px] font-semibold text-slate-800 leading-tight truncate">{r.title}</p>
-                                  <p className="text-[11.5px] text-slate-400 truncate mt-0.5">{r.subtitle}</p>
-                                </div>
-                                {r.badge && (
-                                  <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-[10.5px] font-semibold capitalize ${r.badgeCls}`}>
-                                    {r.badge}
-                                  </span>
-                                )}
-                                <ChevronRight className={`h-3.5 w-3.5 flex-shrink-0 transition-colors ${isActive ? "text-slate-400" : "text-slate-200"}`} />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
-              {/* Footer */}
-              <div className="border-t border-slate-100 px-5 py-2.5 flex items-center gap-4 bg-slate-50/60 flex-shrink-0">
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                  <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-[9.5px] font-bold text-slate-500">↑↓</kbd>
-                  <span>Navigate</span>
+                {/* Footer */}
+                <div className="border-t border-slate-100 px-5 py-2.5 flex items-center gap-4 bg-slate-50/60 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-[9.5px] font-bold text-slate-500">↑↓</kbd>
+                    <span>Navigate</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-[9.5px] font-bold text-slate-500">↵</kbd>
+                    <span>Select</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-[9.5px] font-bold text-slate-500">ESC</kbd>
+                    <span>Close</span>
+                  </div>
+                  <div className="ml-auto text-[11px] text-slate-300">
+                    {results.length > 0 ? `${results.length} result${results.length !== 1 ? "s" : ""}` : ""}
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                  <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-[9.5px] font-bold text-slate-500">↵</kbd>
-                  <span>Select</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
-                  <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-[9.5px] font-bold text-slate-500">ESC</kbd>
-                  <span>Close</span>
-                </div>
-                <div className="ml-auto text-[11px] text-slate-300">
-                  {results.length > 0 ? `${results.length} result${results.length !== 1 ? "s" : ""}` : ""}
-                </div>
-              </div>
+              </motion.div>
             </div>
-          </div>
-        </>
-      )}
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }
