@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { RentalFilters } from "./Operations";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, Check, Ban, MapPin, Eye, Globe, PhoneCall } from "lucide-react";
 import { bookingRequests, BookingRequest, RequestStatus } from "@/data/dashboardData";
@@ -187,7 +188,7 @@ function Drawer({ req, onClose, onStatus }: {
   );
 }
 
-export function BookingRequests({ search = "" }: { search?: string }) {
+export function BookingRequests({ search = "", filters }: { search?: string; filters?: RentalFilters }) {
   const [filter, setFilter]     = useState<FilterId>("all");
   const [selected, setSelected] = useState<BookingRequest | null>(null);
   const [local, setLocal]       = useState(bookingRequests);
@@ -200,7 +201,11 @@ export function BookingRequests({ search = "" }: { search?: string }) {
   const filtered = local.filter(r => {
     const mf = filter === "all" || r.status === filter;
     const ms = !search || [r.customer, r.car, r.email, r.phone].some(v => v.toLowerCase().includes(search.toLowerCase()));
-    return mf && ms;
+    const fsrc = !filters || filters.source === "all" || r.source === filters.source;
+    const fFrom = !filters?.dateFrom || r.pickupDate >= filters.dateFrom;
+    const fTo   = !filters?.dateTo   || r.pickupDate <= filters.dateTo;
+    const fLoc  = !filters || filters.location === "all" || r.pickupLocation === filters.location;
+    return mf && ms && fsrc && fFrom && fTo && fLoc;
   });
 
   const counts: Record<string, number> = {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { RentalFilters } from "./Operations";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle2, AlertTriangle, Eye, Printer, CalendarPlus, Phone, Search } from "lucide-react";
 import { DashboardRental, RentalStatus } from "@/data/dashboardData";
@@ -325,7 +326,7 @@ function RentalDrawer({ rental, onClose, onReturn }: {
 }
 
 /* ── Main ── */
-export function RentalsManagement({ search = "" }: { search?: string }) {
+export function RentalsManagement({ search = "", filters }: { search?: string; filters?: RentalFilters }) {
   const [filter,   setFilter]   = useState<FilterId>("all");
   const [selected, setSelected] = useState<DashboardRental | null>(null);
 
@@ -342,9 +343,13 @@ export function RentalsManagement({ search = "" }: { search?: string }) {
   };
 
   const filtered = local.filter(r => {
-    const mf = filter === "all" || r.status === filter;
-    const ms = !search || [r.client, r.car, r.plate, r.reference].some(v => v.toLowerCase().includes(search.toLowerCase()));
-    return mf && ms;
+    const mf   = filter === "all" || r.status === filter;
+    const ms   = !search || [r.client, r.car, r.plate, r.reference].some(v => v.toLowerCase().includes(search.toLowerCase()));
+    const fsrc  = !filters || filters.source === "all" || r.source === filters.source;
+    const fFrom = !filters?.dateFrom || r.startDate >= filters.dateFrom;
+    const fTo   = !filters?.dateTo   || r.startDate <= filters.dateTo;
+    const fLoc  = !filters || filters.location === "all" || r.pickupLocation === filters.location;
+    return mf && ms && fsrc && fFrom && fTo && fLoc;
   });
 
   return (
