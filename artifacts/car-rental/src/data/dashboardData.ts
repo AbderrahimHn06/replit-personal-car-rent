@@ -90,6 +90,7 @@ export interface DashboardClient {
 
   internalNotes?: string;
   warningNotes?: string;
+  dateOfBirth?: string;
 }
 
 export interface BlockedClient {

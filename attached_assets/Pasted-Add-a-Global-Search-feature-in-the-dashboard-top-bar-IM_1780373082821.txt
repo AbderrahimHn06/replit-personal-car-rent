@@ -1,0 +1,207 @@
+Add a Global Search feature in the dashboard top bar.
+
+IMPORTANT
+- Frontend only for now
+- Mock data only
+- Design it so it can later connect to the backend
+- Must be reusable and scalable
+
+PURPOSE
+
+The search should work across the entire dashboard, not just the current page.
+
+The user should be able to quickly find:
+
+- Clients
+- Cars
+- Rentals
+- Booking Requests
+- Locations
+- Maintenance Records
+
+TOP BAR
+
+Add a search input in the center or left side of the top bar.
+
+Placeholder:
+
+"Search clients, cars, rentals..."
+
+Design:
+- Rounded full-width input
+- Search icon on the left
+- Clear button on the right when typing
+- Premium light style
+- Same design language as the rest of the dashboard
+
+DESKTOP
+
+Width:
+- 350px to 500px
+
+MOBILE
+
+Collapsed search icon
+Tap to expand search
+
+SEARCH BEHAVIOR
+
+When typing:
+
+Show a dropdown command palette style panel.
+
+Examples:
+
+Searching:
+"Ahmed"
+
+Results:
+
+Clients
+--------
+Ahmed Benali
+Client
+Phone: ...
+
+Ahmed K.
+Client
+Phone: ...
+
+Rentals
+--------
+RNT-1023
+Ahmed Benali
+Active Rental
+
+Searching:
+"Clio"
+
+Results:
+
+Vehicles
+---------
+Renault Clio 5
+Available
+
+Renault Clio 4
+Rented
+
+RESULT GROUPS
+
+Group results by category:
+
+Clients
+Vehicles
+Rentals
+Booking Requests
+Locations
+Maintenance
+
+Each group should have:
+
+- category title
+- matching items
+
+RESULT ITEM DESIGN
+
+Each result should contain:
+
+Icon
+Title
+Subtitle
+Status badge if relevant
+
+Examples:
+
+Client:
+👤 Ahmed Benali
++213 xxx
+VIP
+
+Vehicle:
+🚗 Renault Clio 5
+123-456-789
+Available
+
+Rental:
+📄 RNT-1023
+Ahmed Benali
+Active
+
+INTERACTION
+
+Clicking a result:
+
+Client
+→ Open client profile
+
+Vehicle
+→ Open vehicle details
+
+Rental
+→ Open rental details
+
+Booking Request
+→ Open booking drawer
+
+KEYBOARD SHORTCUT
+
+Add:
+
+Ctrl + K
+
+or
+
+⌘ + K
+
+to open search.
+
+When opened:
+
+- Focus search automatically
+- Dark overlay behind
+- Command palette style modal
+
+COMMAND PALETTE STYLE
+
+Use a modern command palette similar to:
+
+- Linear
+- Raycast
+- Notion
+- Vercel Dashboard
+
+Design:
+- Centered modal
+- Rounded corners
+- White background
+- Soft shadow
+- Search field at top
+- Results below
+
+EMPTY STATE
+
+If no result:
+
+Show:
+
+"No results found"
+
+and a small suggestion message.
+
+FUTURE BACKEND SUPPORT
+
+Structure the component so it can later search:
+
+Clients table
+Cars table
+Rentals table
+Bookings table
+
+without changing the UI.
+
+For now use mock data from the existing dashboard state.
+
+GOAL
+
+Create a premium global search experience that lets the agency owner instantly find any client, vehicle, rental, booking request, location, or maintenance record from anywhere in the dashboard.

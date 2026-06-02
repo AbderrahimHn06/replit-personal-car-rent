@@ -9,6 +9,7 @@ import { useActiveLocations, useClients, addClientToStore } from "@/data/localSt
 /* ─── Types ─────────────────────────────────────────────────────── */
 export interface RentalCreationProps {
   prefilledCar?: FleetCar;
+  prefilledClient?: DashboardClient;
   prefilledPickupDate?: string;
   prefilledPickupTime?: string;
   prefilledReturnDate?: string;
@@ -188,6 +189,7 @@ function SecLabel({ icon: Icon, children }: { icon: React.ElementType; children:
 /* ─── Main RentalCreationModal ──────────────────────────────────── */
 export function RentalCreationModal({
   prefilledCar,
+  prefilledClient,
   prefilledPickupDate = "",
   prefilledPickupTime = "09:00",
   prefilledReturnDate = "",
@@ -208,7 +210,7 @@ export function RentalCreationModal({
   const [pickupLoc,      setPickupLoc]      = useState(prefilledPickupLoc);
   const [returnLoc,      setReturnLoc]      = useState(prefilledReturnLoc);
   const [clientMode,     setClientMode]     = useState<"existing" | "new">("existing");
-  const [selectedClient, setSelectedClient] = useState<DashboardClient | null>(null);
+  const [selectedClient, setSelectedClient] = useState<DashboardClient | null>(prefilledClient ?? null);
   const [deposit,        setDeposit]        = useState(prefilledCar?.depositAmount ? String(prefilledCar.depositAmount) : "");
   const [notes,          setNotes]          = useState("");
   const [internalNotes,  setInternalNotes]  = useState("");
@@ -310,6 +312,25 @@ export function RentalCreationModal({
             <section>
               <SecLabel icon={User}>Client</SecLabel>
               {errors.client && <p className="text-[11px] text-red-500 mb-2">{errors.client}</p>}
+
+              {prefilledClient ? (
+                <div className="flex items-center gap-4 bg-violet-50 border border-violet-200 rounded-2xl p-4">
+                  <div className="w-11 h-11 rounded-2xl flex items-center justify-center text-[14px] font-bold flex-shrink-0 bg-violet-100 text-violet-700">
+                    {prefilledClient.name.split(" ").map((n: string) => n[0]).join("").slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-bold text-violet-900">{prefilledClient.name}</p>
+                    <p className="text-[12px] text-violet-600">{prefilledClient.phone}{prefilledClient.city ? ` · ${prefilledClient.city}` : ""}</p>
+                    {prefilledClient.licenseNumber && (
+                      <p className="text-[11.5px] text-violet-500 font-mono">License: {prefilledClient.licenseNumber}</p>
+                    )}
+                  </div>
+                  <span className="flex-shrink-0 px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-violet-100 text-violet-600 border border-violet-200">
+                    Pre-selected
+                  </span>
+                </div>
+              ) : (
+                <>
               <div className="flex items-center bg-slate-100 rounded-xl p-1 mb-4 w-fit">
                 <button
                   onClick={() => setClientMode("existing")}
@@ -382,6 +403,8 @@ export function RentalCreationModal({
                 </div>
               ) : (
                 <NewClientMiniForm onCreated={c => { setSelectedClient(c); setClientMode("existing"); setErrors(prev => ({ ...prev, client: "" })); }} />
+              )}
+              </>
               )}
             </section>
 

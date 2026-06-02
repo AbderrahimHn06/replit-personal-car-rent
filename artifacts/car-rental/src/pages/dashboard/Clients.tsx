@@ -6,7 +6,8 @@ import {
   ChevronRight, Calendar, Hash, Trash2, CheckCircle2,
 } from "lucide-react";
 import { rentals, DashboardClient, ClientStatus } from "@/data/dashboardData";
-import { useClients, addClientToStore, updateClientInStore, removeClientFromStore } from "@/data/localStore";
+import { useClients, addClientToStore, updateClientInStore, removeClientFromStore, addRental } from "@/data/localStore";
+import { RentalCreationModal } from "./RentalCreationModal";
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
 function initials(name: string) {
@@ -96,7 +97,13 @@ function KpiCards({ list }: { list: DashboardClient[] }) {
 
 /* ─── Client Detail Drawer ─────────────────────────────────────── */
 function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: () => void }) {
-  const [section, setSection] = useState<"overview" | "history" | "docs" | "notes" | "payments">("overview");
+  const [section,         setSection]         = useState<"overview" | "history" | "docs" | "notes" | "payments">("overview");
+  const [showRentalModal, setShowRentalModal] = useState(false);
+  const [editOpen,        setEditOpen]        = useState(false);
+  const [blockOpen,       setBlockOpen]       = useState(false);
+  const [noteOpen,        setNoteOpen]        = useState(false);
+  const [blockReason,     setBlockReason]     = useState("");
+  const [noteText,        setNoteText]        = useState("");
 
   const clientRentals = rentals.filter(r => r.client === client.name).sort((a, b) => b.startDate.localeCompare(a.startDate));
   const avatarCls = avatarColor(client.name);
@@ -185,16 +192,34 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
 
           {/* Quick Actions */}
           <div className="flex gap-2 px-4 py-3 border-b border-slate-100 bg-slate-50 overflow-x-auto">
-            {[
-              { label: "Create Rental", icon: Car,          cls: "bg-[#1a2332] text-white hover:bg-[#243044]" },
-              { label: "Edit",          icon: Edit2,        cls: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50" },
-              { label: client.status === "blocked" ? "Unblock" : "Block", icon: Ban, cls: client.status === "blocked" ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-600" },
-              { label: "Add Note",      icon: MessageSquare, cls: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50" },
-            ].map(({ label, icon: Icon, cls }) => (
-              <button key={label} className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors flex-shrink-0 ${cls}`}>
-                <Icon className="h-3.5 w-3.5" />{label}
-              </button>
-            ))}
+            <button
+              onClick={() => setShowRentalModal(true)}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors flex-shrink-0 bg-[#1a2332] text-white hover:bg-[#243044]"
+            >
+              <Car className="h-3.5 w-3.5" /> Create Rental
+            </button>
+            <button
+              onClick={() => setEditOpen(true)}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors flex-shrink-0 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              <Edit2 className="h-3.5 w-3.5" /> Edit
+            </button>
+            <button
+              onClick={() => setBlockOpen(true)}
+              className={`flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors flex-shrink-0 ${
+                client.status === "blocked"
+                  ? "bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                  : "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
+              }`}
+            >
+              <Ban className="h-3.5 w-3.5" /> {client.status === "blocked" ? "Unblock" : "Block"}
+            </button>
+            <button
+              onClick={() => setNoteOpen(true)}
+              className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors flex-shrink-0 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              <MessageSquare className="h-3.5 w-3.5" /> Add Note
+            </button>
           </div>
 
           {/* Section Nav */}
@@ -403,7 +428,10 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                   <p className="text-[13px] font-semibold text-slate-400">No notes yet</p>
                 </div>
               )}
-              <button className="w-full h-10 border-2 border-dashed border-slate-200 rounded-xl text-[12px] font-semibold text-slate-400 hover:border-slate-300 hover:text-slate-600 transition-colors flex items-center justify-center gap-2">
+              <button
+                onClick={() => setNoteOpen(true)}
+                className="w-full h-10 border-2 border-dashed border-slate-200 rounded-xl text-[12px] font-semibold text-slate-400 hover:border-violet-300 hover:text-violet-600 transition-colors flex items-center justify-center gap-2"
+              >
                 <Plus className="h-4 w-4" /> Add Note
               </button>
             </div>
@@ -450,6 +478,135 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
           )}
         </div>
       </aside>
+
+      {/* ── Block / Unblock Modal ── */}
+      {blockOpen && (
+        <>
+          <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm" onClick={() => setBlockOpen(false)} />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+              <h4 className="text-[16px] font-bold text-[#1a2332] mb-2">
+                {client.status === "blocked" ? "Unblock Client" : "Block Client"}
+              </h4>
+              <p className="text-[13px] text-slate-500 mb-4">
+                {client.status === "blocked"
+                  ? `Restore ${client.name}'s ability to book rentals.`
+                  : `Prevent ${client.name} from booking rentals.`}
+              </p>
+              {client.status !== "blocked" && (
+                <div className="mb-4">
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Reason <span className="text-slate-400 font-normal">(optional)</span></label>
+                  <textarea
+                    className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition bg-white"
+                    rows={2}
+                    placeholder="e.g. Did not return vehicle, fraudulent documents…"
+                    value={blockReason}
+                    onChange={e => setBlockReason(e.target.value)}
+                  />
+                </div>
+              )}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    const updated: DashboardClient = {
+                      ...client,
+                      status: client.status === "blocked" ? ("active" as ClientStatus) : ("blocked" as ClientStatus),
+                      blockedReason: client.status !== "blocked" ? blockReason || undefined : undefined,
+                    };
+                    updateClientInStore(updated);
+                    setBlockOpen(false);
+                    setBlockReason("");
+                  }}
+                  className={`flex-1 h-10 rounded-xl text-[13px] font-semibold transition-colors ${
+                    client.status === "blocked"
+                      ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                      : "bg-red-600 text-white hover:bg-red-700"
+                  }`}
+                >
+                  {client.status === "blocked" ? "Yes, Unblock" : "Block Client"}
+                </button>
+                <button
+                  onClick={() => { setBlockOpen(false); setBlockReason(""); }}
+                  className="px-5 h-10 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Add Note Modal ── */}
+      {noteOpen && (
+        <>
+          <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm" onClick={() => setNoteOpen(false)} />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+              <h4 className="text-[16px] font-bold text-[#1a2332] mb-4">Add Note</h4>
+              <div className="mb-4">
+                <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Internal Note</label>
+                <textarea
+                  autoFocus
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition bg-white"
+                  rows={3}
+                  placeholder="Staff-only observation…"
+                  value={noteText}
+                  onChange={e => setNoteText(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    if (!noteText.trim()) return;
+                    const stamp = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+                    const newLine = `[${stamp}] ${noteText.trim()}`;
+                    const combined = client.internalNotes ? `${client.internalNotes}\n${newLine}` : newLine;
+                    updateClientInStore({ ...client, internalNotes: combined });
+                    setNoteOpen(false);
+                    setNoteText("");
+                    setSection("notes");
+                  }}
+                  disabled={!noteText.trim()}
+                  className="flex-1 h-10 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] disabled:opacity-40 transition-colors"
+                >
+                  Save Note
+                </button>
+                <button
+                  onClick={() => { setNoteOpen(false); setNoteText(""); }}
+                  className="px-5 h-10 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Edit Client Modal ── */}
+      {editOpen && (
+        <ClientModal
+          initial={client}
+          onSave={updated => {
+            updateClientInStore(updated);
+            setEditOpen(false);
+          }}
+          onClose={() => setEditOpen(false)}
+        />
+      )}
+
+      {/* ── Create Rental Modal ── */}
+      {showRentalModal && (
+        <RentalCreationModal
+          prefilledClient={client}
+          onClose={() => setShowRentalModal(false)}
+          onCreated={rental => {
+            addRental(rental);
+            setShowRentalModal(false);
+          }}
+        />
+      )}
     </>
   );
 }
@@ -482,7 +639,10 @@ function ClientModal({ initial, onSave, onClose }: {
     source: initial.source as "online" | "walk-in", status: initial.status,
     internalNotes: initial.internalNotes ?? "", warningNotes: initial.warningNotes ?? "",
   } : BLANK_CLIENT_FORM);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors,   setErrors]   = useState<Record<string, string>>({});
+  const [docFiles, setDocFiles] = useState<{ license: File | null; passport: File | null; nationalId: File | null }>({
+    license: null, passport: null, nationalId: null,
+  });
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -674,6 +834,64 @@ function ClientModal({ initial, onSave, onClose }: {
                     onChange={e => set("warningNotes", e.target.value)}
                   />
                 </div>
+              </div>
+            </section>
+
+            {/* Documents */}
+            <section>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Document Uploads</p>
+              <p className="text-[11.5px] text-slate-400 mb-4">Attach scans or photos — stored in this session only.</p>
+              <div className="space-y-2.5">
+                {([
+                  { key: "license" as const,    label: "Driver's License" },
+                  { key: "passport" as const,   label: "Passport" },
+                  { key: "nationalId" as const, label: "National ID / CIN" },
+                ] as const).map(({ key, label }) => {
+                  const file = docFiles[key];
+                  return (
+                    <div
+                      key={key}
+                      className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                        file ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200"
+                      }`}
+                    >
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${file ? "bg-emerald-100" : "bg-white border border-slate-200"}`}>
+                        <FileText className={`h-4 w-4 ${file ? "text-emerald-600" : "text-slate-400"}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-[12.5px] font-semibold leading-tight ${file ? "text-emerald-800" : "text-slate-600"}`}>{label}</p>
+                        {file ? (
+                          <p className="text-[11px] text-emerald-600 truncate">{file.name} &middot; {(file.size / 1024).toFixed(0)} KB</p>
+                        ) : (
+                          <p className="text-[11px] text-slate-400">No file selected</p>
+                        )}
+                      </div>
+                      {file ? (
+                        <button
+                          type="button"
+                          onClick={() => setDocFiles(p => ({ ...p, [key]: null }))}
+                          className="flex-shrink-0 text-emerald-400 hover:text-emerald-600 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      ) : (
+                        <label className="flex-shrink-0 h-8 px-3 rounded-lg bg-white border border-slate-200 text-[11.5px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer flex items-center">
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png,.webp"
+                            className="sr-only"
+                            onChange={e => {
+                              const picked = e.target.files?.[0];
+                              if (picked) setDocFiles(p => ({ ...p, [key]: picked }));
+                              e.target.value = "";
+                            }}
+                          />
+                          Browse
+                        </label>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
           </div>
@@ -911,7 +1129,7 @@ export function ClientsSection() {
       </div>
 
       {/* Detail Drawer */}
-      {selected && <ClientDrawer client={selected} onClose={() => setSelected(null)} />}
+      {selected && <ClientDrawer client={localClients.find(c => c.id === selected.id) ?? selected} onClose={() => setSelected(null)} />}
 
       {/* Add Client Modal */}
       {showAddModal && (

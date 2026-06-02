@@ -4,6 +4,7 @@ import {
   LayoutDashboard, CalendarCheck, UserPlus, Key, Car, Users, UserX,
   CalendarDays, Wrench, Bell, BarChart3, Settings, Menu, X, ChevronLeft,
 } from "lucide-react";
+import { GlobalSearch } from "./dashboard/GlobalSearch";
 import { Booking } from "@/data/mockData";
 import { kpis, alerts } from "@/data/dashboardData";
 import { Overview } from "./dashboard/Overview";
@@ -226,7 +227,8 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
               <p className="text-[10.5px] text-slate-400 leading-tight hidden sm:block">{sub}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
+            <GlobalSearch onNavigate={navigate} />
             <button
               className="relative w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-100 text-slate-500"
               onClick={() => navigate("alerts")}
