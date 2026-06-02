@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Search, Phone, Mail, MapPin, Key, Star, Shield, Clock,
   Plus, Edit2, Ban, FileText, MessageSquare, CreditCard,
@@ -127,8 +128,8 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
-      <aside className="fixed inset-y-0 right-0 z-50 w-full sm:w-[560px] bg-white shadow-2xl flex flex-col overflow-hidden">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
+      <motion.aside initial={{ x: "100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "100%", opacity: 0 }} transition={{ duration: 0.25, ease: "easeOut" }} className="fixed inset-y-0 right-0 z-50 w-full sm:w-[560px] bg-white shadow-2xl flex flex-col overflow-hidden">
 
         {/* Profile Header */}
         <div className="flex-shrink-0">
@@ -477,14 +478,14 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
             </div>
           )}
         </div>
-      </aside>
+      </motion.aside>
 
       {/* ── Block / Unblock Modal ── */}
       {blockOpen && (
         <>
-          <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm" onClick={() => setBlockOpen(false)} />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm" onClick={() => setBlockOpen(false)} />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
               <h4 className="text-[16px] font-bold text-[#1a2332] mb-2">
                 {client.status === "blocked" ? "Unblock Client" : "Block Client"}
               </h4>
@@ -517,7 +518,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                     setBlockOpen(false);
                     setBlockReason("");
                   }}
-                  className={`flex-1 h-10 rounded-xl text-[13px] font-semibold transition-colors ${
+                  className={`flex-1 h-10 rounded-xl text-[13px] font-semibold transition-colors cursor-pointer ${
                     client.status === "blocked"
                       ? "bg-emerald-600 text-white hover:bg-emerald-700"
                       : "bg-red-600 text-white hover:bg-red-700"
@@ -527,12 +528,12 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                 </button>
                 <button
                   onClick={() => { setBlockOpen(false); setBlockReason(""); }}
-                  className="px-5 h-10 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors"
+                  className="px-5 h-10 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
               </div>
-            </div>
+            </motion.div>
           </div>
         </>
       )}
@@ -540,9 +541,9 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
       {/* ── Add Note Modal ── */}
       {noteOpen && (
         <>
-          <div className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm" onClick={() => setNoteOpen(false)} />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm" onClick={() => setNoteOpen(false)} />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
               <h4 className="text-[16px] font-bold text-[#1a2332] mb-4">Add Note</h4>
               <div className="mb-4">
                 <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Internal Note</label>
@@ -574,12 +575,12 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                 </button>
                 <button
                   onClick={() => { setNoteOpen(false); setNoteText(""); }}
-                  className="px-5 h-10 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors"
+                  className="px-5 h-10 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
               </div>
-            </div>
+            </motion.div>
           </div>
         </>
       )}
@@ -699,9 +700,13 @@ function ClientModal({ initial, onSave, onClose }: {
 
   return (
     <>
-      <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6 pointer-events-none">
-        <div
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 8 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
           className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col pointer-events-auto"
           onClick={e => e.stopPropagation()}
         >
@@ -899,16 +904,16 @@ function ClientModal({ initial, onSave, onClose }: {
           <div className="border-t border-slate-100 px-7 py-5 flex gap-3 flex-shrink-0">
             <button
               onClick={handleSave}
-              className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm flex items-center justify-center gap-2"
+              className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               <CheckCircle2 className="h-4 w-4" />
               {isEdit ? "Save Changes" : "Create Client"}
             </button>
-            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors">
+            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">
               Cancel
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );
@@ -1129,33 +1134,41 @@ export function ClientsSection() {
       </div>
 
       {/* Detail Drawer */}
-      {selected && <ClientDrawer client={localClients.find(c => c.id === selected.id) ?? selected} onClose={() => setSelected(null)} />}
+      <AnimatePresence>
+        {selected && <ClientDrawer key="client-drawer" client={localClients.find(c => c.id === selected.id) ?? selected} onClose={() => setSelected(null)} />}
+      </AnimatePresence>
 
       {/* Add Client Modal */}
-      {showAddModal && (
-        <ClientModal
-          onSave={c => {
-            addClientToStore(c);
-            setShowAddModal(false);
-            setToast(`${c.name} added successfully`);
-          }}
-          onClose={() => setShowAddModal(false)}
-        />
-      )}
+      <AnimatePresence>
+        {showAddModal && (
+          <ClientModal
+            key="add-client"
+            onSave={c => {
+              addClientToStore(c);
+              setShowAddModal(false);
+              setToast(`${c.name} added successfully`);
+            }}
+            onClose={() => setShowAddModal(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Edit Client Modal */}
-      {editingClient && (
-        <ClientModal
-          initial={editingClient}
-          onSave={c => {
-            updateClientInStore(c);
-            setEditingClient(null);
-            if (selected?.id === c.id) setSelected(c);
-            setToast(`${c.name} updated`);
-          }}
-          onClose={() => setEditingClient(null)}
-        />
-      )}
+      <AnimatePresence>
+        {editingClient && (
+          <ClientModal
+            key="edit-client"
+            initial={editingClient}
+            onSave={c => {
+              updateClientInStore(c);
+              setEditingClient(null);
+              if (selected?.id === c.id) setSelected(c);
+              setToast(`${c.name} updated`);
+            }}
+            onClose={() => setEditingClient(null)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Success toast */}
       {toast && (

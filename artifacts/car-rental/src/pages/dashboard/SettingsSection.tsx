@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Save, Building2, Phone, Mail, Clock, FileText, Palette, MapPin, Plus, Edit2, X, ToggleLeft, ToggleRight, CheckCircle } from "lucide-react";
 import { useLocations, addLocation, updateLocation, removeLocation, AgencyLocation } from "@/data/localStore";
 
@@ -57,9 +58,9 @@ function LocationModal({ initial, onSave, onClose }: {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto" onClick={e => e.stopPropagation()}>
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
             <div>
               <h3 className="text-[16px] font-bold text-[#1a2332]">{initial ? "Edit Location" : "Add Location"}</h3>
@@ -100,12 +101,12 @@ function LocationModal({ initial, onSave, onClose }: {
             </div>
           </div>
           <div className="px-6 pb-5 flex gap-3">
-            <button onClick={handleSave} disabled={!form.name.trim()} className="flex-1 h-10 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+            <button onClick={handleSave} disabled={!form.name.trim()} className="flex-1 h-10 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
               {initial ? "Save Changes" : "Add Location"}
             </button>
-            <button onClick={onClose} className="h-10 px-5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+            <button onClick={onClose} className="h-10 px-5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );
@@ -182,12 +183,14 @@ function LocationsSection() {
         </div>
       )}
 
-      {adding && (
-        <LocationModal onSave={l => addLocation(l)} onClose={() => setAdding(false)} />
-      )}
-      {editing && (
-        <LocationModal initial={editing} onSave={l => { updateLocation(l); setEditing(null); }} onClose={() => setEditing(null)} />
-      )}
+      <AnimatePresence>
+        {adding && (
+          <LocationModal onSave={l => addLocation(l)} onClose={() => setAdding(false)} />
+        )}
+        {editing && (
+          <LocationModal initial={editing} onSave={l => { updateLocation(l); setEditing(null); }} onClose={() => setEditing(null)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

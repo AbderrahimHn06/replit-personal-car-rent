@@ -1,0 +1,151 @@
+Fix interaction quality and page behavior across the dashboard without redesigning the UI.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API calls
+- Use local state only
+- Keep the current design system and layout
+- Do not redesign the UI, only fix behavior, cursor states, animations, and filtering
+
+1) CURSOR POINTER
+A major problem is that many interactive elements do not show cursor-pointer.
+
+Add cursor-pointer to all clickable elements, especially:
+- primary buttons
+- secondary buttons
+- icon buttons
+- filter pills
+- tabs
+- cards that open drawers/modals
+- table rows that open details
+- search results
+- navigation items
+- modal close buttons
+- action links
+- dropdown triggers
+- booking / confirm / edit / delete / add buttons
+
+If something is clickable, it must visibly feel clickable.
+
+2) MODAL / DRAWER ANIMATIONS
+All modals and drawers must have the same smooth premium animation system.
+
+Apply animation to all of these:
+- Add Vehicle modal
+- Edit Vehicle modal
+- Add Client modal
+- Edit Client modal
+- Add Note modal
+- Block / Unblock Client modal
+- Create Rental modal
+- New Walk-in Rental modal
+- Filters modal or filter panel if any
+- Any client details modal or drawer
+- Any vehicle details modal or drawer
+- Any rental details modal or drawer
+- Any confirmation dialog
+- Any modal opened from routing actions if present
+
+Animation rules:
+- overlay appears with fade in
+- modal scales from 95% to 100%
+- modal fades in smoothly
+- drawer slides from right with fade
+- close animation is smooth too
+- no abrupt mount/unmount feeling
+- no jumpy transitions
+- no harsh shadow pop
+
+Overlay:
+- fixed inset-0
+- bg-black/40 or bg-black/50
+- backdrop-blur-sm
+
+Modal style:
+- rounded corners
+- soft shadow
+- centered
+- scrollable when content is long
+- responsive size
+- proper z-index
+- close on outside click when appropriate
+- close on Escape when appropriate
+
+3) ROUTING TRANSITIONS
+Make routing between pages feel smoother.
+
+Apply subtle transition behavior when changing pages:
+- slight fade in
+- no hard visual jump
+- no abrupt content flash
+- keep the UI stable while navigating
+
+Do not redesign the routing system.
+Just improve the page transition feel and navigation polish.
+
+4) AVAILABILITY PAGE: CHECK AVAILABILITY ACTION
+On the Availability page, when the user clicks “Check Availability”:
+
+Required behavior:
+- show the available cars section if it is hidden
+- smoothly move or scroll the page to the top of the available cars list
+- do not change the UI design
+- only make the action work smoothly
+
+Details:
+- use smooth scrolling to the results section
+- if the results section is below the form, scroll to it after search
+- if it is already visible, just keep the action smooth and polished
+- do not jump instantly
+- do not change the layout
+- do not add new UI elements unless necessary
+
+Goal:
+The user fills the form, clicks Check Availability, and the page smoothly reveals the cars and moves the viewport to the cars list.
+
+5) RENTALS PAGE FILTERS
+The Rentals page filter is not working.
+
+Required behavior:
+- filters must actually change the displayed rentals
+- filters:
+  - All
+  - Active
+  - Reserved
+  - Overdue
+  - Completed
+- when one filter is selected, only matching rentals should show
+- active filter must be clearly highlighted
+- search and filters must work together
+- counts next to filters should update correctly
+- if no results match, show a clean empty state with a Clear Filters button
+
+Make sure the Rentals list is filtered from the actual mock dataset, not just visually selected.
+
+6) GENERAL INTERACTION QUALITY
+Improve all small interaction details:
+- buttons should have hover effects
+- clickable cards should feel clickable
+- selected filters should have a strong active state
+- disabled buttons should look disabled
+- forms should feel consistent
+- dropdowns should open smoothly
+- no awkward layout jumps
+
+7) UX GOAL
+The dashboard should feel:
+- polished
+- responsive
+- smooth
+- premium
+- stable
+- easy to use
+
+The key fixes needed now are:
+- cursor-pointer on almost all clickable elements
+- smooth animations on all major modals and drawers
+- smooth routing transitions
+- smooth scroll to available cars after Check Availability
+- working Rentals filters

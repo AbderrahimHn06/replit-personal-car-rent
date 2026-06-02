@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Search, CalendarDays, Clock, MapPin, Car, ChevronLeft,
   ChevronRight, X, CheckCircle, AlertTriangle, Wrench, Info,
@@ -85,9 +86,9 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo, allRentals
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 pointer-events-none">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden" onClick={e => e.stopPropagation()}>
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
             <div className="flex items-center gap-3">
               <img src={car.image} alt={car.brand} className="w-12 h-9 object-cover rounded-xl" />
@@ -159,7 +160,7 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo, allRentals
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );
@@ -195,10 +196,12 @@ export function AvailabilitySection() {
 
   const activeLocations = useActiveLocations();
   const allRentals = useRentals();
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   function handleSearch() {
     if (!pickupDate || !returnDate || returnDate < pickupDate) return;
     setSearched(true);
+    setTimeout(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
   }
 
   const results = useMemo(() => {
@@ -346,7 +349,7 @@ export function AvailabilitySection() {
 
       {/* Results */}
       {searched && (
-        <div className="px-6 sm:px-8 pb-8 space-y-6">
+        <div ref={resultsRef} className="px-6 sm:px-8 pb-8 space-y-6">
 
           {/* Available */}
           {available.length > 0 && (
@@ -468,15 +471,18 @@ export function AvailabilitySection() {
       )}
 
       {/* Schedule Modal */}
-      {scheduleFor && (
-        <CarScheduleModal
-          car={scheduleFor}
-          onClose={() => setScheduleFor(null)}
-          highlightFrom={pickupDate}
-          highlightTo={returnDate}
-          allRentals={allRentals}
-        />
-      )}
+      <AnimatePresence>
+        {scheduleFor && (
+          <CarScheduleModal
+            key="schedule-modal"
+            car={scheduleFor}
+            onClose={() => setScheduleFor(null)}
+            highlightFrom={pickupDate}
+            highlightTo={returnDate}
+            allRentals={allRentals}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Create Rental Modal — shared component */}
       {bookingCar && (

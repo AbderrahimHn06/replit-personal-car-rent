@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, Check, Ban, MapPin, Eye, Globe, PhoneCall } from "lucide-react";
 import { bookingRequests, BookingRequest, RequestStatus } from "@/data/dashboardData";
 
@@ -55,8 +56,8 @@ function Drawer({ req, onClose, onStatus }: {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
-      <aside className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white shadow-2xl flex flex-col">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
+      <motion.aside initial={{ x: "100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "100%", opacity: 0 }} transition={{ duration: 0.25, ease: "easeOut" }} className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white shadow-2xl flex flex-col">
 
         {/* Header */}
         <div className="flex items-start justify-between px-7 py-6 border-b border-slate-100 flex-shrink-0">
@@ -177,11 +178,11 @@ function Drawer({ req, onClose, onStatus }: {
               <Ban className="h-4 w-4" /> Cancel
             </button>
           )}
-          <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-colors">
+          <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">
             Close
           </button>
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 }
@@ -335,13 +336,16 @@ export function BookingRequests({ search = "" }: { search?: string }) {
         </div>
       </div>
 
-      {selected && (
-        <Drawer
-          req={local.find(r => r.id === selected.id) ?? selected}
-          onClose={() => setSelected(null)}
-          onStatus={updateStatus}
-        />
-      )}
+      <AnimatePresence>
+        {selected && (
+          <Drawer
+            key="booking-drawer"
+            req={local.find(r => r.id === selected.id) ?? selected}
+            onClose={() => setSelected(null)}
+            onStatus={updateStatus}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

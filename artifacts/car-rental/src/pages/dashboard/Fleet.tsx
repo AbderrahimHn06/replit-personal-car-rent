@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   X, LayoutGrid, List, Search, SlidersHorizontal, Plus,
   Car, CheckCircle, Clock, Wrench, CalendarDays, ChevronLeft,
@@ -94,15 +95,15 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 pointer-events-none">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden" onClick={e => e.stopPropagation()}>
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
             <div>
               <h3 className="text-[17px] font-bold text-[#1a2332]">{car.brand} {car.model} — Schedule</h3>
               <p className="text-[12px] text-slate-400 font-mono mt-0.5">{car.plate}</p>
             </div>
-            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-5 w-5" /></button>
+            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"><X className="h-5 w-5" /></button>
           </div>
           <div className="flex-1 overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
@@ -152,7 +153,7 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );
@@ -302,24 +303,24 @@ function EditVehicleModal({ car, onClose, onSave }: {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 pointer-events-none">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
             <div>
               <h3 className="text-[17px] font-bold text-[#1a2332]">Edit Vehicle</h3>
               <p className="text-[12px] text-slate-400 mt-0.5">{car.brand} {car.model} · {car.plate}</p>
             </div>
-            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-5 w-5" /></button>
+            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"><X className="h-5 w-5" /></button>
           </div>
           <div className="flex-1 overflow-y-auto px-7 py-6">
             <VehicleFormFields form={form} set={set} />
           </div>
           <div className="border-t border-slate-100 px-7 py-5 flex gap-3 flex-shrink-0">
-            <button onClick={() => onSave(form)} className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm">Save Changes</button>
-            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+            <button onClick={() => onSave(form)} className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm cursor-pointer">Save Changes</button>
+            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );
@@ -335,15 +336,15 @@ function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car
 
   return (
     <>
-      <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 pointer-events-none">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
+        <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
             <div>
               <h3 className="text-[17px] font-bold text-[#1a2332]">Add New Vehicle</h3>
               <p className="text-[12px] text-slate-400 mt-0.5">Fill in all details to add a vehicle to your fleet</p>
             </div>
-            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors"><X className="h-5 w-5" /></button>
+            <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"><X className="h-5 w-5" /></button>
           </div>
           <div className="flex-1 overflow-y-auto px-7 py-6">
             <VehicleFormFields form={form} set={set} />
@@ -352,13 +353,13 @@ function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car
             <button
               onClick={() => { if (canSubmit) { onAdd?.(form); onClose(); } }}
               disabled={!canSubmit}
-              className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               Add Vehicle
             </button>
-            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors">Cancel</button>
+            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </>
   );
@@ -382,8 +383,8 @@ function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
-      <aside className="fixed inset-y-0 right-0 z-50 w-full sm:w-[520px] bg-white shadow-2xl flex flex-col overflow-hidden">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]" onClick={onClose} />
+      <motion.aside initial={{ x: "100%", opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: "100%", opacity: 0 }} transition={{ duration: 0.25, ease: "easeOut" }} className="fixed inset-y-0 right-0 z-50 w-full sm:w-[520px] bg-white shadow-2xl flex flex-col overflow-hidden">
         <div className="relative h-44 bg-slate-100 flex-shrink-0">
           <img src={car.image} alt={`${car.brand} ${car.model}`} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -543,11 +544,11 @@ function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
               <CheckCircle className="h-4 w-4" /> Mark Available
             </button>
           )}
-          <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-colors">
+          <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">
             Close
           </button>
         </div>
-      </aside>
+      </motion.aside>
     </>
   );
 }
@@ -917,23 +918,26 @@ export function Fleet() {
       </div>
 
       {/* Drawers & Modals */}
-      {selected && !showSchedule && !editing && (
-        <VehicleDrawer
-          car={selected}
-          onClose={() => setSelected(null)}
-          onSchedule={() => setShowSchedule(true)}
-          onEdit={() => setEditing(selected)}
-        />
-      )}
-      {selected && showSchedule && (
-        <ScheduleModal car={selected} onClose={() => { setShowSchedule(false); setSelected(null); }} />
-      )}
-      {editing && (
-        <EditVehicleModal car={editing} onClose={() => setEditing(null)} onSave={handleSaveEdit} />
-      )}
-      {showAddModal && (
-        <AddVehicleModal onClose={() => setShowAddModal(false)} />
-      )}
+      <AnimatePresence>
+        {selected && !showSchedule && !editing && (
+          <VehicleDrawer
+            key="vehicle-drawer"
+            car={selected}
+            onClose={() => setSelected(null)}
+            onSchedule={() => setShowSchedule(true)}
+            onEdit={() => setEditing(selected)}
+          />
+        )}
+        {selected && showSchedule && (
+          <ScheduleModal key="schedule-modal" car={selected} onClose={() => { setShowSchedule(false); setSelected(null); }} />
+        )}
+        {editing && (
+          <EditVehicleModal key="edit-modal" car={editing} onClose={() => setEditing(null)} onSave={handleSaveEdit} />
+        )}
+        {showAddModal && (
+          <AddVehicleModal key="add-modal" onClose={() => setShowAddModal(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

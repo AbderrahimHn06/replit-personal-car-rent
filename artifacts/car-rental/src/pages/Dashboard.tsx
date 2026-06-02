@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 import {
   LayoutDashboard, CalendarCheck, UserPlus, Key, Car, Users, UserX,
@@ -246,21 +247,32 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
 
         {/* Section content */}
         <main className="flex-1 overflow-y-auto">
-          {section === "overview"     && <Overview bookings={bookings} onNavigate={navigate} />}
-          {section === "operations"   && (
-            <OperationsSection
-              activeTab={opsTab}
-              onTabChange={setOpsTab}
-            />
-          )}
-          {section === "fleet"        && <Fleet />}
-          {section === "clients"      && <ClientsSection />}
-          {section === "blocked"      && <BlockedClientsSection />}
-          {section === "availability" && <AvailabilitySection />}
-          {section === "maintenance"  && <MaintenanceSection />}
-          {section === "alerts"       && <AlertsSection />}
-          {section === "reports"      && <Reports />}
-          {section === "settings"     && <SettingsSection />}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={section}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="min-h-full"
+            >
+              {section === "overview"     && <Overview bookings={bookings} onNavigate={navigate} />}
+              {section === "operations"   && (
+                <OperationsSection
+                  activeTab={opsTab}
+                  onTabChange={setOpsTab}
+                />
+              )}
+              {section === "fleet"        && <Fleet />}
+              {section === "clients"      && <ClientsSection />}
+              {section === "blocked"      && <BlockedClientsSection />}
+              {section === "availability" && <AvailabilitySection />}
+              {section === "maintenance"  && <MaintenanceSection />}
+              {section === "alerts"       && <AlertsSection />}
+              {section === "reports"      && <Reports />}
+              {section === "settings"     && <SettingsSection />}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>
