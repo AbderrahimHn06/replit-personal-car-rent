@@ -1,0 +1,121 @@
+Fix the remaining dashboard issues without redesigning the UI.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API calls
+- Use local state only
+- Keep the current design system
+- Do not redesign the whole app
+- Focus only on functionality, mobile UX, language switching, image upload, booking flow, and alerts actions
+
+====================================================
+1) LANGUAGE MUST REALLY CHANGE
+====================================================
+
+Current issue:
+The language setting exists, but the visible text does not actually change.
+
+Required behavior:
+- The selected language must change the UI text across the app
+- Default language: French
+- Supported languages:
+  - French
+  - English
+  - Arabic
+
+The language switch must affect:
+- page titles
+- subtitles
+- button labels
+- filter labels
+- modal titles
+- table headers
+- empty states
+- section labels
+- alert labels
+- navigation labels
+- common action words like:
+  - Add
+  - Edit
+  - Delete
+  - Save
+  - Cancel
+  - Search
+  - Book
+  - Confirm
+  - Close
+
+Implementation requirement:
+- Use a simple translation dictionary / i18n object
+- Do not leave hardcoded text everywhere
+- Connect settings language choice to actual displayed strings
+- Switching language must immediately update the visible UI
+- Arabic should support RTL layout where needed, or at least better direction handling for main text containers
+
+Important:
+- Even if not every single sentence in the app is translated yet, the main dashboard UI must visibly change when language changes
+- The user must clearly see that the app language is switching
+
+====================================================
+2) FLEET → ADD VEHICLE MODAL: UPLOAD IMAGES
+====================================================
+
+Current issue:
+The Add Vehicle modal still needs proper image upload support.
+
+Required behavior:
+- Replace image URL input with file upload
+- Allow uploading up to 5 images per vehicle
+- Maximum size: 10 MB per image
+- Allowed formats:
+  - JPG
+  - JPEG
+  - PNG
+  - WEBP
+- No direct image URL pasting
+- No text input for image links
+
+UI requirements:
+- Add a dedicated “Vehicle Images” section in the modal
+- Use a modern upload area:
+  - drag and drop
+  - or click to browse
+- Show upload instructions clearly
+- Display previews immediately after selection
+- Show file name and size if possible
+- Allow removing images
+- Allow setting one image as cover
+- The cover image must be used in fleet cards, availability cards, rental cards, and vehicle details
+
+Behavior:
+- If more than 5 images are selected, block the extra ones
+- If file is larger than 10 MB, reject it
+- Show a clear validation message if invalid
+- Keep the upload UI clean and premium
+
+Vehicle image data:
+- store images in local state
+- use preview URLs locally for now
+- structure the vehicle object so it can later connect to storage
+
+====================================================
+3) MAKE THE MOBILE VERSION FEEL MORE NATIVE
+====================================================
+
+Current issue:
+The phone version does not feel native enough.
+
+Required mobile improvements:
+- Make spacing more compact and touch-friendly
+- Reduce unnecessary horizontal padding on small screens
+- Use stronger mobile-first layouts
+- Avoid desktop-like card widths on mobile
+- Make modals feel like native mobile sheets when appropriate
+- Keep controls easy to tap
+- Avoid cramped sections
+- Avoid tiny text
+- Avoid overly wide tables on mobile
+- Convert dense tables to stacked cards when needed
+- Ensure the UI feels like a real mobile app, not just a shrunk desktop page
