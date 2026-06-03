@@ -100,6 +100,7 @@ function KpiCards({ list }: { list: DashboardClient[] }) {
 
 /* ─── Client Detail Drawer ─────────────────────────────────────── */
 function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: () => void }) {
+  const t = useT();
   const [section,         setSection]         = useState<"overview" | "history" | "docs" | "notes" | "payments">("overview");
   const [showRentalModal, setShowRentalModal] = useState(false);
   const [editOpen,        setEditOpen]        = useState(false);
@@ -165,7 +166,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
             {client.trustScore !== undefined && (
               <div className="bg-white/10 rounded-xl p-3 mb-4">
                 <div className="flex items-center justify-between mb-1.5">
-                  <p className="text-[11px] font-bold text-white/70 uppercase tracking-wider">Trust Score</p>
+                  <p className="text-[11px] font-bold text-white/70 uppercase tracking-wider">{t("table.trust")}</p>
                   <p className="text-[12px] font-bold text-white">{client.trustScore}/100</p>
                 </div>
                 <div className="h-2 bg-white/20 rounded-full overflow-hidden">
@@ -180,10 +181,10 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
             {/* Quick stats */}
             <div className="grid grid-cols-4 gap-2">
               {[
-                { label: "Rentals",   value: client.totalRentals },
-                { label: "Spend",     value: `$${client.totalSpend ?? 0}` },
-                { label: "Late",      value: client.lateReturns ?? 0 },
-                { label: "Damages",   value: client.damages ?? 0 },
+                { label: t("nav.rentals"),      value: client.totalRentals },
+                { label: t("table.total"),       value: `$${client.totalSpend ?? 0}` },
+                { label: t("drawer.late"),       value: client.lateReturns ?? 0 },
+                { label: t("drawer.damages"),    value: client.damages ?? 0 },
               ].map(({ label, value }) => (
                 <div key={label} className="bg-white/10 rounded-xl p-2.5 text-center">
                   <p className="text-[15px] font-bold text-white leading-none">{value}</p>
@@ -199,13 +200,13 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
               onClick={() => setShowRentalModal(true)}
               className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors flex-shrink-0 bg-[#1a2332] text-white hover:bg-[#243044]"
             >
-              <Car className="h-3.5 w-3.5" /> Create Rental
+              <Car className="h-3.5 w-3.5" /> {t("action.newRental")}
             </button>
             <button
               onClick={() => setEditOpen(true)}
               className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors flex-shrink-0 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
             >
-              <Edit2 className="h-3.5 w-3.5" /> Edit
+              <Edit2 className="h-3.5 w-3.5" /> {t("action.edit")}
             </button>
             <button
               onClick={() => setBlockOpen(true)}
@@ -215,21 +216,27 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                   : "bg-red-50 border border-red-200 text-red-600 hover:bg-red-100"
               }`}
             >
-              <Ban className="h-3.5 w-3.5" /> {client.status === "blocked" ? "Unblock" : "Block"}
+              <Ban className="h-3.5 w-3.5" /> {client.status === "blocked" ? t("action.unblock") : t("action.block")}
             </button>
             <button
               onClick={() => setNoteOpen(true)}
               className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[11.5px] font-semibold transition-colors flex-shrink-0 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
             >
-              <MessageSquare className="h-3.5 w-3.5" /> Add Note
+              <MessageSquare className="h-3.5 w-3.5" /> {t("drawer.addNote")}
             </button>
           </div>
 
           {/* Section Nav */}
           <div className="flex gap-1 px-4 py-3 border-b border-slate-100 overflow-x-auto">
-            {(["overview","history","docs","notes","payments"] as const).map(s => (
-              <button key={s} onClick={() => setSection(s)} className={navCls(s)}>
-                {s.charAt(0).toUpperCase() + s.slice(1)}
+            {([
+              { id: "overview", label: t("drawer.overview") },
+              { id: "history",  label: t("drawer.history")  },
+              { id: "docs",     label: t("drawer.docs")     },
+              { id: "notes",    label: t("drawer.notes")    },
+              { id: "payments", label: t("drawer.payments") },
+            ] as const).map(({ id, label }) => (
+              <button key={id} onClick={() => setSection(id)} className={navCls(id)}>
+                {label}
               </button>
             ))}
           </div>
@@ -243,17 +250,17 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
             <>
               {/* Identity & Contact */}
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Identity & Contact</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("drawer.identityContact")}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: "Phone",       value: client.phone,         icon: Phone   },
-                    { label: "WhatsApp",    value: client.whatsapp,      icon: Phone   },
-                    { label: "Email",       value: client.email,         icon: Mail    },
-                    { label: "City",        value: client.city,          icon: MapPin  },
-                    { label: "License",     value: client.licenseNumber, icon: Key     },
-                    { label: "Nationality", value: client.nationality,   icon: Globe   },
-                    { label: "ID Number",   value: client.idNumber ?? "—", icon: Hash  },
-                    { label: "Member Since",value: fmtDate(client.joinedDate), icon: Calendar },
+                    { label: t("table.phone"),         value: client.phone,         icon: Phone   },
+                    { label: "WhatsApp",               value: client.whatsapp,      icon: Phone   },
+                    { label: t("form.email"),          value: client.email,         icon: Mail    },
+                    { label: t("table.city"),          value: client.city,          icon: MapPin  },
+                    { label: t("drawer.license"),      value: client.licenseNumber, icon: Key     },
+                    { label: t("drawer.nationality"),  value: client.nationality,   icon: Globe   },
+                    { label: t("drawer.idNumber"),     value: client.idNumber ?? "—", icon: Hash  },
+                    { label: t("drawer.memberSince"),  value: fmtDate(client.joinedDate), icon: Calendar },
                   ].map(({ label, value, icon: Icon }) => (
                     <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3">
                       <div className="flex items-center gap-1.5 mb-0.5">
@@ -268,7 +275,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                   <div className="mt-2 bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3">
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <MapPin className="h-3 w-3 text-slate-400" />
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Address</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t("settings.address")}</p>
                     </div>
                     <p className="text-[12.5px] font-semibold text-slate-700">{client.address}</p>
                   </div>
@@ -277,15 +284,15 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
 
               {/* Rental Summary */}
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Rental Summary</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("drawer.rentalSummary")}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { label: "Total Rentals",     value: client.totalRentals,                      color: "text-[#1a2332]" },
-                    { label: "Active Rentals",    value: client.activeRentals ?? 0,                 color: "text-emerald-600" },
-                    { label: "Completed",         value: client.completedRentals ?? client.totalRentals, color: "text-slate-600" },
-                    { label: "Cancelled",         value: client.cancelledRentals ?? 0,              color: "text-red-500" },
-                    { label: "Total Spend",       value: `$${client.totalSpend ?? 0}`,              color: "text-emerald-700" },
-                    { label: "Last Rental",       value: client.lastRentalDate ? fmtDate(client.lastRentalDate) : "—", color: "text-slate-600" },
+                    { label: t("kpi.totalClients").replace("clients","").trim() + " " + t("nav.rentals"), value: client.totalRentals,                      color: "text-[#1a2332]" },
+                    { label: t("kpi.activeRentals"),    value: client.activeRentals ?? 0,                 color: "text-emerald-600" },
+                    { label: t("filter.completed"),     value: client.completedRentals ?? client.totalRentals, color: "text-slate-600" },
+                    { label: t("filter.cancelled"),     value: client.cancelledRentals ?? 0,              color: "text-red-500" },
+                    { label: t("drawer.totalSpend"),    value: `$${client.totalSpend ?? 0}`,              color: "text-emerald-700" },
+                    { label: t("table.lastRental"),     value: client.lastRentalDate ? fmtDate(client.lastRentalDate) : "—", color: "text-slate-600" },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{label}</p>
@@ -297,12 +304,12 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
 
               {/* Trust & Risk */}
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Trust & Risk</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("drawer.trustRisk")}</p>
                 <div className="space-y-2">
                   {client.trustScore !== undefined && (
                     <div className="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3.5">
                       <div className="flex items-center justify-between mb-2">
-                        <p className="text-[12px] font-semibold text-slate-700">Trust Score</p>
+                        <p className="text-[12px] font-semibold text-slate-700">{t("table.trust")}</p>
                         <span className={`text-[12px] font-bold ${client.trustScore >= 85 ? "text-emerald-600" : client.trustScore >= 65 ? "text-amber-600" : "text-red-600"}`}>{client.trustScore}/100</span>
                       </div>
                       <TrustBar score={client.trustScore} />

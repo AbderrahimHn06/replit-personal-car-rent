@@ -287,8 +287,7 @@ function CurrencySection() {
 
         {/* Supported currencies */}
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Supported Currencies</p>
-          <p className="text-[12px] text-slate-500 mb-3">Enable currencies for multi-currency pricing on your fleet.</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("settings.supportedCurrencies")}</p>
           <div className="space-y-2">
             {ALL_CURRENCIES.map(c => {
               const isEnabled = supportedCurrencies.includes(c);
@@ -326,6 +325,7 @@ const ALL_LANGUAGES: LanguageCode[] = ["fr", "en", "ar"];
 const LANG_FLAGS: Record<LanguageCode, string> = { fr: "🇫🇷", en: "🇬🇧", ar: "🇩🇿" };
 
 function LanguageSection() {
+  const t = useT();
   const { mainLanguage, supportedLanguages } = useLanguageSettings();
   const [saved, setSaved] = useState(false);
 
