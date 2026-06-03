@@ -4,6 +4,7 @@ import {
   X, LayoutGrid, List, Search, SlidersHorizontal, Plus,
   Car, CheckCircle, Clock, Wrench, CalendarDays, ChevronLeft,
   ChevronRight, Edit2, FileText, Shield, ClipboardList, Upload,
+  AlertCircle, Star,
 } from "lucide-react";
 import {
   fleet as initialFleet, FleetCar, FleetStatus,
@@ -161,67 +162,221 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
 }
 
 /* ─── Image Upload Section ─────────────────────────────────────── */
+interface VehicleImage {
+  id: string;
+  previewUrl: string;
+  fileName: string;
+  fileSize: number;
+  isCover: boolean;
+}
+
+const MAX_IMAGES = 5;
+const MAX_MB = 10;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+function fmtFileSize(bytes: number) {
+  if (bytes === 0) return "";
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
 function ImageUploadSection({ images, onChange }: {
   images: string[];
   onChange: (imgs: string[]) => void;
 }) {
-  const MAX = 5;
   const fileRef = useRef<HTMLInputElement>(null);
+  const [items, setItems] = useState<VehicleImage[]>(() =>
+    images.map((url, i) => ({
+      id: `init-${i}`,
+      previewUrl: url,
+      fileName: `image-${i + 1}`,
+      fileSize: 0,
+      isCover: i === 0,
+    }))
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
 
-  function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []);
-    const remaining = MAX - images.length;
-    const toLoad = files.slice(0, remaining);
-    const newImgs: string[] = [];
+  function syncParent(next: VehicleImage[]) {
+    setItems(next);
+    const cover = next.find(x => x.isCover);
+    const rest  = next.filter(x => !x.isCover);
+    const ordered = cover ? [cover, ...rest] : next;
+    onChange(ordered.map(x => x.previewUrl));
+  }
+
+  function processFiles(files: File[]) {
+    setError(null);
+    const remaining = MAX_IMAGES - items.length;
+    if (remaining <= 0) { setError(`Maximum ${MAX_IMAGES} images already reached.`); return; }
+    const toProcess = Array.from(files).slice(0, remaining);
+    const invalid = toProcess.find(f => !ALLOWED_TYPES.includes(f.type));
+    if (invalid) { setError(`"${invalid.name}" — unsupported format. Use JPG, PNG, or WEBP.`); return; }
+    const tooBig = toProcess.find(f => f.size > MAX_MB * 1024 * 1024);
+    if (tooBig) { setError(`"${tooBig.name}" exceeds the 10 MB limit.`); return; }
+    if (toProcess.length === 0) return;
+
     let loaded = 0;
-    if (toLoad.length === 0) { e.target.value = ""; return; }
-    toLoad.forEach(file => {
+    const newImgs: VehicleImage[] = [];
+    toProcess.forEach(file => {
       const reader = new FileReader();
       reader.onload = ev => {
-        newImgs.push(ev.target?.result as string);
+        newImgs.push({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          previewUrl: ev.target?.result as string,
+          fileName: file.name,
+          fileSize: file.size,
+          isCover: false,
+        });
         loaded++;
-        if (loaded === toLoad.length) onChange([...images, ...newImgs]);
+        if (loaded === toProcess.length) {
+          const updated = [...items, ...newImgs];
+          if (!updated.some(x => x.isCover) && updated.length > 0) {
+            updated[0] = { ...updated[0], isCover: true };
+          }
+          syncParent(updated);
+        }
       };
       reader.readAsDataURL(file);
     });
-    e.target.value = "";
   }
 
-  function remove(idx: number) {
-    onChange(images.filter((_, i) => i !== idx));
+  function remove(id: string) {
+    let next = items.filter(x => x.id !== id);
+    if (next.length > 0 && !next.some(x => x.isCover)) {
+      next = [{ ...next[0], isCover: true }, ...next.slice(1)];
+    }
+    syncParent(next);
+  }
+
+  function setCover(id: string) {
+    syncParent(items.map(x => ({ ...x, isCover: x.id === id })));
   }
 
   return (
-    <div>
-      <div className="flex items-center gap-2.5 flex-wrap mb-2">
-        {images.map((src, i) => (
-          <div key={i} className="relative w-20 h-16 rounded-xl overflow-hidden border border-slate-200 group flex-shrink-0">
-            <img src={src} alt={`photo ${i + 1}`} className="w-full h-full object-cover" />
+    <div className="space-y-3">
+      {/* Drop zone */}
+      {items.length < MAX_IMAGES && (
+        <div
+          onDragOver={e => { e.preventDefault(); setDragging(true); }}
+          onDragLeave={e => { e.preventDefault(); setDragging(false); }}
+          onDrop={e => { e.preventDefault(); setDragging(false); processFiles(Array.from(e.dataTransfer.files)); }}
+          onClick={() => fileRef.current?.click()}
+          className={`relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-200 select-none ${
+            dragging
+              ? "border-violet-400 bg-violet-50 scale-[1.01]"
+              : "border-slate-200 hover:border-violet-300 hover:bg-violet-50/40"
+          }`}
+        >
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${dragging ? "bg-violet-100" : "bg-slate-100"}`}>
+            <Upload className={`h-5 w-5 transition-colors ${dragging ? "text-violet-500" : "text-slate-400"}`} />
+          </div>
+          <div className="text-center">
+            <p className="text-[13px] font-semibold text-slate-700">
+              {dragging ? "Drop images here" : "Drag and drop images here"}
+            </p>
+            <p className="text-[12px] text-slate-400 mt-0.5">or click to browse</p>
+          </div>
+          <p className="text-[11px] text-slate-400">
+            Maximum {MAX_IMAGES} images · Max {MAX_MB} MB per image · JPG, PNG, WEBP
+          </p>
+          {items.length > 0 && (
+            <span className="text-[11px] font-semibold text-violet-500">
+              {items.length} / {MAX_IMAGES} uploaded
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Error banner */}
+      {error && (
+        <div className="flex items-start gap-2 px-3.5 py-2.5 bg-red-50 border border-red-100 rounded-xl">
+          <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0 mt-0.5" />
+          <p className="text-[12px] text-red-600 font-medium flex-1">{error}</p>
+          <button type="button" onClick={() => setError(null)} className="text-red-300 hover:text-red-500 transition-colors cursor-pointer">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Preview grid */}
+      {items.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {items.map(img => (
+            <div
+              key={img.id}
+              className={`relative group rounded-xl overflow-hidden border-2 transition-all duration-150 bg-slate-50 ${
+                img.isCover ? "border-violet-400 shadow-sm shadow-violet-100" : "border-slate-200"
+              }`}
+            >
+              {/* Image */}
+              <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                <img src={img.previewUrl} alt={img.fileName} className="w-full h-full object-cover" />
+              </div>
+
+              {/* Cover badge */}
+              {img.isCover && (
+                <div className="absolute top-1.5 left-1.5">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-violet-600 text-white text-[9px] font-bold rounded-md shadow">
+                    <Star className="h-2.5 w-2.5 fill-white" /> COVER
+                  </span>
+                </div>
+              )}
+
+              {/* Remove button */}
+              <button
+                type="button"
+                onClick={() => remove(img.id)}
+                className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:bg-red-500"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+
+              {/* Footer */}
+              <div className="px-2 py-1.5 space-y-0.5">
+                <p className="text-[10px] font-medium text-slate-600 truncate" title={img.fileName}>
+                  {img.fileName}
+                </p>
+                {img.fileSize > 0 && (
+                  <p className="text-[10px] text-slate-400">{fmtFileSize(img.fileSize)}</p>
+                )}
+                {!img.isCover ? (
+                  <button
+                    type="button"
+                    onClick={() => setCover(img.id)}
+                    className="text-[10px] font-semibold text-violet-500 hover:text-violet-700 cursor-pointer transition-colors"
+                  >
+                    Set as cover
+                  </button>
+                ) : (
+                  <p className="text-[10px] font-semibold text-violet-500">Cover image</p>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {/* Add more slot (when at least 1 image but room remains) */}
+          {items.length < MAX_IMAGES && items.length > 0 && (
             <button
               type="button"
-              onClick={() => remove(i)}
-              className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer"
+              onClick={() => fileRef.current?.click()}
+              className="aspect-[4/3] col-span-1 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50 transition-all duration-200 cursor-pointer"
             >
-              <X className="h-4 w-4 text-white" />
+              <Plus className="h-5 w-5" />
+              <span className="text-[10px] font-semibold">Add more</span>
             </button>
-            {i === 0 && (
-              <span className="absolute bottom-0.5 left-0.5 text-[9px] bg-black/60 text-white px-1 rounded font-semibold">Cover</span>
-            )}
-          </div>
-        ))}
-        {images.length < MAX && (
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="w-20 h-16 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50 transition-colors cursor-pointer flex-shrink-0"
-          >
-            <Upload className="h-4 w-4 mb-0.5" />
-            <span className="text-[9.5px] font-semibold">Add</span>
-          </button>
-        )}
-      </div>
-      <p className="text-[10.5px] text-slate-400">{images.length}/{MAX} photos · First image is the cover</p>
-      <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} />
+          )}
+        </div>
+      )}
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".jpg,.jpeg,.png,.webp"
+        multiple
+        className="hidden"
+        onChange={e => { processFiles(Array.from(e.target.files ?? [])); e.target.value = ""; }}
+      />
     </div>
   );
 }
