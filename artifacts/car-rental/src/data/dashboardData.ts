@@ -148,6 +148,7 @@ export interface MaintenanceItem {
   status: MaintenanceStatus;
   scheduledDate: string;
   completedDate?: string;
+  nextServiceDate?: string;
   notes: string;
   mileage: number;
   garage: string;

@@ -1,0 +1,185 @@
+Fix the Rentals page filter and table transitions.
+
+CURRENT ISSUE
+
+On the Rentals page, switching between filters:
+
+- All
+- Active
+- Reserved
+- Overdue
+- Completed
+
+feels abrupt and visually unstable.
+
+The table content changes instantly and the page feels like it is re-rendering aggressively.
+
+The user should feel that the data is being filtered, not that the entire page is being rebuilt.
+
+====================================================
+1) KEEP THE FILTER BAR STABLE
+====================================================
+
+The filter bar must never move.
+
+Requirements:
+- Same height at all times
+- Same spacing at all times
+- No width changes
+- No layout shifts
+- No jumping badges
+
+Active filter changes should only affect:
+- background color
+- text color
+- badge color
+
+Animate these transitions smoothly.
+
+Duration:
+150-250ms
+
+====================================================
+2) TABLE TRANSITIONS
+====================================================
+
+Current issue:
+
+When changing filters:
+- rows disappear instantly
+- rows appear instantly
+- table feels jumpy
+
+Required:
+
+Animate the content update.
+
+When switching filters:
+
+Option A (preferred):
+- fade old rows out
+- update data
+- fade new rows in
+
+Option B:
+- animate row opacity
+- animate slight translateY
+
+Example:
+
+Old rows:
+opacity 100 → 0
+
+New rows:
+opacity 0 → 100
+
+translateY:
+4px → 0
+
+Duration:
+150-250ms
+
+====================================================
+3) PRESERVE SCROLL POSITION
+====================================================
+
+When changing filters:
+
+DO NOT:
+- jump to page top
+- reset scroll
+- focus random elements
+
+The user must stay exactly where they are.
+
+Check for:
+- scrollTo()
+- autoFocus
+- navigation behavior
+- rerender side effects
+
+====================================================
+4) NO FULL PAGE RE-RENDER FEEL
+====================================================
+
+The page header must remain visually stable.
+
+Do not flash:
+- KPI cards
+- filter bar
+- page title
+- action buttons
+
+Only the table content should update.
+
+====================================================
+5) TABLE HEIGHT STABILITY
+====================================================
+
+Avoid the table collapsing and expanding aggressively.
+
+When changing filters:
+
+- keep a stable table container
+- avoid sudden height changes
+- use smooth content transitions
+
+If needed:
+- animate container height
+- use min-height
+
+The page should not visibly jump.
+
+====================================================
+6) ACTIVE FILTER ANIMATION
+====================================================
+
+When selecting a filter:
+
+Animate:
+- background
+- text color
+- badge color
+- shadow
+
+Duration:
+150-200ms
+
+The active state should smoothly move from one filter to another.
+
+It should feel premium and modern.
+
+====================================================
+7) LOADING / TRANSITION STATE
+====================================================
+
+Even with local data:
+
+Show a very subtle transition.
+
+The user should perceive:
+
+"I filtered the data"
+
+not
+
+"The page refreshed"
+
+====================================================
+8) UX GOAL
+====================================================
+
+The Rentals page should feel similar to:
+
+- Linear
+- Notion
+- Stripe Dashboard
+- Vercel Dashboard
+
+Smooth.
+Stable.
+No flashing.
+No jumping.
+No sudden content replacement.
+
+Filtering should feel elegant and professional.

@@ -1,0 +1,184 @@
+Fix layout shifts and UI jumping across the entire dashboard.
+
+IMPORTANT
+- Do not redesign the UI
+- Keep the current visual style
+- Focus on UX quality and layout stability
+- Frontend only
+
+CURRENT ISSUE
+
+Many components use:
+
+- display: none
+- hidden
+- conditional rendering
+
+Examples:
+- Fleet page "Clear Filters"
+- Active Filters section
+- Empty states
+- Action bars
+- Filter summaries
+- Alert banners
+- Context actions
+
+When these elements appear, they push surrounding content down and create an ugly layout jump.
+
+This makes the UI feel unstable and unprofessional.
+
+====================================================
+LAYOUT STABILITY RULE
+====================================================
+
+The page should not move significantly when:
+- filters are applied
+- filters are cleared
+- search results appear
+- active filters appear
+- banners appear
+- actions become available
+
+Avoid sudden content shifts.
+
+====================================================
+FLEET PAGE FIX
+====================================================
+
+Current issue:
+
+When filters are applied:
+
+"Active Filters"
+and
+"Clear Filters"
+
+appear above the content.
+
+This pushes the entire vehicle list down.
+
+Required fix:
+
+Reserve space for filter actions from the beginning.
+
+Possible approaches:
+
+Option A (preferred):
+- Keep the filter action row mounted at all times
+- Animate opacity
+- Animate visibility
+- Do not remove it from layout
+
+Option B:
+- Place active filter indicators inside the filter bar itself
+- Do not create a new block above the content
+
+Result:
+Vehicle cards should not jump down when filters appear.
+
+====================================================
+GENERAL RULE FOR CONDITIONAL UI
+====================================================
+
+Avoid:
+
+display:none → display:block
+
+when the appearance affects page structure.
+
+Instead use:
+
+- opacity
+- visibility
+- scale
+- fade
+- height transitions when appropriate
+
+Keep layout stable.
+
+====================================================
+FILTER BARS
+====================================================
+
+For all pages:
+
+- Fleet
+- Rentals
+- Clients
+- Alerts
+- Availability
+
+Do not create new rows that suddenly appear.
+
+Reserve the space from the start.
+
+The content below should remain visually stable.
+
+====================================================
+ANIMATION
+====================================================
+
+When optional UI appears:
+
+Use:
+
+- opacity transition
+- fade in
+- subtle scale
+- duration 150-250ms
+
+Avoid:
+
+- sudden push
+- sudden jump
+- instant reflow
+
+====================================================
+SEARCH RESULTS
+====================================================
+
+When search results update:
+
+- preserve scroll position
+- avoid layout jumps
+- avoid moving the entire page
+
+====================================================
+EMPTY STATES
+====================================================
+
+When switching from results to empty state:
+
+- animate smoothly
+- keep container dimensions reasonable
+- avoid large content shifts
+
+====================================================
+ACTION BARS
+====================================================
+
+Any action bar like:
+
+- Clear Filters
+- Active Filters
+- Bulk Actions
+- Selection Actions
+
+must not suddenly push content.
+
+Reserve the area or integrate it into existing controls.
+
+====================================================
+UX GOAL
+====================================================
+
+The dashboard should feel:
+
+- stable
+- smooth
+- premium
+- predictable
+
+No component appearing or disappearing should cause noticeable layout jumps or push large sections of the UI unexpectedly.
+
+The user should never feel that the page is "moving around" because an element became visible.
