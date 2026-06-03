@@ -10,7 +10,7 @@ import {
   fleet as initialFleet, FleetCar, FleetStatus,
   rentals, maintenance,
 } from "@/data/dashboardData";
-import { useCurrencySettings, CURRENCY_SYMBOLS, CurrencyCode } from "@/data/localStore";
+import { useCurrencySettings, CURRENCY_SYMBOLS, CurrencyCode, useT } from "@/data/localStore";
 
 /* ─── helpers ─────────────────────────────────────────────────── */
 const STATUS_CFG: Record<FleetStatus, { label: string; dot: string; badge: string }> = {
@@ -20,11 +20,13 @@ const STATUS_CFG: Record<FleetStatus, { label: string; dot: string; badge: strin
   maintenance: { label: "Maintenance", dot: "bg-red-500",     badge: "bg-red-50 text-red-700 border border-red-200"           },
 };
 function StatusBadge({ s }: { s: FleetStatus }) {
-  const { label, dot, badge } = STATUS_CFG[s];
+  const t = useT();
+  const { dot, badge } = STATUS_CFG[s];
+  const labelKey = s === "available" ? "filter.available" : s === "reserved" ? "filter.reserved" : s === "rented" ? "filter.rented" : "maintenance.title";
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${badge}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-      {label}
+      {t(labelKey as any)}
     </span>
   );
 }
@@ -68,6 +70,7 @@ const RENTAL_COLORS = [
 ];
 
 function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void }) {
+  const t = useT();
   const [year,  setYear]  = useState(2026);
   const [month, setMonth] = useState(5);
 
@@ -138,7 +141,7 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
               </div>
               {carRentals.length > 0 && (
                 <div className="mt-5 space-y-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Bookings</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("availability.existingBookings")}</p>
                   {carRentals.map((r, i) => (
                     <div key={r.id} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${RENTAL_COLORS[i % RENTAL_COLORS.length]}`}>
                       <div>
@@ -151,7 +154,7 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
                 </div>
               )}
               {carRentals.length === 0 && (
-                <p className="text-[13px] text-slate-400 text-center py-8">No bookings for this vehicle</p>
+                <p className="text-[13px] text-slate-400 text-center py-8">{t("fleet.noBookings")}</p>
               )}
             </div>
           </div>

@@ -1,0 +1,235 @@
+Continue and finish the language translation system for the car rental dashboard.
+
+IMPORTANT
+- Keep using the existing translation setup already created
+- Frontend only
+- Mock data only
+- No backend
+- No API calls
+- Do not redesign the UI
+- Do not change the layout
+- Only finish the missing translations and make language switching fully visible across the app
+
+CURRENT STATUS
+The following are already done:
+- translations.ts exists with fr/en/ar dictionaries
+- localStore.ts useT(), getT(), isRTL() are already wired
+- most pages are translated
+- some sections in Clients and Settings are partially translated
+- Availability and Fleet are still not completed
+- some new French keys were added but en/ar are still missing them
+
+YOUR TASK
+Complete the remaining translation work so the language switch really changes the visible UI across the dashboard.
+
+====================================================
+1) FINISH ALL MISSING TRANSLATIONS
+====================================================
+
+The app must visibly change when switching between:
+- French
+- English
+- Arabic
+
+Do not leave hardcoded UI text in the translated areas.
+
+Update the translation dictionaries so the new keys exist in:
+- fr
+- en
+- ar
+
+Make sure the new keys added in French are also added in English and Arabic.
+
+If needed, keep fallback behavior, but the UI should not show raw keys in normal use.
+
+====================================================
+2) COMPLETE CLIENTS PAGE TRANSLATIONS
+====================================================
+
+The Clients page is partially translated. Finish all missing text in:
+
+ClientDrawer:
+- action buttons
+- section tabs
+- labels
+- headers
+- metadata
+- notes
+- payments
+- history
+- docs
+- overview
+- timeline text
+- status labels
+
+ClientModal:
+- all form labels
+- all section headers
+- placeholders
+- buttons
+- save/cancel text
+- status options
+- identity fields
+- optional document upload labels
+
+Make sure every visible client-related UI label changes with the selected language.
+
+====================================================
+3) COMPLETE SETTINGS PAGE TRANSLATIONS
+====================================================
+
+Finish the missing labels in Settings, especially:
+
+Currency section:
+- Supported Currencies
+- sub-labels
+- currency chips
+- helper text
+- labels for main currency and enabled currencies
+
+Language section:
+- Language
+- Main Language
+- Supported Languages
+- language chips
+- helper text
+- save status labels
+
+Also translate:
+- section labels
+- buttons
+- form fields
+- location management labels
+- agency info labels
+- business hours labels
+
+====================================================
+4) TRANSLATE AVAILABILITY PAGE
+====================================================
+
+Availability.tsx has not been started enough.
+
+Translate all visible text in the Availability page:
+- title
+- subtitle
+- search form labels
+- pickup/return labels
+- date/time labels
+- button text
+- result summary labels
+- car card labels
+- schedule/modal labels
+- status labels
+- empty states
+
+The Availability page must clearly react to the selected language.
+
+====================================================
+5) TRANSLATE FLEET PAGE
+====================================================
+
+Fleet.tsx is not finished and is the largest missing area.
+
+Translate all visible Fleet UI text:
+- page title
+- subtitle
+- local search bar placeholder
+- filters
+- table headers
+- status badges
+- Add Vehicle modal labels
+- Edit Vehicle modal labels
+- image upload labels
+- currency labels
+- pricing fields
+- maintenance labels
+- schedule view labels
+- drawer labels
+- action buttons
+- empty states
+
+This includes:
+- Add/Edit vehicle modals
+- filter chips
+- grid/list view labels
+- status text
+- schedule/calendar labels
+- document labels
+- maintenance fields
+
+Fleet must visibly switch language in all major UI areas.
+
+====================================================
+6) VERIFY RTL SUPPORT FOR ARABIC
+====================================================
+
+Arabic must not only translate text.
+It should also feel directionally correct where possible.
+
+Make sure:
+- root or main layout uses dir="rtl" when Arabic is selected
+- text alignment is adjusted where appropriate
+- navigation and main containers behave correctly in RTL
+- modals and drawers remain readable in Arabic
+- button ordering and spacing do not look broken in RTL
+
+Do not overcomplicate it, but Arabic must feel better than a simple text swap.
+
+====================================================
+7) REMOVE HARD-CODED TEXT WHERE IT MATTERS
+====================================================
+
+Search for remaining visible hardcoded strings in:
+- Clients
+- Settings
+- Availability
+- Fleet
+- any modal or drawer in those pages
+
+Replace them with translation keys if they are user-facing UI text.
+
+Focus on:
+- buttons
+- labels
+- tabs
+- section titles
+- table headers
+- status chips
+- empty states
+- helper text
+- modal titles
+- drawer headings
+- placeholders
+
+====================================================
+8) DO NOT BREAK WHAT ALREADY WORKS
+====================================================
+
+Keep:
+- the existing translation architecture
+- the language switch setting
+- the dark/light layout style
+- the current page structure
+- the current dashboard design
+
+Only complete missing translations and fix places where the UI still does not react to language changes.
+
+====================================================
+9) ACCEPTANCE CRITERIA
+====================================================
+
+The work is done only if:
+- switching language changes visible text across the main dashboard
+- Clients page is fully translated
+- Settings page is fully translated in the visible parts
+- Availability page is translated
+- Fleet page is translated
+- en and ar dictionaries include the missing keys
+- Arabic direction handling works reasonably well
+- the user can clearly see that the app language actually changed
+
+====================================================
+10) FINAL GOAL
+====================================================
+
+Finish the language system so the dashboard feels properly localized in French, English, and Arabic, with the visible UI changing immediately and no major untranslated sections left in the main app.
