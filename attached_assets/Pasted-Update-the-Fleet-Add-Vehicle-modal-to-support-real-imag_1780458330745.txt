@@ -1,0 +1,156 @@
+Update the Fleet → Add Vehicle modal to support real image uploads instead of image URLs.
+
+IMPORTANT
+- Frontend only
+- Mock data only
+- No backend
+- No API calls
+- Use local state only
+- Keep the current design system
+- Do not redesign the modal, only improve the image section
+
+CURRENT ISSUE
+
+The Add Vehicle modal does not have a proper image upload field.
+
+REQUIRED CHANGE
+
+Add a dedicated section:
+
+Vehicle Images
+
+Remove:
+- Image URL input
+- Any "paste image link" fields
+
+Add:
+- File upload input
+- Drag & drop area
+- Click to browse
+
+UPLOAD RULES
+
+Maximum images:
+- 5 images per vehicle
+
+Maximum size:
+- 10 MB per image
+
+Allowed formats:
+- JPG
+- JPEG
+- PNG
+- WEBP
+
+Validation:
+- Reject files larger than 10 MB
+- Reject unsupported formats
+- Show a clear validation message
+
+UPLOAD UI
+
+Create a premium upload area:
+
+Title:
+Vehicle Images
+
+Upload zone:
+- Large dashed border
+- Upload icon
+- Text:
+  Drag and drop images here
+  or click to browse
+
+Helper text:
+Maximum 5 images
+Maximum 10 MB per image
+
+IMAGE PREVIEWS
+
+After upload:
+
+Show a preview grid.
+
+Desktop:
+- Up to 5 preview cards
+
+Tablet:
+- 3 per row
+
+Mobile:
+- 2 per row
+
+Each preview card includes:
+- Image preview
+- File name
+- File size
+- Remove button
+- Set as Cover button
+
+COVER IMAGE
+
+The user must be able to choose one image as:
+
+Cover Image
+
+Behavior:
+- Only one cover image allowed
+- Cover image badge visible
+- Cover image used everywhere:
+  - Fleet cards
+  - Vehicle details
+  - Availability cards
+  - Rental cards
+  - Search results
+
+REMOVE IMAGE
+
+Each image must have:
+- Remove button
+
+Behavior:
+- Removes image immediately
+- Updates local state
+- If removed image is the cover image:
+  - automatically use the first remaining image as cover
+
+VEHICLE OBJECT
+
+Store images like:
+
+images: [
+  {
+    id,
+    file,
+    previewUrl,
+    fileName,
+    size,
+    isCover
+  }
+]
+
+Do not store image URLs.
+
+Use:
+URL.createObjectURL()
+
+for local previews.
+
+EDIT VEHICLE
+
+When editing:
+- Existing images appear
+- User can add more images
+- User can remove images
+- User can change cover image
+
+MOBILE UX
+
+- Upload area responsive
+- Touch-friendly buttons
+- No overflow
+- Preview grid responsive
+
+GOAL
+
+The Add Vehicle modal should behave like a real car rental management system where employees upload up to 5 photos directly from their device (10 MB max per image), preview them instantly, choose a cover image, and manage them visually without using image URLs.

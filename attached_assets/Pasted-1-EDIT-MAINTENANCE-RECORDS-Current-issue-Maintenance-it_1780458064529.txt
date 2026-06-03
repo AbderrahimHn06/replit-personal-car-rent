@@ -1,0 +1,104 @@
+1) EDIT MAINTENANCE RECORDS
+Current issue:
+Maintenance items can be created but not properly edited.
+
+Required behavior:
+- Each maintenance item must have an Edit action
+- Clicking Edit opens a modal or drawer
+- The modal must allow editing:
+  - maintenance date
+  - service type
+  - details / notes
+  - status
+  - garage if needed
+  - cost if needed
+  - next service date if needed
+- Save updates the local state only
+- Cancel closes without saving
+
+2) CAR SELECTION FOR NEW MAINTENANCE
+Current issue:
+The user manually types the vehicle name and plate number.
+
+Required change:
+- Do NOT manually type vehicle name
+- Do NOT manually type plate number
+- Add a searchable car selector
+- The user must choose the car from the existing cars list
+- When a car is selected, auto-fill:
+  - vehicle name
+  - plate number
+  - current status
+  - image if available
+
+Car selector UI:
+- searchable dropdown
+- show car image
+- show car name
+- show plate number
+- show current status
+- only pick from existing cars
+
+3) REPEATING SERVICES
+Current issue:
+Maintenance services are typed manually every time.
+
+Required change:
+Add reusable service presets so the user can quickly choose common services instead of typing them every time.
+
+Add a “Service Type” selector with common presets like:
+- Oil change
+- Oil + filter
+- Filter change
+- Tire check
+- Brake check
+- General inspection
+- Engine service
+- Battery check
+- AC check
+- Other
+
+Behavior:
+- Selecting a preset fills the service title / type automatically
+- The user can still edit the details if needed
+- Keep an optional custom service field for special cases
+
+4) NEW MAINTENANCE SCHEDULE FORM
+When creating a new maintenance schedule, use a clean structured form:
+
+Sections:
+- Vehicle
+- Service type
+- Date
+- Next service date
+- Cost
+- Garage
+- Notes
+- Status
+
+Vehicle section:
+- searchable car selector
+- no manual typing
+
+Service section:
+- preset dropdown
+- optional custom text
+
+Date section:
+- maintenance date picker
+- next service date picker
+
+Details section:
+- cost
+- garage name
+- notes
+- status selector
+
+5) MAINTENANCE LIST UI
+Keep the page simple and readable:
+- use clean cards or table rows
+- show car name, plate, service type, date, status
+- show an Edit button on each item
+- show a small status badge
+- keep spacing consistent
+- maintain a premium light style
