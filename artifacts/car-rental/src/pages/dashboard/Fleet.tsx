@@ -2,27 +2,28 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X, LayoutGrid, List, Search, SlidersHorizontal, Plus,
-  Car, CheckCircle, Clock, Wrench, CalendarDays, ChevronLeft,
+  Car, CheckCircle, Wrench, CalendarDays, ChevronLeft,
   ChevronRight, Edit2, FileText, Shield, ClipboardList, Upload,
-  AlertCircle, Star,
+  AlertCircle, Star, Clock,
 } from "lucide-react";
 import {
-  fleet as initialFleet, FleetCar, FleetStatus,
-  rentals, maintenance,
-} from "@/data/dashboardData";
-import { useCurrencySettings, CURRENCY_SYMBOLS, CurrencyCode, useT } from "@/data/localStore";
+  useFleet, addCar, updateCar,
+  useRentals, useMaintenance,
+  useCurrencySettings, CURRENCY_SYMBOLS, CurrencyCode, useT,
+  FleetVehicle, FleetStatus, Money, getCarPriceInCurrency
+} from "@/store";
 
 /* ─── helpers ─────────────────────────────────────────────────── */
-const STATUS_CFG: Record<FleetStatus, { label: string; dot: string; badge: string }> = {
-  available:   { label: "Available",   dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
-  reserved:    { label: "Reserved",    dot: "bg-indigo-500",  badge: "bg-indigo-50 text-indigo-700 border border-indigo-200"   },
-  rented:      { label: "Rented",      dot: "bg-amber-500",   badge: "bg-amber-50 text-amber-700 border border-amber-200"     },
-  maintenance: { label: "Maintenance", dot: "bg-red-500",     badge: "bg-red-50 text-red-700 border border-red-200"           },
+const STATUS_CFG: Record<FleetStatus, { dot: string; badge: string; labelKey: string }> = {
+  available:   { dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 border border-emerald-200", labelKey: "fleet.available" },
+  reserved:    { dot: "bg-indigo-500",  badge: "bg-indigo-50 text-indigo-700 border border-indigo-200",   labelKey: "fleet.reserved" },
+  rented:      { dot: "bg-amber-500",   badge: "bg-amber-50 text-amber-700 border border-amber-200",     labelKey: "fleet.rented" },
+  maintenance: { dot: "bg-red-500",     badge: "bg-red-50 text-red-700 border border-red-200",           labelKey: "fleet.maintenance" },
 };
+
 function StatusBadge({ s }: { s: FleetStatus }) {
   const t = useT();
-  const { dot, badge } = STATUS_CFG[s];
-  const labelKey = s === "available" ? "filter.available" : s === "reserved" ? "filter.reserved" : s === "rented" ? "filter.rented" : "maintenance.title";
+  const { dot, badge, labelKey } = STATUS_CFG[s];
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${badge}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
@@ -30,9 +31,11 @@ function StatusBadge({ s }: { s: FleetStatus }) {
     </span>
   );
 }
+
 function fmtShort(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
+
 function fmtDate(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
@@ -50,16 +53,6 @@ function activeFilterCount(f: Filters) {
   return [f.status !== "all", f.transmission !== "all", f.fuel !== "all", f.type !== "all"].filter(Boolean).length;
 }
 
-/* ─── KPI data ─────────────────────────────────────────────────── */
-const KPI_LIST = (fleet: FleetCar[]) => [
-  { label: "Total Vehicles",  value: fleet.length,                                          sub: "in your fleet",        color: "text-slate-700",   bg: "bg-slate-100",  icon: Car          },
-  { label: "Available",       value: fleet.filter(c => c.status === "available").length,    sub: "ready to rent",        color: "text-emerald-600", bg: "bg-emerald-50", icon: CheckCircle  },
-  { label: "Reserved",        value: fleet.filter(c => c.status === "reserved").length,     sub: "upcoming pickups",     color: "text-indigo-600",  bg: "bg-indigo-50",  icon: CalendarDays },
-  { label: "Rented",          value: fleet.filter(c => c.status === "rented").length,       sub: "on the road",          color: "text-amber-600",   bg: "bg-amber-50",   icon: Car          },
-  { label: "Maintenance",     value: fleet.filter(c => c.status === "maintenance").length,  sub: "in service",           color: "text-red-600",     bg: "bg-red-50",     icon: Wrench       },
-  { label: "Returning Today", value: 1,                                                     sub: "expected returns",     color: "text-violet-600",  bg: "bg-violet-50",  icon: Clock        },
-];
-
 /* ─── Schedule Modal ───────────────────────────────────────────── */
 const RENTAL_COLORS = [
   "bg-indigo-100 text-indigo-800 border-indigo-300",
@@ -69,7 +62,7 @@ const RENTAL_COLORS = [
   "bg-violet-100 text-violet-800 border-violet-300",
 ];
 
-function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void }) {
+function ScheduleModal({ car, onClose }: { car: FleetVehicle; onClose: () => void }) {
   const t = useT();
   const [year,  setYear]  = useState(2026);
   const [month, setMonth] = useState(5);
@@ -79,7 +72,8 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
     return () => { document.body.style.overflow = ""; };
   }, []);
 
-  const carRentals  = rentals.filter(r => r.plate === car.plate || r.car.includes(car.model));
+  const allRentals  = useRentals();
+  const carRentals  = allRentals.filter(r => r.plate === car.plate || r.car.includes(car.model));
   const monthName   = new Date(year, month, 1).toLocaleDateString("en-GB", { month: "long", year: "numeric" });
   const firstDay    = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -105,7 +99,7 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto overflow-hidden" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 flex-shrink-0">
             <div>
-              <h3 className="text-[17px] font-bold text-[#1a2332]">{car.brand} {car.model} — Schedule</h3>
+              <h3 className="text-[17px] font-bold text-[#1a2332]">{car.brand} {car.model} — {t("fleet.viewSchedule")}</h3>
               <p className="text-[12px] text-slate-400 font-mono mt-0.5">{car.plate}</p>
             </div>
             <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"><X className="h-5 w-5" /></button>
@@ -154,7 +148,7 @@ function ScheduleModal({ car, onClose }: { car: FleetCar; onClose: () => void })
                 </div>
               )}
               {carRentals.length === 0 && (
-                <p className="text-[13px] text-slate-400 text-center py-8">{t("fleet.noBookings")}</p>
+                <p className="text-[13px] text-slate-400 text-center py-8">{t("fleet.noBookingsVehicle")}</p>
               )}
             </div>
           </div>
@@ -187,6 +181,7 @@ function ImageUploadSection({ images, onChange }: {
   images: string[];
   onChange: (imgs: string[]) => void;
 }) {
+  const t = useT();
   const fileRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<VehicleImage[]>(() =>
     images.map((url, i) => ({
@@ -276,7 +271,7 @@ function ImageUploadSection({ images, onChange }: {
           </div>
           <div className="text-center">
             <p className="text-[13px] font-semibold text-slate-700">
-              {dragging ? "Drop images here" : "Drag and drop images here"}
+              {dragging ? "Drop images here" : t("fleet.dragDropImages")}
             </p>
             <p className="text-[12px] text-slate-400 mt-0.5">or click to browse</p>
           </div>
@@ -321,7 +316,7 @@ function ImageUploadSection({ images, onChange }: {
               {img.isCover && (
                 <div className="absolute top-1.5 left-1.5">
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-violet-600 text-white text-[9px] font-bold rounded-md shadow">
-                    <Star className="h-2.5 w-2.5 fill-white" /> COVER
+                    <Star className="h-2.5 w-2.5 fill-white" /> {t("fleet.coverImage")}
                   </span>
                 </div>
               )}
@@ -349,10 +344,10 @@ function ImageUploadSection({ images, onChange }: {
                     onClick={() => setCover(img.id)}
                     className="text-[10px] font-semibold text-violet-500 hover:text-violet-700 cursor-pointer transition-colors"
                   >
-                    Set as cover
+                    {t("fleet.setCoverImage")}
                   </button>
                 ) : (
-                  <p className="text-[10px] font-semibold text-violet-500">Cover image</p>
+                  <p className="text-[10px] font-semibold text-violet-500">{t("fleet.coverImage")}</p>
                 )}
               </div>
             </div>
@@ -366,7 +361,7 @@ function ImageUploadSection({ images, onChange }: {
               className="aspect-[4/3] col-span-1 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-1.5 text-slate-400 hover:border-violet-400 hover:text-violet-500 hover:bg-violet-50 transition-all duration-200 cursor-pointer"
             >
               <Plus className="h-5 w-5" />
-              <span className="text-[10px] font-semibold">Add more</span>
+              <span className="text-[10px] font-semibold">{t("fleet.addMore")}</span>
             </button>
           )}
         </div>
@@ -386,9 +381,10 @@ function ImageUploadSection({ images, onChange }: {
 
 /* ─── Shared vehicle form fields ───────────────────────────────── */
 function VehicleFormFields({ form, set }: {
-  form: FleetCar;
-  set: (k: keyof FleetCar, v: string | number | boolean | object) => void;
+  form: FleetVehicle;
+  set: (k: keyof FleetVehicle, v: string | number | boolean | object | Money) => void;
 }) {
+  const t = useT();
   const inp = "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
   const sel = "w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
   const lbl = "block text-[12px] font-semibold text-slate-600 mb-1.5";
@@ -398,48 +394,48 @@ function VehicleFormFields({ form, set }: {
     <div className="space-y-7">
       {/* Vehicle Info */}
       <div>
-        <p className={sec}>Vehicle Information</p>
+        <p className={sec}>{t("fleet.vehicleInfo")}</p>
         <div className="grid grid-cols-2 gap-3.5">
-          <div><label className={lbl}>Brand</label><input className={inp} value={form.brand} onChange={e => set("brand", e.target.value)} placeholder="e.g. Renault" /></div>
-          <div><label className={lbl}>Model</label><input className={inp} value={form.model} onChange={e => set("model", e.target.value)} placeholder="e.g. Clio 5" /></div>
-          <div><label className={lbl}>Year</label><input type="number" className={inp} value={form.year || ""} onChange={e => set("year", parseInt(e.target.value) || 0)} placeholder="2024" /></div>
-          <div><label className={lbl}>Plate Number</label><input className={inp} value={form.plate} onChange={e => set("plate", e.target.value)} placeholder="e.g. RCL-031-31" /></div>
-          <div><label className={lbl}>Color</label><input className={inp} value={form.color} onChange={e => set("color", e.target.value)} placeholder="e.g. Pearl White" /></div>
+          <div><label className={lbl}>{t("fleet.brand")}</label><input className={inp} value={form.brand} onChange={e => set("brand", e.target.value)} placeholder="e.g. Renault" /></div>
+          <div><label className={lbl}>{t("fleet.model")}</label><input className={inp} value={form.model} onChange={e => set("model", e.target.value)} placeholder="e.g. Clio 5" /></div>
+          <div><label className={lbl}>{t("fleet.year")}</label><input type="number" className={inp} value={form.year || ""} onChange={e => set("year", parseInt(e.target.value) || 0)} placeholder="2024" /></div>
+          <div><label className={lbl}>{t("fleet.plateNumber")}</label><input className={inp} value={form.plate} onChange={e => set("plate", e.target.value)} placeholder="e.g. RCL-031-31" /></div>
+          <div><label className={lbl}>{t("fleet.color")}</label><input className={inp} value={form.color} onChange={e => set("color", e.target.value)} placeholder="e.g. Pearl White" /></div>
           <div>
-            <label className={lbl}>Type / Category</label>
+            <label className={lbl}>{t("fleet.typeCategory")}</label>
             <select className={sel} value={form.type} onChange={e => set("type", e.target.value)}>
               <option value="">Select type</option>
-              {["Economy","Compact","Sedan","SUV","Luxury","Van","City"].map(t => <option key={t}>{t}</option>)}
+              {["Economy","Compact","Sedan","SUV","Luxury","Van","City"].map(typeVal => <option key={typeVal}>{typeVal}</option>)}
             </select>
           </div>
           <div>
-            <label className={lbl}>Transmission</label>
+            <label className={lbl}>{t("fleet.transmission")}</label>
             <select className={sel} value={form.transmission} onChange={e => set("transmission", e.target.value)}>
               <option>Manual</option><option>Automatic</option>
             </select>
           </div>
           <div>
-            <label className={lbl}>Fuel Type</label>
+            <label className={lbl}>{t("fleet.fuelType")}</label>
             <select className={sel} value={form.fuel} onChange={e => set("fuel", e.target.value)}>
               <option>Gasoline</option><option>Diesel</option><option>Electric</option>
             </select>
           </div>
-          <div><label className={lbl}>Seats</label><input type="number" className={inp} value={form.seats || ""} onChange={e => set("seats", parseInt(e.target.value) || 0)} placeholder="5" /></div>
-          <div><label className={lbl}>Doors</label><input type="number" className={inp} value={form.doors || ""} onChange={e => set("doors", parseInt(e.target.value) || 0)} placeholder="4" /></div>
-          <div><label className={lbl}>Mileage (km)</label><input type="number" className={inp} value={form.mileage || ""} onChange={e => set("mileage", parseInt(e.target.value) || 0)} placeholder="0" /></div>
-          <div><label className={lbl}>Engine Size</label><input className={inp} value={form.engineSize ?? ""} onChange={e => set("engineSize", e.target.value)} placeholder="e.g. 1.5 dCi 115hp" /></div>
-          <div className="col-span-2"><label className={lbl}>VIN / Chassis Number</label><input className={inp} value={form.vin ?? ""} onChange={e => set("vin", e.target.value)} placeholder="e.g. VF1BJA00012345679" /></div>
+          <div><label className={lbl}>{t("fleet.seats")}</label><input type="number" className={inp} value={form.seats || ""} onChange={e => set("seats", parseInt(e.target.value) || 0)} placeholder="5" /></div>
+          <div><label className={lbl}>{t("fleet.doors")}</label><input type="number" className={inp} value={form.doors || ""} onChange={e => set("doors", parseInt(e.target.value) || 0)} placeholder="4" /></div>
+          <div><label className={lbl}>{t("fleet.mileageKm")}</label><input type="number" className={inp} value={form.mileage || ""} onChange={e => set("mileage", parseInt(e.target.value) || 0)} placeholder="0" /></div>
+          <div><label className={lbl}>{t("fleet.engineSize")}</label><input className={inp} value={form.engineSize ?? ""} onChange={e => set("engineSize", e.target.value)} placeholder="e.g. 1.5 dCi 115hp" /></div>
+          <div className="col-span-2"><label className={lbl}>{t("fleet.vinChassis")}</label><input className={inp} value={form.vin ?? ""} onChange={e => set("vin", e.target.value)} placeholder="e.g. VF1BJA00012345679" /></div>
           <div>
-            <label className={lbl}>Status</label>
+            <label className={lbl}>{t("form.status")}</label>
             <select className={sel} value={form.status} onChange={e => set("status", e.target.value as FleetStatus)}>
-              <option value="available">Available</option>
-              <option value="reserved">Reserved</option>
-              <option value="rented">Rented</option>
-              <option value="maintenance">Maintenance</option>
+              <option value="available">{t("fleet.available")}</option>
+              <option value="reserved">{t("fleet.reserved")}</option>
+              <option value="rented">{t("fleet.rented")}</option>
+              <option value="maintenance">{t("fleet.maintenance")}</option>
             </select>
           </div>
           <div className="col-span-2">
-            <label className={lbl}>Vehicle Photos <span className="text-slate-300">(max 5, first is cover)</span></label>
+            <label className={lbl}>{t("fleet.vehiclePhotos")} <span className="text-slate-300">(max 5, first is cover)</span></label>
             <ImageUploadSection
               images={form.images && form.images.length > 0 ? form.images : (form.image ? [form.image] : [])}
               onChange={imgs => { set("images", imgs); if (imgs.length > 0) set("image", imgs[0]); }}
@@ -450,16 +446,16 @@ function VehicleFormFields({ form, set }: {
 
       {/* Pricing */}
       <div>
-        <p className={sec}>Pricing</p>
+        <p className={sec}>{t("fleet.pricing")}</p>
         <div className="grid grid-cols-2 gap-3.5">
-          <div><label className={lbl}>Daily Rate ($)</label><input type="number" className={inp} value={form.pricePerDay || ""} onChange={e => set("pricePerDay", parseFloat(e.target.value) || 0)} placeholder="45" /></div>
-          <div><label className={lbl}>Weekly Rate ($)</label><input type="number" className={inp} value={form.pricePerWeek ?? ""} onChange={e => set("pricePerWeek", parseFloat(e.target.value) || 0)} placeholder="280" /></div>
-          <div><label className={lbl}>Monthly Rate ($)</label><input type="number" className={inp} value={form.pricePerMonth ?? ""} onChange={e => set("pricePerMonth", parseFloat(e.target.value) || 0)} placeholder="900" /></div>
-          <div><label className={lbl}>Deposit Amount ($)</label><input type="number" className={inp} value={form.depositAmount ?? ""} onChange={e => set("depositAmount", parseFloat(e.target.value) || 0)} placeholder="150" /></div>
-          <div><label className={lbl}>Late Fee ($/day)</label><input type="number" className={inp} value={form.lateFee ?? ""} onChange={e => set("lateFee", parseFloat(e.target.value) || 0)} placeholder="15" /></div>
-          <div><label className={lbl}>Extra Mileage Fee ($/km)</label><input type="number" className={inp} value={form.extraMileageFee ?? ""} onChange={e => set("extraMileageFee", parseFloat(e.target.value) || 0)} placeholder="0.25" /></div>
+          <div><label className={lbl}>{t("fleet.dailyRate")} ($)</label><input type="number" className={inp} value={form.pricePerDay?.amount || ""} onChange={e => set("pricePerDay", { amount: parseFloat(e.target.value) || 0, currencyCode: form.pricePerDay.currencyCode })} placeholder="45" /></div>
+          <div><label className={lbl}>{t("fleet.weeklyRate")} ($)</label><input type="number" className={inp} value={form.pricePerWeek?.amount ?? ""} onChange={e => set("pricePerWeek", { amount: parseFloat(e.target.value) || 0, currencyCode: form.pricePerDay.currencyCode })} placeholder="280" /></div>
+          <div><label className={lbl}>{t("fleet.monthlyRate")} ($)</label><input type="number" className={inp} value={form.pricePerMonth?.amount ?? ""} onChange={e => set("pricePerMonth", { amount: parseFloat(e.target.value) || 0, currencyCode: form.pricePerDay.currencyCode })} placeholder="900" /></div>
+          <div><label className={lbl}>{t("fleet.depositAmount")} ($)</label><input type="number" className={inp} value={form.depositAmount?.amount ?? ""} onChange={e => set("depositAmount", { amount: parseFloat(e.target.value) || 0, currencyCode: form.pricePerDay.currencyCode })} placeholder="150" /></div>
+          <div><label className={lbl}>{t("fleet.lateFee")} ($/day)</label><input type="number" className={inp} value={form.lateFee?.amount ?? ""} onChange={e => set("lateFee", { amount: parseFloat(e.target.value) || 0, currencyCode: form.pricePerDay.currencyCode })} placeholder="15" /></div>
+          <div><label className={lbl}>{t("fleet.extraMileageFee")} ($/km)</label><input type="number" className={inp} value={form.extraMileageFee?.amount ?? ""} onChange={e => set("extraMileageFee", { amount: parseFloat(e.target.value) || 0, currencyCode: form.pricePerDay.currencyCode })} placeholder="0.25" /></div>
           <div className="col-span-2">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">Per-Currency Daily Rates</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2.5">{t("fleet.perCurrencyRates")}</p>
             <div className="grid grid-cols-3 gap-3">
               {(["DZD", "USD", "EUR"] as CurrencyCode[]).map(c => (
                 <div key={c}>
@@ -480,29 +476,29 @@ function VehicleFormFields({ form, set }: {
 
       {/* Documents */}
       <div>
-        <p className={sec}>Documents</p>
+        <p className={sec}>{t("drawer.docs")}</p>
         <div className="grid grid-cols-2 gap-3.5">
-          <div><label className={lbl}>Insurance Provider</label><input className={inp} value={form.insuranceProvider ?? ""} onChange={e => set("insuranceProvider", e.target.value)} placeholder="e.g. AXA Algeria" /></div>
-          <div><label className={lbl}>Insurance Number</label><input className={inp} value={form.insuranceNumber ?? ""} onChange={e => set("insuranceNumber", e.target.value)} placeholder="AXA-2024-XXX" /></div>
-          <div><label className={lbl}>Insurance Start</label><input type="date" className={inp} value={form.insuranceStart ?? ""} onChange={e => set("insuranceStart", e.target.value)} /></div>
-          <div><label className={lbl}>Insurance End</label><input type="date" className={inp} value={form.insuranceEnd ?? ""} onChange={e => set("insuranceEnd", e.target.value)} /></div>
-          <div><label className={lbl}>Registration Number</label><input className={inp} value={form.registrationNumber ?? ""} onChange={e => set("registrationNumber", e.target.value)} /></div>
-          <div><label className={lbl}>Registration Expiry</label><input type="date" className={inp} value={form.registrationExpiry ?? ""} onChange={e => set("registrationExpiry", e.target.value)} /></div>
-          <div><label className={lbl}>Technical Inspection Date</label><input type="date" className={inp} value={form.inspectionDate ?? ""} onChange={e => set("inspectionDate", e.target.value)} /></div>
-          <div><label className={lbl}>Inspection Expiry</label><input type="date" className={inp} value={form.inspectionExpiry ?? ""} onChange={e => set("inspectionExpiry", e.target.value)} /></div>
+          <div><label className={lbl}>{t("fleet.insuranceProvider")}</label><input className={inp} value={form.insuranceProvider ?? ""} onChange={e => set("insuranceProvider", e.target.value)} placeholder="e.g. AXA Algeria" /></div>
+          <div><label className={lbl}>{t("fleet.insuranceNumber")}</label><input className={inp} value={form.insuranceNumber ?? ""} onChange={e => set("insuranceNumber", e.target.value)} placeholder="AXA-2024-XXX" /></div>
+          <div><label className={lbl}>{t("fleet.insuranceStart")}</label><input type="date" className={inp} value={form.insuranceStart ?? ""} onChange={e => set("insuranceStart", e.target.value)} /></div>
+          <div><label className={lbl}>{t("fleet.insuranceEnd")}</label><input type="date" className={inp} value={form.insuranceEnd ?? ""} onChange={e => set("insuranceEnd", e.target.value)} /></div>
+          <div><label className={lbl}>{t("fleet.registrationNumber")}</label><input className={inp} value={form.registrationNumber ?? ""} onChange={e => set("registrationNumber", e.target.value)} /></div>
+          <div><label className={lbl}>{t("fleet.registrationExpiry")}</label><input type="date" className={inp} value={form.registrationExpiry ?? ""} onChange={e => set("registrationExpiry", e.target.value)} /></div>
+          <div><label className={lbl}>{t("fleet.inspectionDate")}</label><input type="date" className={inp} value={form.inspectionDate ?? ""} onChange={e => set("inspectionDate", e.target.value)} /></div>
+          <div><label className={lbl}>{t("fleet.inspectionExpiry")}</label><input type="date" className={inp} value={form.inspectionExpiry ?? ""} onChange={e => set("inspectionExpiry", e.target.value)} /></div>
         </div>
       </div>
 
       {/* Maintenance */}
       <div>
-        <p className={sec}>Maintenance</p>
+        <p className={sec}>{t("maintenance.title")}</p>
         <div className="grid grid-cols-2 gap-3.5">
-          <div><label className={lbl}>Last Service Date</label><input type="date" className={inp} value={form.lastService} onChange={e => set("lastService", e.target.value)} /></div>
-          <div><label className={lbl}>Next Service Date</label><input type="date" className={inp} value={form.nextService} onChange={e => set("nextService", e.target.value)} /></div>
-          <div><label className={lbl}>Last Service Mileage (km)</label><input type="number" className={inp} value={form.lastServiceMileage ?? ""} onChange={e => set("lastServiceMileage", parseInt(e.target.value) || 0)} /></div>
-          <div><label className={lbl}>Garage / Service Center</label><input className={inp} value={form.garageName ?? ""} onChange={e => set("garageName", e.target.value)} placeholder="e.g. Renault Service Center" /></div>
+          <div><label className={lbl}>{t("fleet.lastServiceDate")}</label><input type="date" className={inp} value={form.lastService} onChange={e => set("lastService", e.target.value)} /></div>
+          <div><label className={lbl}>{t("fleet.nextServiceDate")}</label><input type="date" className={inp} value={form.nextService} onChange={e => set("nextService", e.target.value)} /></div>
+          <div><label className={lbl}>{t("fleet.lastServiceMileage")}</label><input type="number" className={inp} value={form.lastServiceMileage ?? ""} onChange={e => set("lastServiceMileage", parseInt(e.target.value) || 0)} /></div>
+          <div><label className={lbl}>{t("fleet.garageServiceCenter")}</label><input className={inp} value={form.garageName ?? ""} onChange={e => set("garageName", e.target.value)} placeholder="e.g. Renault Service Center" /></div>
           <div className="col-span-2">
-            <label className={lbl}>Maintenance Notes</label>
+            <label className={lbl}>{t("fleet.maintenanceNotes")}</label>
             <textarea rows={2} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition"
               value={form.maintenanceNotes ?? ""} onChange={e => set("maintenanceNotes", e.target.value)} />
           </div>
@@ -511,19 +507,19 @@ function VehicleFormFields({ form, set }: {
 
       {/* Notes */}
       <div>
-        <p className={sec}>Notes & Description</p>
+        <p className={sec}>{t("fleet.notesSection")}</p>
         <div className="space-y-3.5">
           <div>
-            <label className={lbl}>Short Description</label>
+            <label className={lbl}>{t("fleet.shortDescription")}</label>
             <input className={inp} value={form.description ?? ""} onChange={e => set("description", e.target.value)} placeholder="Brief description for clients" />
           </div>
           <div>
-            <label className={lbl}>Operational Notes</label>
+            <label className={lbl}>{t("fleet.operationalNotes")}</label>
             <textarea rows={2} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition"
               value={form.notes} onChange={e => set("notes", e.target.value)} />
           </div>
           <div>
-            <label className={lbl}>Internal Notes <span className="text-slate-300">(not shown to clients)</span></label>
+            <label className={lbl}>{t("fleet.internalNotes")}</label>
             <textarea rows={2} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition"
               value={form.internalNotes ?? ""} onChange={e => set("internalNotes", e.target.value)} />
           </div>
@@ -533,21 +529,28 @@ function VehicleFormFields({ form, set }: {
   );
 }
 
-const BLANK_CAR: FleetCar = {
+const BLANK_CAR = (currency: CurrencyCode): FleetVehicle => ({
   id: "", brand: "", model: "", year: new Date().getFullYear(), plate: "",
   color: "", type: "", transmission: "Manual", fuel: "Gasoline",
   seats: 5, doors: 4, mileage: 0, status: "available",
-  image: "", notes: "", pricePerDay: 0,
+  image: "", notes: "", 
+  pricePerDay: { amount: 0, currencyCode: currency },
+  pricePerWeek: { amount: 0, currencyCode: currency },
+  pricePerMonth: { amount: 0, currencyCode: currency },
+  depositAmount: { amount: 0, currencyCode: currency },
+  lateFee: { amount: 0, currencyCode: currency },
+  extraMileageFee: { amount: 0, currencyCode: currency },
   lastService: "", nextService: "",
-};
+});
 
 /* ─── Edit Vehicle Modal ───────────────────────────────────────── */
 function EditVehicleModal({ car, onClose, onSave }: {
-  car: FleetCar; onClose: () => void; onSave: (updated: FleetCar) => void;
+  car: FleetVehicle; onClose: () => void; onSave: (updated: FleetVehicle) => void;
 }) {
-  const [form, setForm] = useState<FleetCar>({ ...car });
+  const t = useT();
+  const [form, setForm] = useState<FleetVehicle>({ ...car });
   useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
-  const set = (k: keyof FleetCar, v: string | number | boolean | object) => setForm(prev => ({ ...prev, [k]: v }));
+  const set = (k: keyof FleetVehicle, v: any) => setForm(prev => ({ ...prev, [k]: v }));
 
   return (
     <>
@@ -556,7 +559,7 @@ function EditVehicleModal({ car, onClose, onSave }: {
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
             <div>
-              <h3 className="text-[17px] font-bold text-[#1a2332]">Edit Vehicle</h3>
+              <h3 className="text-[17px] font-bold text-[#1a2332]">{t("fleet.editVehicle")}</h3>
               <p className="text-[12px] text-slate-400 mt-0.5">{car.brand} {car.model} · {car.plate}</p>
             </div>
             <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"><X className="h-5 w-5" /></button>
@@ -565,8 +568,8 @@ function EditVehicleModal({ car, onClose, onSave }: {
             <VehicleFormFields form={form} set={set} />
           </div>
           <div className="border-t border-slate-100 px-7 py-5 flex gap-3 flex-shrink-0">
-            <button onClick={() => onSave(form)} className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm cursor-pointer">Save Changes</button>
-            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
+            <button onClick={() => onSave(form)} className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm cursor-pointer">{t("action.saveChanges")}</button>
+            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">{t("action.cancel")}</button>
           </div>
         </motion.div>
       </div>
@@ -575,12 +578,14 @@ function EditVehicleModal({ car, onClose, onSave }: {
 }
 
 /* ─── Add Vehicle Modal ───────────────────────────────────────── */
-function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car: FleetCar) => void }) {
-  const [form, setForm] = useState<FleetCar>({ ...BLANK_CAR, id: `f-${Date.now()}` });
+function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car: FleetVehicle) => void }) {
+  const t = useT();
+  const { mainCurrency } = useCurrencySettings();
+  const [form, setForm] = useState<FleetVehicle>(() => ({ ...BLANK_CAR(mainCurrency), id: `f-${Date.now()}` }));
   useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
-  const set = (k: keyof FleetCar, v: string | number | boolean | object) => setForm(prev => ({ ...prev, [k]: v }));
+  const set = (k: keyof FleetVehicle, v: any) => setForm(prev => ({ ...prev, [k]: v }));
 
-  const canSubmit = form.brand && form.model && form.plate && form.pricePerDay > 0;
+  const canSubmit = form.brand && form.model && form.plate && form.pricePerDay?.amount > 0;
 
   return (
     <>
@@ -589,8 +594,8 @@ function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col pointer-events-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between px-7 py-5 border-b border-slate-100 flex-shrink-0">
             <div>
-              <h3 className="text-[17px] font-bold text-[#1a2332]">Add New Vehicle</h3>
-              <p className="text-[12px] text-slate-400 mt-0.5">Fill in all details to add a vehicle to your fleet</p>
+              <h3 className="text-[17px] font-bold text-[#1a2332]">{t("fleet.addNewVehicle")}</h3>
+              <p className="text-[12px] text-slate-400 mt-0.5">{t("fleet.addVehicleSubtitle")}</p>
             </div>
             <button onClick={onClose} className="w-9 h-9 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"><X className="h-5 w-5" /></button>
           </div>
@@ -603,9 +608,9 @@ function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car
               disabled={!canSubmit}
               className="flex-1 h-11 bg-[#1a2332] text-white rounded-xl text-[13.5px] font-semibold hover:bg-[#243044] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
-              Add Vehicle
+              {t("fleet.addVehicle")}
             </button>
-            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
+            <button onClick={onClose} className="h-11 px-6 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">{t("action.cancel")}</button>
           </div>
         </motion.div>
       </div>
@@ -614,16 +619,17 @@ function AddVehicleModal({ onClose, onAdd }: { onClose: () => void; onAdd?: (car
 }
 
 /* ─── Drawer Price Display ─────────────────────────────────────── */
-function DrawerPrice({ car }: { car: FleetCar }) {
+function DrawerPrice({ car }: { car: FleetVehicle }) {
+  const t = useT();
   const { mainCurrency } = useCurrencySettings();
   const sym = CURRENCY_SYMBOLS[mainCurrency];
-  const price = car.prices?.[mainCurrency] ?? (mainCurrency === "USD" ? car.pricePerDay : car.pricePerDay);
+  const price = getCarPriceInCurrency(car, mainCurrency);
   return (
     <div>
       <span className="text-[22px] font-bold text-[#1a2332]">{sym}{price}</span>
-      <span className="text-[13px] text-slate-400 font-medium"> / day</span>
-      {mainCurrency !== "USD" && car.prices?.[mainCurrency] && (
-        <span className="ml-2 text-[11px] text-slate-400">(${car.pricePerDay} USD)</span>
+      <span className="text-[13px] text-slate-400 font-medium"> {t("fleet.perDay")}</span>
+      {mainCurrency !== "USD" && car.prices?.["USD"] && (
+        <span className="ml-2 text-[11px] text-slate-400">(${car.pricePerDay.amount} USD)</span>
       )}
     </div>
   );
@@ -631,18 +637,21 @@ function DrawerPrice({ car }: { car: FleetCar }) {
 
 /* ─── Vehicle Drawer ──────────────────────────────────────────── */
 function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
-  car: FleetCar;
+  car: FleetVehicle;
   onClose: () => void;
   onSchedule: () => void;
   onEdit: () => void;
 }) {
-  const carRentals     = rentals.filter(r => r.plate === car.plate || r.car.includes(car.model)).slice(0, 5);
-  const carMaintenance = maintenance.find(m => m.plate === car.plate);
+  const t = useT();
+  const allRentals     = useRentals();
+  const allMaintenance = useMaintenance();
+  const carRentals     = allRentals.filter(r => r.plate === car.plate || r.car.includes(car.model)).slice(0, 5);
+  const carMaintenance = allMaintenance.find(m => m.plate === car.plate);
 
   const DOCS = [
-    { name: "Insurance Certificate", expires: "2026-12-31", icon: Shield        },
-    { name: "Vehicle Registration",  expires: "2027-01-15", icon: FileText      },
-    { name: "Technical Inspection",  expires: "2026-09-01", icon: ClipboardList },
+    { name: t("fleet.insuranceCert"), expires: car.insuranceEnd || "2026-12-31", icon: Shield        },
+    { name: t("fleet.vehicleReg"),  expires: car.registrationExpiry || "2027-01-15", icon: FileText      },
+    { name: t("fleet.techInspection"),  expires: car.inspectionExpiry || "2026-09-01", icon: ClipboardList },
   ];
 
   return (
@@ -668,27 +677,27 @@ function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
           <div className="flex items-center justify-between px-6 py-3.5 bg-slate-50 border-b border-slate-100">
             <DrawerPrice car={car} />
             <button onClick={onSchedule} className="flex items-center gap-2 h-9 px-4 bg-[#1a2332] text-white rounded-xl text-[12.5px] font-semibold hover:bg-[#243044] transition-colors">
-              <CalendarDays className="h-3.5 w-3.5" /> View Schedule
+              <CalendarDays className="h-3.5 w-3.5" /> {t("fleet.viewSchedule")}
             </button>
           </div>
 
           <div className="px-6 py-6 space-y-7">
             {/* Overview */}
             <section>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Vehicle Overview</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("fleet.vehicleOverview")}</p>
               <div className="grid grid-cols-2 gap-2">
                 {[
-                  { label: "Brand",        value: car.brand },
-                  { label: "Model",        value: car.model },
-                  { label: "Year",         value: car.year.toString() },
-                  { label: "Color",        value: car.color },
-                  { label: "Plate",        value: car.plate },
-                  { label: "Type",         value: car.type },
-                  { label: "Transmission", value: car.transmission },
-                  { label: "Fuel",         value: car.fuel },
-                  { label: "Seats",        value: `${car.seats}` },
-                  { label: "Mileage",      value: `${car.mileage.toLocaleString()} km` },
-                  { label: "Daily Rate",   value: (() => { const { mainCurrency: mc } = { mainCurrency: "USD" }; return `$${car.pricePerDay}`; })() },
+                  { label: t("fleet.brand"),        value: car.brand },
+                  { label: t("fleet.model"),        value: car.model },
+                  { label: t("fleet.year"),         value: car.year.toString() },
+                  { label: t("fleet.color"),        value: car.color },
+                  { label: t("fleet.plateNumber"),        value: car.plate },
+                  { label: t("fleet.typeCategory"),         value: car.type },
+                  { label: t("fleet.transmission"), value: car.transmission },
+                  { label: t("fleet.fuelType"),         value: car.fuel },
+                  { label: t("fleet.seats"),        value: `${car.seats}` },
+                  { label: t("fleet.mileageKm"),      value: `${car.mileage.toLocaleString()} km` },
+                  { label: t("fleet.dailyRate"),   value: `${CURRENCY_SYMBOLS[car.pricePerDay.currencyCode]}${car.pricePerDay.amount}` },
                 ].map(({ label, value }) => (
                   <div key={label} className="bg-slate-50 border border-slate-100 rounded-xl px-3.5 py-3">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{label}</p>
@@ -700,24 +709,24 @@ function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
 
             {/* Status */}
             <section>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Current Status</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("fleet.currentStatus")}</p>
               <div className={`rounded-2xl border p-4 ${STATUS_CFG[car.status].badge}`}>
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className={`w-2 h-2 rounded-full ${STATUS_CFG[car.status].dot}`} />
-                  <p className="text-[13px] font-bold">{STATUS_CFG[car.status].label}</p>
+                  <p className="text-[13px] font-bold">{t(STATUS_CFG[car.status].labelKey as any)}</p>
                 </div>
-                {car.status === "rented"      && carRentals[0] && <p className="text-[12px] opacity-80">Rented to {carRentals[0].client} · Returns {fmtShort(carRentals[0].endDate)}</p>}
-                {car.status === "reserved"    && carRentals[0] && <p className="text-[12px] opacity-80">Reserved by {carRentals[0].client} · Pickup {fmtShort(carRentals[0].startDate)}</p>}
-                {car.status === "available"   && <p className="text-[12px] opacity-80">Ready for rental — no active bookings</p>}
-                {car.status === "maintenance" && carMaintenance && <p className="text-[12px] opacity-80">{carMaintenance.type} · Est. ready {carMaintenance.scheduledDate}</p>}
+                {car.status === "rented"      && carRentals[0] && <p className="text-[12px] opacity-80">{t("fleet.rentedTo")} {carRentals[0].client} · {t("fleet.returnsOn")} {fmtShort(carRentals[0].endDate)}</p>}
+                {car.status === "reserved"    && carRentals[0] && <p className="text-[12px] opacity-80">{t("fleet.reservedBy")} {carRentals[0].client} · {t("fleet.pickupOn")} {fmtShort(carRentals[0].startDate)}</p>}
+                {car.status === "available"   && <p className="text-[12px] opacity-80">{t("fleet.readyForRental")}</p>}
+                {car.status === "maintenance" && carMaintenance && <p className="text-[12px] opacity-80">{carMaintenance.type} · {t("fleet.currentJob")} {carMaintenance.scheduledDate}</p>}
               </div>
             </section>
 
             {/* Rental History */}
             <section>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Rental History</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("fleet.rentalHistory")}</p>
               {carRentals.length === 0 ? (
-                <p className="text-[13px] text-slate-400 py-3">No rental history for this vehicle.</p>
+                <p className="text-[13px] text-slate-400 py-3">{t("fleet.noVehicleHistory")}</p>
               ) : (
                 <div className="relative pl-5">
                   <div className="absolute left-[7px] top-2 bottom-2 w-[2px] bg-slate-200 rounded-full" />
@@ -729,10 +738,10 @@ function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
                         }`} />
                         <div className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
                           <div className="flex items-center justify-between">
-                            <p className="text-[12.5px] font-semibold text-slate-800">{r.client}</p>
-                            <span className="text-[10.5px] font-semibold text-slate-400 capitalize">{r.status}</span>
+                            <p className="text-[12.5px] font-bold text-slate-700">{r.client}</p>
+                            <span className="text-[10px] font-semibold text-slate-400">{fmtShort(r.startDate)} - {fmtShort(r.endDate)}</span>
                           </div>
-                          <p className="text-[11.5px] text-slate-500 mt-0.5">{fmtShort(r.startDate)} → {fmtShort(r.endDate)} · <span className="font-semibold text-slate-700">${r.totalPrice}</span></p>
+                          <p className="text-[11px] text-slate-400 mt-1">Ref: {r.reference} · Total: {CURRENCY_SYMBOLS[r.totalPrice.currencyCode]}{r.totalPrice.amount}</p>
                         </div>
                       </div>
                     ))}
@@ -741,48 +750,19 @@ function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
               )}
             </section>
 
-            {/* Maintenance */}
+            {/* Docs */}
             <section>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Maintenance</p>
-              <div className="bg-slate-50 border border-slate-100 rounded-2xl divide-y divide-slate-100">
-                {[
-                  { label: "Last Service", value: fmtDate(car.lastService) },
-                  { label: "Next Service", value: fmtDate(car.nextService) },
-                  ...(carMaintenance ? [
-                    { label: "Current Job", value: carMaintenance.type },
-                    { label: "Garage",      value: carMaintenance.garage },
-                    { label: "Est. Cost",   value: `$${carMaintenance.estimatedCost}` },
-                  ] : []),
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex justify-between items-center px-4 py-3">
-                    <span className="text-[11.5px] text-slate-400 font-medium">{label}</span>
-                    <span className="text-[12.5px] text-slate-700 font-semibold text-right max-w-[200px]">{value}</span>
-                  </div>
-                ))}
-              </div>
-              {car.notes && (
-                <div className="mt-3 bg-amber-50 border border-amber-100 rounded-xl p-3.5">
-                  <p className="text-[11.5px] text-amber-800 leading-relaxed">{car.notes}</p>
-                </div>
-              )}
-            </section>
-
-            {/* Documents */}
-            <section>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Documents</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("drawer.docs")}</p>
               <div className="space-y-2">
                 {DOCS.map(({ name, expires, icon: Icon }) => (
-                  <div key={name} className="flex items-center gap-3.5 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
-                    <div className="w-9 h-9 rounded-xl bg-slate-200 flex items-center justify-center flex-shrink-0">
-                      <Icon className="h-4 w-4 text-slate-500" />
+                  <div key={name} className="flex items-center justify-between p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center"><Icon className="h-4 w-4 text-slate-500" /></div>
+                      <div>
+                        <p className="text-[12.5px] font-bold text-slate-700">{name}</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{t("fleet.valid")} {t("availability.to")} {fmtDate(expires)}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[12.5px] font-semibold text-slate-700">{name}</p>
-                      <p className="text-[11px] text-slate-400 mt-0.5">Expires {fmtDate(expires)}</p>
-                    </div>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Valid
-                    </span>
                   </div>
                 ))}
               </div>
@@ -790,23 +770,12 @@ function VehicleDrawer({ car, onClose, onSchedule, onEdit }: {
           </div>
         </div>
 
-        <div className="border-t border-slate-100 px-6 py-4 flex flex-wrap gap-2.5 flex-shrink-0 bg-slate-50/60">
-          <button onClick={onEdit} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-[12.5px] font-semibold hover:bg-slate-100 transition-colors">
-            <Edit2 className="h-4 w-4" /> Edit
+        <div className="border-t border-slate-100 px-6 py-4 flex gap-2.5 flex-shrink-0 bg-slate-50">
+          <button onClick={onEdit} className="flex items-center gap-2 px-4 py-2.5 bg-[#1a2332] text-white rounded-xl text-[12.5px] font-semibold hover:bg-[#243044] transition-colors">
+            <Edit2 className="h-4 w-4" /> {t("action.edit")}
           </button>
-          <button onClick={onSchedule} className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-[12.5px] font-semibold hover:bg-slate-100 transition-colors">
-            <CalendarDays className="h-4 w-4" /> Schedule
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 text-slate-700 rounded-xl text-[12.5px] font-semibold hover:bg-slate-100 transition-colors">
-            <Wrench className="h-4 w-4" /> Maintenance
-          </button>
-          {car.status !== "available" && (
-            <button className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-xl text-[12.5px] font-semibold hover:bg-emerald-100 transition-colors">
-              <CheckCircle className="h-4 w-4" /> Mark Available
-            </button>
-          )}
           <button onClick={onClose} className="ml-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[12.5px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">
-            Close
+            {t("action.close")}
           </button>
         </div>
       </motion.aside>
@@ -821,6 +790,7 @@ function FilterPanel({ filters, onChange, onClose, onClear }: {
   onClose: () => void;
   onClear: () => void;
 }) {
+  const t = useT();
   const selCls = (active: boolean) =>
     `px-3 py-1.5 rounded-lg border text-[12px] font-semibold transition-all cursor-pointer ${
       active ? "bg-[#1a2332] text-white border-[#1a2332]" : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
@@ -831,39 +801,39 @@ function FilterPanel({ filters, onChange, onClose, onClear }: {
       <div className="fixed inset-0 z-30" onClick={onClose} />
       <div className="absolute top-full right-0 mt-2 z-40 bg-white border border-slate-200 rounded-2xl shadow-xl p-5 w-[320px]">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-[13px] font-bold text-slate-700">Filter Vehicles</p>
-          <button onClick={onClear} className="text-[11.5px] font-semibold text-violet-600 hover:text-violet-700">Clear all</button>
+          <p className="text-[13px] font-bold text-slate-700">{t("fleet.filterVehicles")}</p>
+          <button onClick={onClear} className="text-[11.5px] font-semibold text-violet-600 hover:text-violet-700">{t("fleet.clearAll")}</button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Transmission</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{t("fleet.transmission")}</p>
             <div className="flex gap-2 flex-wrap">
               {(["all","Manual","Automatic"] as const).map(v => (
                 <button key={v} onClick={() => onChange({ transmission: v })} className={selCls(filters.transmission === v)}>
-                  {v === "all" ? "Any" : v}
+                  {v === "all" ? t("fleet.any") : v}
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Fuel</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{t("fleet.fuel")}</p>
             <div className="flex gap-2 flex-wrap">
               {(["all","Gasoline","Diesel","Electric"] as const).map(v => (
                 <button key={v} onClick={() => onChange({ fuel: v })} className={selCls(filters.fuel === v)}>
-                  {v === "all" ? "Any" : v}
+                  {v === "all" ? t("fleet.any") : v}
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Vehicle Type</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">{t("fleet.vehicleType")}</p>
             <div className="flex gap-2 flex-wrap">
               {["all","Economy","Compact","Sedan","SUV","Luxury","Van","City"].map(v => (
                 <button key={v} onClick={() => onChange({ type: v })} className={selCls(filters.type === v)}>
-                  {v === "all" ? "Any" : v}
+                  {v === "all" ? t("fleet.any") : v}
                 </button>
               ))}
             </div>
@@ -871,7 +841,7 @@ function FilterPanel({ filters, onChange, onClose, onClear }: {
         </div>
 
         <button onClick={onClose} className="mt-5 w-full h-10 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] transition-colors">
-          Apply Filters
+          {t("fleet.applyFilters")}
         </button>
       </div>
     </>
@@ -880,22 +850,22 @@ function FilterPanel({ filters, onChange, onClose, onClear }: {
 
 /* ─── Main Fleet Component ────────────────────────────────────── */
 export function Fleet() {
-  const [localFleet,   setLocalFleet]   = useState<FleetCar[]>(initialFleet);
+  const t = useT();
+  const localFleet = useFleet();
   const [search,       setSearch]       = useState("");
   const [filters,      setFilters]      = useState<Filters>(BLANK_FILTERS);
   const [showFilters,  setShowFilters]  = useState(false);
   const [view,         setView]         = useState<"grid" | "list">("grid");
-  const [selected,     setSelected]     = useState<FleetCar | null>(null);
+  const [selected,     setSelected]     = useState<FleetVehicle | null>(null);
   const [showSchedule, setShowSchedule] = useState(false);
-  const [editing,      setEditing]      = useState<FleetCar | null>(null);
+  const [editing,      setEditing]      = useState<FleetVehicle | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
 
   const { mainCurrency } = useCurrencySettings();
   const sym = CURRENCY_SYMBOLS[mainCurrency];
-  function displayPrice(car: FleetCar): string {
-    const p = car.prices?.[mainCurrency] ?? (mainCurrency === "USD" ? car.pricePerDay : null);
-    if (p != null) return `${sym}${p}`;
-    return `$${car.pricePerDay}`;
+  function displayPrice(car: FleetVehicle): string {
+    const price = getCarPriceInCurrency(car, mainCurrency);
+    return `${sym}${price}`;
   }
 
   const counts = useMemo(() => ({
@@ -921,8 +891,8 @@ export function Fleet() {
   const activeFCount = activeFilterCount(filters);
   const hasAnyFilter = activeFCount > 0 || !!search;
 
-  function handleSaveEdit(updated: FleetCar) {
-    setLocalFleet(prev => prev.map(c => c.id === updated.id ? updated : c));
+  function handleSaveEdit(updated: FleetVehicle) {
+    updateCar(updated);
     if (selected?.id === updated.id) setSelected(updated);
     setEditing(null);
   }
@@ -931,12 +901,22 @@ export function Fleet() {
     setFilters(prev => ({ ...prev, ...partial }));
   }
 
-  const STATUS_FILTERS: { label: string; value: FleetStatus | "all" }[] = [
-    { label: "All",         value: "all"         },
-    { label: "Available",   value: "available"   },
-    { label: "Reserved",    value: "reserved"    },
-    { label: "Rented",      value: "rented"      },
-    { label: "Maintenance", value: "maintenance" },
+  const STATUS_FILTERS: { labelKey: string; value: FleetStatus | "all" }[] = [
+    { labelKey: "filter.all",         value: "all"         },
+    { labelKey: "fleet.available",   value: "available"   },
+    { labelKey: "fleet.reserved",    value: "reserved"    },
+    { labelKey: "fleet.rented",      value: "rented"      },
+    { labelKey: "fleet.maintenance", value: "maintenance" },
+  ];
+
+  /* ─── KPI data ─────────────────────────────────────────────────── */
+  const KPI_LIST = (fleet: FleetVehicle[]) => [
+    { labelKey: "fleet.inYourFleet",  value: fleet.length,                                          subKey: "fleet.inYourFleet",        color: "text-slate-700",   bg: "bg-slate-100",  icon: Car          },
+    { labelKey: "fleet.readyToRent",       value: fleet.filter(c => c.status === "available").length,    subKey: "fleet.readyToRent",        color: "text-emerald-600", bg: "bg-emerald-50", icon: CheckCircle  },
+    { labelKey: "fleet.upcomingPickups",        value: fleet.filter(c => c.status === "reserved").length,     subKey: "fleet.upcomingPickups",     color: "text-indigo-600",  bg: "bg-indigo-50",  icon: CalendarDays },
+    { labelKey: "kpi.sub.onTheRoad",          value: fleet.filter(c => c.status === "rented").length,       subKey: "kpi.sub.onTheRoad",          color: "text-amber-600",   bg: "bg-amber-50",   icon: Car          },
+    { labelKey: "status.inService",     value: fleet.filter(c => c.status === "maintenance").length,  subKey: "status.inService",           color: "text-red-600",     bg: "bg-red-50",     icon: Wrench       },
+    { labelKey: "fleet.expectedReturns", value: 1,                                                     subKey: "fleet.expectedReturns",     color: "text-violet-600",  bg: "bg-violet-50",  icon: Clock        },
   ];
 
   return (
@@ -946,15 +926,15 @@ export function Fleet() {
       <div className="px-6 sm:px-8 pt-7 pb-0">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">Fleet</h2>
-            <p className="text-[13px] text-slate-400 mt-1 font-medium">Manage vehicles, availability, maintenance, and fleet operations</p>
+            <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">{t("nav.fleet")}</h2>
+            <p className="text-[13px] text-slate-400 mt-1 font-medium">{t("section.fleet.sub")}</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               <input
                 type="text"
-                placeholder="Search brand, model, plate…"
+                placeholder={t("fleet.searchPlaceholder")}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pl-10 pr-4 h-10 w-56 rounded-xl border border-slate-200 bg-white text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 shadow-sm transition"
@@ -968,7 +948,7 @@ export function Fleet() {
                 }`}
               >
                 <SlidersHorizontal className="h-4 w-4" />
-                <span className="hidden sm:inline">Filters</span>
+                <span className="hidden sm:inline">{t("fleet.filters")}</span>
                 {activeFCount > 0 && <span className="bg-white/25 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{activeFCount}</span>}
               </button>
               {showFilters && (
@@ -984,37 +964,37 @@ export function Fleet() {
               className={`h-10 px-3.5 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-500 rounded-xl text-[12.5px] font-medium hover:bg-red-50 hover:text-red-500 hover:border-red-100 shadow-sm transition-all duration-200 ${
                 hasAnyFilter ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
               }`}>
-              <X className="h-3.5 w-3.5" /> Clear
+              <X className="h-3.5 w-3.5" /> {t("action.cancel")}
             </button>
             <button onClick={() => setShowAddModal(true)}
               className="h-10 px-5 flex items-center gap-2 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-colors">
-              <Plus className="h-4 w-4" /> Add Vehicle
+              <Plus className="h-4 w-4" /> {t("fleet.addVehicle")}
             </button>
           </div>
         </div>
 
         {/* KPI cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-5">
-          {KPI_LIST(localFleet).map(({ label, value, sub, color, bg, icon: Icon }) => (
-            <div key={label} className="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
+          {KPI_LIST(localFleet).map(({ labelKey, value, subKey, color, bg, icon: Icon }) => (
+            <div key={labelKey} className="bg-white border border-slate-200/70 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow">
               <div className={`w-8 h-8 rounded-xl ${bg} flex items-center justify-center mb-3`}>
                 <Icon className={`h-4 w-4 ${color}`} />
               </div>
               <p className={`text-[26px] font-bold ${color} leading-none tabular-nums mb-1`}>{value}</p>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 leading-tight mb-1">{label}</p>
-              <p className="text-[11px] text-slate-400">{sub}</p>
+              <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 leading-tight mb-1">{t(labelKey as any)}</p>
+              <p className="text-[11px] text-slate-400">{t(subKey as any)}</p>
             </div>
           ))}
         </div>
 
-        {/* Active filter chips — fixed height container, no layout shift */}
+        {/* Active filter chips */}
         <div className="h-9 flex items-center gap-2 mb-4 overflow-x-auto overflow-y-hidden">
           {activeFCount > 0 && (
             <>
               <span className="text-[11.5px] text-slate-400 font-medium whitespace-nowrap flex-shrink-0">Active:</span>
               {filters.status !== "all" && (
                 <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a2332] border border-[#1a2332] rounded-full text-[11.5px] font-semibold text-white whitespace-nowrap flex-shrink-0">
-                  {filters.status}
+                  {t(`fleet.${filters.status}` as any)}
                   <button onClick={() => mergeFilters({ status: "all" })} className="opacity-60 hover:opacity-100 ml-0.5"><X className="h-3 w-3" /></button>
                 </span>
               )}
@@ -1043,14 +1023,14 @@ export function Fleet() {
         {/* Status pills + view switcher */}
         <div className="flex items-center justify-between gap-3 flex-wrap pb-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            {STATUS_FILTERS.map(({ label, value }) => {
+            {STATUS_FILTERS.map(({ labelKey, value }) => {
               const active = filters.status === value;
               return (
                 <button key={value} onClick={() => mergeFilters({ status: value })}
                   className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold transition-all ${
                     active ? "bg-[#1a2332] text-white shadow-sm" : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
                   }`}>
-                  {label}
+                  {t(labelKey as any)}
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full min-w-[20px] text-center font-bold ${active ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"}`}>
                     {counts[value]}
                   </span>
@@ -1076,13 +1056,13 @@ export function Fleet() {
         <div className="flex items-center justify-between mb-4">
           <p className="text-[12.5px] text-slate-400 font-medium">
             {filtered.length === localFleet.length
-              ? `${filtered.length} vehicles`
-              : `${filtered.length} of ${localFleet.length} vehicles`}
-            {hasAnyFilter && " matching filters"}
+              ? `${filtered.length} ${t("fleet.showingVehicles")}`
+              : `${filtered.length} ${t("misc.ofTotal")} ${localFleet.length} ${t("fleet.showingVehicles")}`}
+            {hasAnyFilter && ` ${t("fleet.matchingFilters")}`}
           </p>
           {hasAnyFilter && (
             <button onClick={() => { setFilters(BLANK_FILTERS); setSearch(""); }} className="text-[12px] text-violet-600 font-semibold hover:text-violet-700">
-              Reset all filters
+              {t("fleet.resetAllFilters")}
             </button>
           )}
         </div>
@@ -1090,10 +1070,10 @@ export function Fleet() {
         {filtered.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <Car className="h-12 w-12 text-slate-200 mb-4" />
-            <p className="text-[15px] font-semibold text-slate-400">No vehicles match your filters</p>
+            <p className="text-[15px] font-semibold text-slate-400">{t("fleet.noVehiclesMatch")}</p>
             <p className="text-[13px] text-slate-300 mt-1">Try adjusting the search or filter settings</p>
             <button onClick={() => { setFilters(BLANK_FILTERS); setSearch(""); }} className="mt-4 px-5 py-2 bg-white border border-slate-200 rounded-xl text-[13px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors">
-              Clear all filters
+              {t("fleet.clearAllFilters")}
             </button>
           </div>
         )}
@@ -1116,7 +1096,7 @@ export function Fleet() {
                     </div>
                     <div className="text-right flex-shrink-0 ml-2">
                       <p className="text-[17px] font-bold text-[#1a2332]">{displayPrice(car)}</p>
-                      <p className="text-[10.5px] text-slate-400 font-medium">/day</p>
+                      <p className="text-[10.5px] text-slate-400 font-medium">{t("fleet.perDay")}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-[11.5px] text-slate-500 mt-3 pt-3 border-t border-slate-100 flex-wrap">
@@ -1126,7 +1106,7 @@ export function Fleet() {
                     <span>{car.seats} seats</span>
                   </div>
                   <div className="flex gap-2 mt-3.5" onClick={e => e.stopPropagation()}>
-                    <button onClick={() => { setSelected(car); setShowSchedule(false); }} className="flex-1 h-8 bg-[#1a2332] text-white rounded-lg text-[11.5px] font-semibold hover:bg-[#243044] transition-colors">View Details</button>
+                    <button onClick={() => { setSelected(car); setShowSchedule(false); }} className="flex-1 h-8 bg-[#1a2332] text-white rounded-lg text-[11.5px] font-semibold hover:bg-[#243044] transition-colors">{t("fleet.viewDetails")}</button>
                     <button onClick={() => { setSelected(car); setShowSchedule(true); }} className="h-8 px-3 bg-slate-100 text-slate-600 rounded-lg text-[11.5px] font-semibold hover:bg-slate-200 transition-colors"><CalendarDays className="h-3.5 w-3.5" /></button>
                   </div>
                 </div>
@@ -1169,7 +1149,7 @@ export function Fleet() {
                       <td className="px-5 py-4"><StatusBadge s={car.status} /></td>
                       <td className="px-5 py-4" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center gap-1.5">
-                          <button onClick={() => { setSelected(car); setShowSchedule(false); }} className="h-8 px-3 rounded-lg bg-slate-100 text-slate-600 text-[11.5px] font-semibold hover:bg-slate-200 transition-colors">Details</button>
+                          <button onClick={() => { setSelected(car); setShowSchedule(false); }} className="h-8 px-3 rounded-lg bg-slate-100 text-slate-600 text-[11.5px] font-semibold hover:bg-slate-200 transition-colors">{t("fleet.details")}</button>
                           <button onClick={() => setEditing(car)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"><Edit2 className="h-3.5 w-3.5" /></button>
                           <button onClick={() => { setSelected(car); setShowSchedule(true); }} className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"><CalendarDays className="h-3.5 w-3.5" /></button>
                         </div>
@@ -1180,7 +1160,7 @@ export function Fleet() {
               </table>
             </div>
             <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50">
-              <span className="text-[11.5px] text-slate-400 font-medium">Showing {filtered.length} of {localFleet.length} vehicles</span>
+              <span className="text-[11.5px] text-slate-400 font-medium">{t("clients.showingOf")} {filtered.length} {t("misc.ofTotal")} {localFleet.length} {t("fleet.showingVehicles")}</span>
             </div>
           </div>
         )}
@@ -1204,7 +1184,7 @@ export function Fleet() {
           <EditVehicleModal key="edit-modal" car={editing} onClose={() => setEditing(null)} onSave={handleSaveEdit} />
         )}
         {showAddModal && (
-          <AddVehicleModal key="add-modal" onClose={() => setShowAddModal(false)} />
+          <AddVehicleModal key="add-modal" onClose={() => setShowAddModal(false)} onAdd={(car) => { addCar(car); setShowAddModal(false); }} />
         )}
       </AnimatePresence>
     </div>

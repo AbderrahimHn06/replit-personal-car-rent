@@ -5,14 +5,11 @@ import {
   ArrowRight, Activity, BarChart3, CalendarDays,
   ChevronUp, ChevronDown, UserPlus, Bell,
 } from "lucide-react";
-import { Booking } from "@/data/mockData";
-import { kpis, recentActivity, alerts, fleet } from "@/data/dashboardData";
-import { useT } from "@/data/localStore";
+import { useT, useKPIs, useRecentActivity, useAlerts, useFleet } from "@/data/localStore";
 
 type NavTarget = string;
 
 interface Props {
-  bookings: Booking[];
   onNavigate: (s: NavTarget) => void;
 }
 
@@ -28,7 +25,7 @@ interface KpiDef {
   section?: NavTarget;
 }
 
-const kpiCards = (k: typeof kpis, totalFleet: number): KpiDef[] => [
+const kpiCards = (k: KPIStats, totalFleet: number): KpiDef[] => [
   { labelKey: "kpi.totalBookings",   value: k.totalBookings,    icon: CalendarCheck, iconBg: "bg-primary/10", iconColor: "text-primary",     subKey: "kpi.sub.allTimeReservations",    trend: "neutral", section: "operations" },
   { labelKey: "kpi.pendingRequests", value: k.pendingRequests,  icon: Clock,         iconBg: "bg-amber-50",   iconColor: "text-amber-600",   subKey: "kpi.sub.awaitingConfirmation",   trend: k.pendingRequests > 3 ? "warn" : "neutral", section: "operations" },
   { labelKey: "kpi.confirmed",       value: k.confirmedBookings,icon: CheckCircle2,  iconBg: "bg-emerald-50", iconColor: "text-emerald-600", subKey: "kpi.sub.confirmedThisMonth",     trend: "up",      section: "operations" },
@@ -77,12 +74,17 @@ function FleetRow({ label, count, total, color }: { label: string; count: number
   );
 }
 
-export function Overview({ bookings, onNavigate }: Props) {
+export function Overview({ onNavigate }: Props) {
   const t = useT();
+  const kpis = useKPIs();
+  const alerts = useAlerts();
+  const fleet = useFleet();
+  const recentActivity = useRecentActivity();
+
   const totalFleet = fleet.length;
   const cards = kpiCards(kpis, totalFleet);
   const urgentAlerts = alerts.filter(a => a.severity === "high");
-  const utilization = Math.round(((kpis.rentedCars + kpis.reservedCars) / totalFleet) * 100);
+  const utilization = Math.round(((kpis.rentedCars + kpis.reservedCars) / (totalFleet || 1)) * 100);
   const today = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   const SHORTCUTS = [

@@ -5,8 +5,8 @@ import {
   ChevronRight, X, CheckCircle, AlertTriangle, Wrench, Info,
   CheckCircle2,
 } from "lucide-react";
-import { fleet, FleetCar, FleetStatus, DashboardRental } from "@/data/dashboardData";
-import { useActiveLocations, addRental, useRentals, useT } from "@/data/localStore";
+import { FleetCar, FleetStatus, DashboardRental } from "@/data/dashboardData";
+import { useActiveLocations, addRental, useRentals, useFleet, useT } from "@/data/localStore";
 import { RentalCreationModal } from "./RentalCreationModal";
 import type { TranslationKey } from "@/i18n/translations";
 
@@ -24,9 +24,9 @@ const STATUS_BADGE: Record<FleetStatus, string> = {
   maintenance: "bg-red-50 text-red-700 border border-red-200",
 };
 const STATUS_KEY: Record<FleetStatus, TranslationKey> = {
-  available:   "filter.available",
+  available:   "fleet.available",
   reserved:    "filter.reserved",
-  rented:      "filter.rented",
+  rented:      "fleet.rented",
   maintenance: "maintenance.title",
 };
 
@@ -221,6 +221,7 @@ export function AvailabilitySection() {
 
   const activeLocations = useActiveLocations();
   const allRentals = useRentals();
+  const fleet = useFleet();
   const resultsRef = useRef<HTMLDivElement>(null);
 
   function handleSearch() {
@@ -356,7 +357,7 @@ export function AvailabilitySection() {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
               {[
-                { label: t("filter.available"),        value: available.length,                                              color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100", icon: CheckCircle  },
+                { label: t("fleet.available"),        value: available.length,                                              color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100", icon: CheckCircle  },
                 { label: t("filter.reserved"),         value: results.filter(r => r.conflict?.client && r.conflict).length,  color: "text-indigo-600",  bg: "bg-indigo-50",  border: "border-indigo-100",  icon: CalendarDays },
                 { label: t("availability.unavailable"),value: unavailable.length,                                            color: "text-red-600",     bg: "bg-red-50",     border: "border-red-100",     icon: AlertTriangle },
                 { label: t("maintenance.title"),       value: fleet.filter(c => c.status === "maintenance").length,          color: "text-orange-600",  bg: "bg-orange-50",  border: "border-orange-100",  icon: Wrench        },

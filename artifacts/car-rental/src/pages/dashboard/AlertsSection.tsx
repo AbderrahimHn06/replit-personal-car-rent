@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AlertTriangle, Clock, Wrench, ShieldOff, CalendarCheck, Phone, Car, CheckCircle2, X } from "lucide-react";
-import { alerts as initialAlerts, AlertItem, AlertSeverity, AlertType } from "@/data/dashboardData";
-import { useT } from "@/data/localStore";
+import { AlertItem, AlertSeverity, AlertType } from "@/data/dashboardData";
+import { useAlerts, removeAlert, dismissAllAlerts, useT } from "@/data/localStore";
 
 function getAlertStyle(severity: AlertSeverity) {
   switch (severity) {
@@ -90,9 +90,9 @@ function AlertCard({ alert, onDismiss }: { alert: AlertItem; onDismiss: (id: str
 
 export function AlertsSection() {
   const t = useT();
-  const [items, setItems] = useState<AlertItem[]>(initialAlerts);
+  const items = useAlerts();
 
-  const dismiss = (id: string) => setItems(prev => prev.filter(a => a.id !== id));
+  const dismiss = (id: string) => removeAlert(id);
 
   const high   = items.filter(a => a.severity === "high");
   const medium = items.filter(a => a.severity === "medium");
@@ -111,7 +111,7 @@ export function AlertsSection() {
         </div>
         {items.length > 0 && (
           <button
-            onClick={() => setItems([])}
+            onClick={() => dismissAllAlerts()}
             className="flex items-center gap-1.5 h-8 px-3.5 bg-white border border-slate-200 text-slate-500 rounded-xl text-[12px] font-semibold hover:bg-slate-50 hover:text-slate-700 transition-colors cursor-pointer"
           >
             <CheckCircle2 className="h-3.5 w-3.5" /> {t("action.dismissAll")}

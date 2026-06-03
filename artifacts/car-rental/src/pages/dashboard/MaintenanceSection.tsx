@@ -4,10 +4,12 @@ import {
   Search, Edit2, ChevronDown, Car,
 } from "lucide-react";
 import {
-  maintenance as allMaintenance, MaintenanceItem, MaintenanceStatus,
-  fleet,
+  MaintenanceItem, MaintenanceStatus,
 } from "@/data/dashboardData";
-import { useT } from "@/data/localStore";
+import {
+  useFleet, useMaintenance, addMaintenanceItem,
+  updateMaintenanceItem, useT,
+} from "@/data/localStore";
 
 const SERVICE_PRESETS = [
   "Oil change", "Oil + filter change", "Filter change", "Tire check",
@@ -61,7 +63,8 @@ function CarSelector({ value, onChange }: { value: CarOption | null; onChange: (
     maintenance: t("status.inService"),
   };
 
-  const options = fleet.filter(c => {
+  const fleetCars = useFleet();
+  const options = fleetCars.filter(c => {
     const q = search.toLowerCase();
     return `${c.brand} ${c.model}`.toLowerCase().includes(q) || c.plate.toLowerCase().includes(q);
   });
@@ -311,7 +314,8 @@ function MaintenanceModal({ isEdit, form, setForm, onSave, onClose }: {
 
 export function MaintenanceSection() {
   const t = useT();
-  const [items, setItems]       = useState<MaintenanceItem[]>(allMaintenance);
+  const items = useMaintenance();
+  const fleet = useFleet();
   const [filter, setFilter]     = useState<MaintenanceStatus | "all">("all");
   const [showAdd, setShowAdd]   = useState(false);
   const [editItem, setEditItem] = useState<MaintenanceItem | null>(null);
@@ -342,7 +346,7 @@ export function MaintenanceSection() {
   const openEdit = (item: MaintenanceItem) => {
     const presetMatch = SERVICE_PRESETS.find(p => p !== "Other" && p === item.type);
     const preset = presetMatch ?? "Other";
-    const matchedCar = fleet.find(c => `${c.brand} ${c.model}` === item.car || c.plate === item.plate);
+    const [matchedCar] = fleet.filter(c => `${c.brand} ${c.model}` === item.car || c.plate === item.plate);
     setForm({
       carId: matchedCar?.id ?? "", car: item.car, plate: item.plate, carImage: matchedCar?.image ?? "",
       servicePreset: preset, customService: preset === "Other" ? item.type : "",
@@ -356,12 +360,12 @@ export function MaintenanceSection() {
   const handleCreate = () => {
     const serviceType = form.servicePreset === "Other" ? form.customService : form.servicePreset;
     if (!form.car || !serviceType || !form.scheduledDate) return;
-    setItems(p => [{
+    addMaintenanceItem({
       id: `m-${Date.now()}`, car: form.car, plate: form.plate, type: serviceType, status: "due-soon",
       scheduledDate: form.scheduledDate, nextServiceDate: form.nextServiceDate || undefined,
       notes: form.notes, mileage: 0, garage: form.garage,
       estimatedCost: parseFloat(form.estimatedCost) || 0,
-    }, ...p]);
+    });
     setShowAdd(false); setForm(BLANK);
   };
 
@@ -369,16 +373,13 @@ export function MaintenanceSection() {
     if (!editItem) return;
     const serviceType = form.servicePreset === "Other" ? form.customService : form.servicePreset;
     if (!form.car || !serviceType || !form.scheduledDate) return;
-    setItems(p => p.map(m => {
-      if (m.id !== editItem.id) return m;
-      return {
-        ...m, car: form.car, plate: form.plate, type: serviceType,
-        scheduledDate: form.scheduledDate, nextServiceDate: form.nextServiceDate || undefined,
-        garage: form.garage, notes: form.notes, estimatedCost: parseFloat(form.estimatedCost) || 0,
-        status: form.status,
-        completedDate: form.status === "completed" && !m.completedDate ? new Date().toISOString().split("T")[0] : m.completedDate,
-      };
-    }));
+    updateMaintenanceItem(editItem.id, {
+      car: form.car, plate: form.plate, type: serviceType,
+      scheduledDate: form.scheduledDate, nextServiceDate: form.nextServiceDate || undefined,
+      garage: form.garage, notes: form.notes, estimatedCost: parseFloat(form.estimatedCost) || 0,
+      status: form.status,
+      completedDate: form.status === "completed" && !editItem.completedDate ? new Date().toISOString().split("T")[0] : editItem.completedDate,
+    });
     setEditItem(null); setForm(BLANK);
   };
 
@@ -483,9 +484,7 @@ export function MaintenanceSection() {
 
               {item.status !== "completed" && (
                 <button
-                  onClick={() => setItems(p => p.map(m =>
-                    m.id === item.id ? { ...m, status: "completed", completedDate: new Date().toISOString().split("T")[0] } : m
-                  ))}
+                  onClick={() => updateMaintenanceItem(item.id, { status: "completed", completedDate: new Date().toISOString().split("T")[0] })}
                   className="mt-3 w-full h-8 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-[12px] font-semibold hover:bg-emerald-100 transition-colors cursor-pointer"
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" /> {t("status.completed")}

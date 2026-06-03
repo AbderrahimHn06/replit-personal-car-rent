@@ -8,7 +8,30 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Car, Booking } from "@/data/mockData";
+export interface Car {
+  id: string;
+  name: string;
+  type: string;
+  pricePerDay: number;
+  seats: number;
+  transmission: "Manual" | "Automatic";
+  available: boolean;
+  image: string;
+}
+
+export interface Booking {
+  id: string;
+  clientName: string;
+  phone?: string;
+  email?: string;
+  car: string;
+  pickupDate: string;
+  returnDate: string;
+  pickupLocation: string;
+  status: "Pending" | "Confirmed" | "Cancelled";
+  totalPrice: number;
+  notes?: string;
+}
 
 // ── helpers ────────────────────────────────────────────────────────────────
 function getFuel(type: string) {
@@ -121,12 +144,15 @@ export function BookingModal({
     addBooking({
       id: `bk-${Date.now()}`,
       clientName: form.fullName,
+      phone: form.phone,
+      email: form.email,
       car: car.name,
       pickupDate: pickupDate || new Date().toISOString().split("T")[0],
       returnDate: returnDate || new Date(Date.now() + 3 * 86_400_000).toISOString().split("T")[0],
       pickupLocation,
       status: "Pending",
       totalPrice: total,
+      notes: form.notes,
     });
     setStep(3);
   };

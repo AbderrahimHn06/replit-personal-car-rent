@@ -126,6 +126,8 @@ export interface DashboardRental {
   reference: string;
   client: string;
   clientPhone: string;
+  clientId?: string;
+  vehicleId?: string;
   car: string;
   plate: string;
   startDate: string;
@@ -144,6 +146,7 @@ export interface MaintenanceItem {
   id: string;
   car: string;
   plate: string;
+  vehicleId?: string;
   type: string;
   status: MaintenanceStatus;
   scheduledDate: string;
@@ -462,7 +465,7 @@ export const bookingRequests: BookingRequest[] = [
 ];
 
 export const rentals: DashboardRental[] = [
-  { id: "r-1", reference: "RNT-2026-0071", client: "Youcef Mebarki", clientPhone: "0661 987 321", car: "Hyundai Tucson", plate: "HYT-045-31", startDate: "2026-06-01", endDate: "2026-06-07", totalPrice: 420, deposit: 200, status: "active", source: "walk-in", pickupLocation: "Agency Main Office", returnLocation: "Agency Main Office", driverLicense: "DL-16-1892-B" },
+  { id: "r-1", reference: "RNT-2026-0071", client: "Abderrahim Haioun", clientPhone: "0660 998 924", car: "Hyundai Tucson", plate: "HYT-045-31", startDate: "2026-06-01", endDate: "2026-06-07", totalPrice: 420, deposit: 200, status: "active", source: "walk-in", pickupLocation: "Agency Main Office", returnLocation: "Agency Main Office", driverLicense: "DL-16-1892-B" },
   { id: "r-2", reference: "RNT-2026-0070", client: "Fatima Ziani", clientPhone: "0664 321 098", car: "Kia Picanto", plate: "KPC-001-31", startDate: "2026-05-29", endDate: "2026-05-31", totalPrice: 50, deposit: 50, status: "overdue", source: "online", pickupLocation: "Oran City Center", returnLocation: "Oran City Center", driverLicense: "DL-13-5501-A" },
   { id: "r-3", reference: "RNT-2026-0069", client: "Karima Benali", clientPhone: "0555 123 456", car: "Peugeot 208", plate: "PGT-208-16", startDate: "2026-06-01", endDate: "2026-06-05", totalPrice: 128, deposit: 100, status: "reserved", source: "online", pickupLocation: "Oran Airport", returnLocation: "Oran Airport", driverLicense: "DL-09-2031-A" },
   { id: "r-4", reference: "RNT-2026-0065", client: "James Sterling", clientPhone: "0770 111 222", car: "Mercedes-Benz C-Class", plate: "MBC-300-16", startDate: "2026-06-15", endDate: "2026-06-18", totalPrice: 255, deposit: 300, status: "reserved", source: "online", pickupLocation: "Agency Main Office", returnLocation: "Agency Main Office", driverLicense: "DL-UK-11245" },

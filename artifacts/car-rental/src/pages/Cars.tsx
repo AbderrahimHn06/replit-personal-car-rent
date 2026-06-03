@@ -3,8 +3,32 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SlidersHorizontal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { cars, CarType, Car, Booking } from "@/data/mockData";
+import { useFleet } from "@/data/localStore";
 import { BookingModal } from "@/components/BookingModal";
+
+export type CarType = "SUV" | "Economy" | "Compact" | "Luxury" | "Sedan" | "City";
+
+export interface Car {
+  id: string;
+  name: string;
+  type: CarType;
+  pricePerDay: number;
+  seats: number;
+  transmission: "Manual" | "Automatic";
+  available: boolean;
+  image: string;
+}
+
+export interface Booking {
+  id: string;
+  clientName: string;
+  car: string;
+  pickupDate: string;
+  returnDate: string;
+  pickupLocation: string;
+  status: "Pending" | "Confirmed" | "Cancelled";
+  totalPrice: number;
+}
 
 const ALL_TYPES: CarType[] = ["SUV", "Economy", "Compact", "Luxury", "Sedan", "City"];
 
@@ -24,6 +48,18 @@ export function Cars({ addBooking }: { addBooking: (b: Booking) => void }) {
   const threeDaysLater = new Date(Date.now() + 3 * 86_400_000).toISOString().split("T")[0];
 
   const priceRange = PRICE_RANGES[activePriceIdx];
+
+  const fleet = useFleet();
+  const cars: Car[] = fleet.map(c => ({
+    id: c.id,
+    name: `${c.brand} ${c.model}`,
+    type: c.type as CarType,
+    pricePerDay: c.pricePerDay.amount,
+    seats: c.seats,
+    transmission: c.transmission as any,
+    available: c.status === "available",
+    image: c.image
+  }));
 
   const filtered = cars.filter((car) => {
     const typeMatch = activeType === "All" || car.type === activeType;

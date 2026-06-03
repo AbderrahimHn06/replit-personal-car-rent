@@ -6,8 +6,8 @@ import {
   TrendingUp, Users, Globe, Car, AlertTriangle, CheckCircle,
   ChevronRight, Calendar, Hash, Trash2, CheckCircle2,
 } from "lucide-react";
-import { rentals, DashboardClient, ClientStatus } from "@/data/dashboardData";
-import { useClients, addClientToStore, updateClientInStore, removeClientFromStore, addRental, useT } from "@/data/localStore";
+import { DashboardClient, ClientStatus } from "@/data/dashboardData";
+import { useClients, useRentals, addClientToStore, updateClientInStore, removeClientFromStore, addRental, useT } from "@/data/localStore";
 import { RentalCreationModal } from "./RentalCreationModal";
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
@@ -109,6 +109,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
   const [blockReason,     setBlockReason]     = useState("");
   const [noteText,        setNoteText]        = useState("");
 
+  const rentals = useRentals();
   const clientRentals = rentals.filter(r => r.client === client.name).sort((a, b) => b.startDate.localeCompare(a.startDate));
   const avatarCls = avatarColor(client.name);
 

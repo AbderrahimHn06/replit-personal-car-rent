@@ -5,8 +5,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { cars, Booking, Car as CarType } from "@/data/mockData";
+import { useFleet } from "@/data/localStore";
 import { BookingModal } from "@/components/BookingModal";
+
+export interface CarType {
+  id: string;
+  name: string;
+  type: string;
+  pricePerDay: number;
+  seats: number;
+  transmission: "Manual" | "Automatic";
+  available: boolean;
+  image: string;
+}
+
+export interface Booking {
+  id: string;
+  clientName: string;
+  car: string;
+  pickupDate: string;
+  returnDate: string;
+  pickupLocation: string;
+  status: "Pending" | "Confirmed" | "Cancelled";
+  totalPrice: number;
+}
 
 export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
   const { toast } = useToast();
@@ -21,7 +43,17 @@ export function Home({ addBooking }: { addBooking: (b: Booking) => void }) {
   const [hasSearched, setHasSearched] = useState(false);
   const [selectedCar, setSelectedCar] = useState<CarType | null>(null);
 
-  const availableCars = cars.filter((c) => c.available);
+  const fleet = useFleet();
+  const availableCars: CarType[] = fleet.map(c => ({
+    id: c.id,
+    name: `${c.brand} ${c.model}`,
+    type: c.type,
+    pricePerDay: c.pricePerDay.amount,
+    seats: c.seats,
+    transmission: c.transmission as any,
+    available: c.status === "available",
+    image: c.image
+  })).filter(c => c.available);
 
   const days =
     pickupDate && returnDate

@@ -76,7 +76,7 @@ export type TranslationKey =
   | "table.scheduled" | "table.completed" | "table.garage" | "table.cost"
   | "table.city" | "table.lastRental" | "table.trust"
   /* ── Clients page ── */
-  | "clients.subtitle"
+  | "clients.subtitle" | "clients.paymentDepositInfo"
   /* ── Settings page ── */
   | "settings.subtitle" | "settings.agencyInfo" | "settings.agencyName"
   | "settings.address" | "settings.mobile" | "settings.website" | "settings.taxId"
@@ -115,7 +115,7 @@ export type TranslationKey =
   | "empty.noResults" | "empty.noRentals" | "empty.noBookings" | "empty.noCars"
   | "empty.noClients" | "empty.noAlerts" | "empty.noMaintenance" | "empty.noLocations"
   /* ── Form labels ── */
-  | "form.name" | "form.phone" | "form.email" | "form.notes" | "form.required"
+  | "form.name" | "form.phone" | "form.email" | "form.notes" | "form.required" | "form.optional"
   | "form.status" | "form.pickupLocation" | "form.returnLocation"
   | "form.pickupDate" | "form.returnDate" | "form.deposit"
   /* ── Drawer labels ── */
@@ -191,9 +191,97 @@ export type TranslationKey =
   | "clients.blockReasonOpt" | "clients.yesUnblock" | "clients.blockClient"
   | "clients.addNoteTitle" | "clients.saveNoteBtn" | "clients.showingOf"
   | "clients.editClientTitle" | "clients.newClientTitle" | "clients.editClientSub" | "clients.newClientSub"
-  | "clients.deposit" | "clients.driversLicense" | "clients.passport" | "clients.nationalIdDoc";
+  | "clients.deposit" | "clients.driversLicense" | "clients.passport" | "clients.nationalIdDoc"
+  /* ── Global Search ── */
+  | "search.placeholder" | "search.inputPlaceholder" | "search.acrossTitle" | "search.acrossDesc"
+  | "search.noResultsFor" | "search.tryKeywords" | "search.navigate" | "search.select" | "search.close"
+  | "search.results" | "search.result"
+  | "search.group.clients" | "search.group.vehicles" | "search.group.rentals"
+  | "search.group.bookings" | "search.group.locations" | "search.group.maintenance"
+  /* ── Rental Creation Modal ── */
+  | "rcm.createRental" | "rcm.walkInFill" | "rcm.bookingFor"
+  | "rcm.existingClient" | "rcm.newClient" | "rcm.preSelected" | "rcm.createSelectClient"
+  | "rcm.newClientDetails" | "rcm.fullName" | "rcm.phone" | "rcm.city" | "rcm.licenseNumber" | "rcm.email"
+  | "rcm.rentalPeriod" | "rcm.pickupDate" | "rcm.pickupTime" | "rcm.returnDate" | "rcm.returnTime"
+  | "rcm.ratePerDay" | "rcm.duration" | "rcm.depositAmount" | "rcm.rentalNotes" | "rcm.internalNotes"
+  | "rcm.internalNotesHint" | "rcm.specialRequests" | "rcm.internalObs" | "rcm.summary"
+  | "rcm.period" | "rcm.deposit" | "rcm.change" | "rcm.noAvailableCars" | "rcm.noClientsFound"
+  | "rcm.searchBrandModel" | "rcm.searchClientName" | "rcm.seats" | "rcm.perDay" | "rcm.rentals"
+  | "rcm.license" | "rcm.selectLocation" | "rcm.pickupLocationLabel" | "rcm.returnLocationLabel"
+  | "rcm.err.selectClient" | "rcm.err.selectVehicle" | "rcm.err.required"
+  | "rcm.err.selectPickup" | "rcm.err.selectReturn" | "rcm.days" | "rcm.day"
+  | "fleet.year"
+  | "bm.vehicleInfo"
+  | "bm.includedFeatures"
+  | "bm.rentalSummary"
+  | "bm.estimatedTotal"
+  | "bm.continueBooking"
+  | "bm.pickup"
+  | "bm.return"
+  | "bm.at"
+  | "bm.day"
+  | "bm.days"
+  | "bm.est"
+  | "bm.estTotal"
+  | "bm.dailyRate"
+  | "bm.category"
+  | "bm.transmission"
+  | "bm.fuelType"
+  | "bm.seats"
+  | "bm.airConditioning"
+  | "bm.luggage"
+  | "bm.passengers"
+  | "bm.included"
+  | "bm.unlimitedMileage"
+  | "bm.basicInsurance"
+  | "bm.roadAssistance"
+  | "bm.freeCancellation"
+  | "bm.bookingDetails"
+  | "bm.completeReservation"
+  | "bm.customerInfo"
+  | "bm.driverInfo"
+  | "bm.emergencyContact"
+  | "bm.termsConfirmation"
+  | "bm.fullName"
+  | "bm.phoneNumber"
+  | "bm.emailAddress"
+  | "bm.whatsappNumber"
+  | "bm.flightNumber"
+  | "bm.notesRequests"
+  | "bm.driverAge"
+  | "bm.licenseNumber"
+  | "bm.nationality"
+  | "bm.contactName"
+  | "bm.contactPhone"
+  | "bm.placeholderName"
+  | "bm.placeholderPhone"
+  | "bm.placeholderEmail"
+  | "bm.placeholderWhatsapp"
+  | "bm.placeholderOptional"
+  | "bm.placeholderNotes"
+  | "bm.placeholderAge"
+  | "bm.placeholderLicense"
+  | "bm.placeholderFullName"
+  | "bm.placeholderContactPhone"
+  | "bm.agreeTerms"
+  | "bm.confirmInfo"
+  | "bm.back"
+  | "bm.confirmReservation"
+  | "bm.requestSent"
+  | "bm.successDesc"
+  | "bm.bookingRef"
+  | "bm.browseCars"
+  | "bm.backHome"
+  | "bm.bag1"
+  | "bm.bags2"
+  | "bm.bags3"
+  | "bm.diesel"
+  | "bm.premium"
+  | "bm.gasoline"
+  | "bm.manual"
+  | "bm.automatic";
 
-type Translations = Record<TranslationKey, string>;
+type Translations = Partial<Record<TranslationKey, string>>;
 
 const fr: Translations = {
   /* Navigation */
@@ -444,6 +532,7 @@ const fr: Translations = {
   "form.email": "Email",
   "form.notes": "Notes",
   "form.required": "requis",
+  "form.optional": "optionnel",
   "form.status": "Statut",
   "form.pickupLocation": "Lieu de prise en charge",
   "form.returnLocation": "Lieu de retour",
@@ -698,6 +787,7 @@ const fr: Translations = {
   "clients.noPayments": "Aucun paiement",
   "clients.notesObs": "Notes & Observations",
   "clients.paymentHistory": "Historique des paiements",
+  "clients.paymentDepositInfo": "Dépôt de garantie & paiements",
   "clients.totalSpend": "Total dépensé",
   "clients.depositHeld": "Caution retenue",
   "clients.depositReturned": "Caution restituée",
@@ -741,6 +831,135 @@ const fr: Translations = {
   "clients.driversLicense": "Permis de conduire",
   "clients.passport": "Passeport",
   "clients.nationalIdDoc": "Carte nationale d'identité",
+  /* Global Search */
+  "search.placeholder": "Rechercher clients, voitures, locations…",
+  "search.inputPlaceholder": "Rechercher clients, voitures, locations, réservations…",
+  "search.acrossTitle": "Rechercher dans le tableau de bord",
+  "search.acrossDesc": "Trouvez instantanément clients, véhicules, locations, demandes de réservation, sites et entretiens.",
+  "search.noResultsFor": "Aucun résultat pour",
+  "search.tryKeywords": "Essayez d'autres mots-clés ou vérifiez l'orthographe.",
+  "search.navigate": "Naviguer",
+  "search.select": "Sélectionner",
+  "search.close": "Fermer",
+  "search.results": "résultats",
+  "search.result": "résultat",
+  "search.group.clients": "Clients",
+  "search.group.vehicles": "Véhicules",
+  "search.group.rentals": "Locations",
+  "search.group.bookings": "Demandes de réservation",
+  "search.group.locations": "Sites",
+  "search.group.maintenance": "Maintenance",
+  /* Rental Creation Modal */
+  "rcm.createRental": "Créer une location",
+  "rcm.walkInFill": "Location guichet — remplir tous les champs",
+  "rcm.bookingFor": "Réservation",
+  "rcm.existingClient": "Client existant",
+  "rcm.newClient": "Nouveau client",
+  "rcm.preSelected": "Pré-sélectionné",
+  "rcm.createSelectClient": "Créer et sélectionner le client",
+  "rcm.newClientDetails": "Détails du nouveau client",
+  "rcm.fullName": "Nom complet *",
+  "rcm.phone": "Téléphone *",
+  "rcm.city": "Ville",
+  "rcm.licenseNumber": "N° de permis",
+  "rcm.email": "Email",
+  "rcm.rentalPeriod": "Période de location",
+  "rcm.pickupDate": "Date de prise en charge *",
+  "rcm.pickupTime": "Heure de prise en charge",
+  "rcm.returnDate": "Date de retour *",
+  "rcm.returnTime": "Heure de retour",
+  "rcm.ratePerDay": "Tarif/jour",
+  "rcm.duration": "Durée",
+  "rcm.depositAmount": "Montant caution ($)",
+  "rcm.rentalNotes": "Notes de location",
+  "rcm.internalNotes": "Notes internes",
+  "rcm.internalNotesHint": "(personnel uniquement)",
+  "rcm.specialRequests": "Demandes spéciales, instructions de prise en charge…",
+  "rcm.internalObs": "Observations internes, remarques agent…",
+  "rcm.summary": "Résumé",
+  "rcm.period": "Période",
+  "rcm.deposit": "Caution",
+  "rcm.change": "Modifier",
+  "rcm.noAvailableCars": "Aucun véhicule disponible ne correspond",
+  "rcm.noClientsFound": "Aucun client trouvé",
+  "rcm.searchBrandModel": "Rechercher marque, modèle, immatriculation…",
+  "rcm.searchClientName": "Rechercher par nom, téléphone, ville…",
+  "rcm.seats": "sièges",
+  "rcm.perDay": "/jour",
+  "rcm.rentals": "locations",
+  "rcm.license": "Permis",
+  "rcm.selectLocation": "— Sélectionner un site —",
+  "rcm.pickupLocationLabel": "Lieu de prise en charge *",
+  "rcm.returnLocationLabel": "Lieu de retour *",
+  "rcm.err.selectClient": "Sélectionnez ou créez un client",
+  "rcm.err.selectVehicle": "Sélectionnez un véhicule",
+  "rcm.err.required": "Requis",
+  "rcm.err.selectPickup": "Sélectionnez un lieu de prise en charge",
+  "rcm.err.selectReturn": "Sélectionnez un lieu de retour",
+  "rcm.days": "jours",
+  "rcm.day": "jour",
+  "fleet.year": "Année",
+  "bm.vehicleInfo": "Informations du véhicule",
+  "bm.includedFeatures": "Équipements inclus",
+  "bm.rentalSummary": "Résumé de la location",
+  "bm.estimatedTotal": "Total estimé",
+  "bm.continueBooking": "Continuer la réservation",
+  "bm.pickup": "Départ",
+  "bm.return": "Retour",
+  "bm.at": "à",
+  "bm.day": "jour",
+  "bm.days": "jours",
+  "bm.est": "estimé",
+  "bm.estTotal": "total estimé",
+  "bm.dailyRate": "Tarif journalier",
+  "bm.category": "Catégorie",
+  "bm.transmission": "Transmission",
+  "bm.fuelType": "Carburant",
+  "bm.seats": "Sièges",
+  "bm.airConditioning": "Climatisation",
+  "bm.luggage": "Bagages",
+  "bm.passengers": "{count} passagers",
+  "bm.included": "Inclus",
+  "bm.unlimitedMileage": "Kilométrage illimité",
+  "bm.basicInsurance": "Assurance de base",
+  "bm.roadAssistance": "Assistance routière",
+  "bm.freeCancellation": "Annulation gratuite",
+  "bm.bookingDetails": "Détails de la réservation",
+  "bm.completeReservation": "Finalisez votre réservation",
+  "bm.customerInfo": "Informations client",
+  "bm.driverInfo": "Informations conducteur",
+  "bm.emergencyContact": "Contact d'urgence",
+  "bm.termsConfirmation": "Conditions & Confirmation",
+  "bm.fullName": "Nom complet",
+  "bm.phoneNumber": "Numéro de téléphone",
+  "bm.emailAddress": "Adresse email",
+  "bm.whatsappNumber": "Numéro WhatsApp",
+  "bm.flightNumber": "Numéro de vol",
+  "bm.notesRequests": "Notes / Demandes spéciales",
+  "bm.driverAge": "Âge du conducteur",
+  "bm.licenseNumber": "Numéro de permis",
+  "bm.nationality": "Nationalité",
+  "bm.contactName": "Nom du contact",
+  "bm.contactPhone": "Téléphone du contact",
+  "bm.placeholderName": "John Doe",
+  "bm.placeholderPhone": "+213 XXX XXX XXX",
+  "bm.placeholderEmail": "john@exemple.com",
+  "bm.placeholderWhatsapp": "Même que le téléphone",
+  "bm.placeholderOptional": "Optionnel",
+  "bm.placeholderNotes": "Toutes exigences spécifiques...",
+  "bm.placeholderAge": "ex. 28",
+  "bm.placeholderLicense": "N° Permis",
+  "bm.placeholderFullName": "Nom complet",
+  "bm.placeholderContactPhone": "Numéro de téléphone",
+  "bm.agreeTerms": "J'accepte les conditions de location, y compris la politique d'annulation et la couverture d'assurance.",
+  "bm.confirmInfo": "Je confirme que toutes les informations fournies sont exactes et complètes.",
+  "bm.back": "Retour",
+  "bm.confirmReservation": "Confirmer la réservation",
+  "bm.requestSent": "Demande de réservation envoyée",
+  "bm.successDesc": "Votre demande de réservation a été reçue. Notre équipe vous contactera sous peu pour confirmer la disponibilité et finaliser votre réservation.",
+  "bm.bookingRef": "Référence de réservation",
+  "bm.browseCars": "Voir d'autres voitures",
+  "bm.backHome": "Retour à l'accueil",
 };
 
 const en: Translations = {
@@ -1236,6 +1455,135 @@ const en: Translations = {
   "clients.driversLicense": "Driver's License",
   "clients.passport": "Passport",
   "clients.nationalIdDoc": "National ID",
+  /* Global Search */
+  "search.placeholder": "Search clients, cars, rentals…",
+  "search.inputPlaceholder": "Search clients, cars, rentals, bookings…",
+  "search.acrossTitle": "Search across the dashboard",
+  "search.acrossDesc": "Find clients, vehicles, rentals, booking requests, locations, and maintenance records instantly.",
+  "search.noResultsFor": "No results for",
+  "search.tryKeywords": "Try different keywords or check the spelling.",
+  "search.navigate": "Navigate",
+  "search.select": "Select",
+  "search.close": "Close",
+  "search.results": "results",
+  "search.result": "result",
+  "search.group.clients": "Clients",
+  "search.group.vehicles": "Vehicles",
+  "search.group.rentals": "Rentals",
+  "search.group.bookings": "Booking Requests",
+  "search.group.locations": "Locations",
+  "search.group.maintenance": "Maintenance",
+  /* Rental Creation Modal */
+  "rcm.createRental": "Create Rental",
+  "rcm.walkInFill": "Walk-in rental — fill in all details below",
+  "rcm.bookingFor": "Booking",
+  "rcm.existingClient": "Existing Client",
+  "rcm.newClient": "New Client",
+  "rcm.preSelected": "Pre-selected",
+  "rcm.createSelectClient": "Create & Select Client",
+  "rcm.newClientDetails": "New Client Details",
+  "rcm.fullName": "Full Name *",
+  "rcm.phone": "Phone *",
+  "rcm.city": "City",
+  "rcm.licenseNumber": "License Number",
+  "rcm.email": "Email",
+  "rcm.rentalPeriod": "Rental Period",
+  "rcm.pickupDate": "Pickup Date *",
+  "rcm.pickupTime": "Pickup Time",
+  "rcm.returnDate": "Return Date *",
+  "rcm.returnTime": "Return Time",
+  "rcm.ratePerDay": "Rate/day",
+  "rcm.duration": "Duration",
+  "rcm.depositAmount": "Deposit Amount ($)",
+  "rcm.rentalNotes": "Rental Notes",
+  "rcm.internalNotes": "Internal Notes",
+  "rcm.internalNotesHint": "(staff only)",
+  "rcm.specialRequests": "Special requests, pickup instructions…",
+  "rcm.internalObs": "Internal observations, agent remarks…",
+  "rcm.summary": "Summary",
+  "rcm.period": "Period",
+  "rcm.deposit": "Deposit",
+  "rcm.change": "Change",
+  "rcm.noAvailableCars": "No available cars match your search",
+  "rcm.noClientsFound": "No clients found",
+  "rcm.searchBrandModel": "Search brand, model, plate…",
+  "rcm.searchClientName": "Search by name, phone, city…",
+  "rcm.seats": "seats",
+  "rcm.perDay": "/day",
+  "rcm.rentals": "rentals",
+  "rcm.license": "License",
+  "rcm.selectLocation": "— Select location —",
+  "rcm.pickupLocationLabel": "Pickup Location *",
+  "rcm.returnLocationLabel": "Return Location *",
+  "rcm.err.selectClient": "Select or create a client",
+  "rcm.err.selectVehicle": "Select a vehicle",
+  "rcm.err.required": "Required",
+  "rcm.err.selectPickup": "Select pickup location",
+  "rcm.err.selectReturn": "Select return location",
+  "rcm.days": "days",
+  "rcm.day": "day",
+  "fleet.year": "Year",
+  "bm.vehicleInfo": "Vehicle Information",
+  "bm.includedFeatures": "Included Features",
+  "bm.rentalSummary": "Rental Summary",
+  "bm.estimatedTotal": "Estimated total",
+  "bm.continueBooking": "Continue Booking",
+  "bm.pickup": "Pickup",
+  "bm.return": "Return",
+  "bm.at": "at",
+  "bm.day": "day",
+  "bm.days": "days",
+  "bm.est": "est.",
+  "bm.estTotal": "est. total",
+  "bm.dailyRate": "Daily Rate",
+  "bm.category": "Category",
+  "bm.transmission": "Transmission",
+  "bm.fuelType": "Fuel Type",
+  "bm.seats": "Seats",
+  "bm.airConditioning": "Air Conditioning",
+  "bm.luggage": "Luggage",
+  "bm.passengers": "{count} passengers",
+  "bm.included": "Included",
+  "bm.unlimitedMileage": "Unlimited mileage",
+  "bm.basicInsurance": "Basic insurance",
+  "bm.roadAssistance": "Road assistance",
+  "bm.freeCancellation": "Free cancellation",
+  "bm.bookingDetails": "Booking Details",
+  "bm.completeReservation": "Complete your reservation",
+  "bm.customerInfo": "Customer Information",
+  "bm.driverInfo": "Driver Information",
+  "bm.emergencyContact": "Emergency Contact",
+  "bm.termsConfirmation": "Terms & Confirmation",
+  "bm.fullName": "Full Name",
+  "bm.phoneNumber": "Phone Number",
+  "bm.emailAddress": "Email Address",
+  "bm.whatsappNumber": "WhatsApp Number",
+  "bm.flightNumber": "Flight Number",
+  "bm.notesRequests": "Notes / Special Requests",
+  "bm.driverAge": "Driver Age",
+  "bm.licenseNumber": "License Number",
+  "bm.nationality": "Nationality",
+  "bm.contactName": "Contact Name",
+  "bm.contactPhone": "Contact Phone",
+  "bm.placeholderName": "John Doe",
+  "bm.placeholderPhone": "+213 XXX XXX XXX",
+  "bm.placeholderEmail": "john@example.com",
+  "bm.placeholderWhatsapp": "Same as phone",
+  "bm.placeholderOptional": "Optional",
+  "bm.placeholderNotes": "Any specific requirements...",
+  "bm.placeholderAge": "e.g. 28",
+  "bm.placeholderLicense": "DL-XXXXXXXXX",
+  "bm.placeholderFullName": "Full name",
+  "bm.placeholderContactPhone": "Phone number",
+  "bm.agreeTerms": "I agree to the rental terms and conditions, including the cancellation policy and insurance coverage.",
+  "bm.confirmInfo": "I confirm that all information provided is accurate and complete.",
+  "bm.back": "Back",
+  "bm.confirmReservation": "Confirm Reservation",
+  "bm.requestSent": "Reservation Request Sent",
+  "bm.successDesc": "Your reservation request has been received. Our team will contact you shortly to confirm availability and finalize your booking.",
+  "bm.bookingRef": "Booking Reference",
+  "bm.browseCars": "Browse More Cars",
+  "bm.backHome": "Back to Home",
 };
 
 const ar: Translations = {
@@ -1731,6 +2079,135 @@ const ar: Translations = {
   "clients.driversLicense": "رخصة القيادة",
   "clients.passport": "جواز السفر",
   "clients.nationalIdDoc": "بطاقة الهوية الوطنية",
+  /* Global Search */
+  "search.placeholder": "البحث عن عملاء أو سيارات أو تأجيرات…",
+  "search.inputPlaceholder": "البحث عن عملاء، سيارات، تأجيرات، حجوزات…",
+  "search.acrossTitle": "البحث في لوحة التحكم",
+  "search.acrossDesc": "ابحث فوراً عن العملاء والمركبات والتأجيرات وطلبات الحجز والمواقع وسجلات الصيانة.",
+  "search.noResultsFor": "لا توجد نتائج لـ",
+  "search.tryKeywords": "جرّب كلمات مختلفة أو تحقق من الإملاء.",
+  "search.navigate": "تنقل",
+  "search.select": "اختيار",
+  "search.close": "إغلاق",
+  "search.results": "نتائج",
+  "search.result": "نتيجة",
+  "search.group.clients": "العملاء",
+  "search.group.vehicles": "المركبات",
+  "search.group.rentals": "التأجيرات",
+  "search.group.bookings": "طلبات الحجز",
+  "search.group.locations": "المواقع",
+  "search.group.maintenance": "الصيانة",
+  /* Rental Creation Modal */
+  "rcm.createRental": "إنشاء عقد تأجير",
+  "rcm.walkInFill": "تأجير مباشر — أدخل جميع التفاصيل",
+  "rcm.bookingFor": "حجز",
+  "rcm.existingClient": "عميل موجود",
+  "rcm.newClient": "عميل جديد",
+  "rcm.preSelected": "محدد مسبقاً",
+  "rcm.createSelectClient": "إنشاء واختيار العميل",
+  "rcm.newClientDetails": "بيانات العميل الجديد",
+  "rcm.fullName": "الاسم الكامل *",
+  "rcm.phone": "الهاتف *",
+  "rcm.city": "المدينة",
+  "rcm.licenseNumber": "رقم الرخصة",
+  "rcm.email": "البريد الإلكتروني",
+  "rcm.rentalPeriod": "فترة الإيجار",
+  "rcm.pickupDate": "تاريخ الاستلام *",
+  "rcm.pickupTime": "وقت الاستلام",
+  "rcm.returnDate": "تاريخ الإرجاع *",
+  "rcm.returnTime": "وقت الإرجاع",
+  "rcm.ratePerDay": "السعر/يوم",
+  "rcm.duration": "المدة",
+  "rcm.depositAmount": "مبلغ التأمين ($)",
+  "rcm.rentalNotes": "ملاحظات الإيجار",
+  "rcm.internalNotes": "ملاحظات داخلية",
+  "rcm.internalNotesHint": "(للموظفين فقط)",
+  "rcm.specialRequests": "طلبات خاصة، تعليمات الاستلام…",
+  "rcm.internalObs": "ملاحظات داخلية، تعليقات الموظف…",
+  "rcm.summary": "الملخص",
+  "rcm.period": "الفترة",
+  "rcm.deposit": "التأمين",
+  "rcm.change": "تغيير",
+  "rcm.noAvailableCars": "لا توجد سيارات متاحة تطابق البحث",
+  "rcm.noClientsFound": "لم يُعثر على عملاء",
+  "rcm.searchBrandModel": "البحث بالعلامة أو الطراز أو اللوحة…",
+  "rcm.searchClientName": "البحث بالاسم أو الهاتف أو المدينة…",
+  "rcm.seats": "مقاعد",
+  "rcm.perDay": "/يوم",
+  "rcm.rentals": "إيجارات",
+  "rcm.license": "الرخصة",
+  "rcm.selectLocation": "— اختر موقعاً —",
+  "rcm.pickupLocationLabel": "موقع الاستلام *",
+  "rcm.returnLocationLabel": "موقع الإرجاع *",
+  "rcm.err.selectClient": "اختر أو أنشئ عميلاً",
+  "rcm.err.selectVehicle": "اختر مركبة",
+  "rcm.err.required": "مطلوب",
+  "rcm.err.selectPickup": "اختر موقع الاستلام",
+  "rcm.err.selectReturn": "اختر موقع الإرجاع",
+  "rcm.days": "أيام",
+  "rcm.day": "يوم",
+  "fleet.year": "السنة",
+  "bm.vehicleInfo": "معلومات المركبة",
+  "bm.includedFeatures": "الميزات المشمولة",
+  "bm.rentalSummary": "ملخص الإيجار",
+  "bm.estimatedTotal": "الإجمالي التقديري",
+  "bm.continueBooking": "متابعة الحجز",
+  "bm.pickup": "الاستلام",
+  "bm.return": "الإرجاع",
+  "bm.at": "في",
+  "bm.day": "يوم",
+  "bm.days": "أيام",
+  "bm.est": "تقديري",
+  "bm.estTotal": "الإجمالي التقديري",
+  "bm.dailyRate": "السعر اليومي",
+  "bm.category": "الفئة",
+  "bm.transmission": "ناقل الحركة",
+  "bm.fuelType": "نوع الوقود",
+  "bm.seats": "المقاعد",
+  "bm.airConditioning": "تكييف هواء",
+  "bm.luggage": "الأمتعة",
+  "bm.passengers": "{count} ركاب",
+  "bm.included": "مشمول",
+  "bm.unlimitedMileage": "مسافة مفتوحة",
+  "bm.basicInsurance": "تأمين أساسي",
+  "bm.roadAssistance": "المساعدة على الطريق",
+  "bm.freeCancellation": "إلغاء مجاني",
+  "bm.bookingDetails": "تفاصيل الحجز",
+  "bm.completeReservation": "أكمل حجزك",
+  "bm.customerInfo": "معلومات العميل",
+  "bm.driverInfo": "معلومات السائق",
+  "bm.emergencyContact": "جهة اتصال الطوارئ",
+  "bm.termsConfirmation": "الشروط والتأكيد",
+  "bm.fullName": "الاسم الكامل",
+  "bm.phoneNumber": "رقم الهاتف",
+  "bm.emailAddress": "البريد الإلكتروني",
+  "bm.whatsappNumber": "رقم الواتساب",
+  "bm.flightNumber": "رقم الرحلة",
+  "bm.notesRequests": "ملاحظات / طلبات خاصة",
+  "bm.driverAge": "عمر السائق",
+  "bm.licenseNumber": "رقم رخصة القيادة",
+  "bm.nationality": "الجنسية",
+  "bm.contactName": "اسم جهة الاتصال",
+  "bm.contactPhone": "هاتف جهة الاتصال",
+  "bm.placeholderName": "فلان الفلاني",
+  "bm.placeholderPhone": "+213 XXX XXX XXX",
+  "bm.placeholderEmail": "john@example.com",
+  "bm.placeholderWhatsapp": "نفس رقم الهاتف",
+  "bm.placeholderOptional": "اختياري",
+  "bm.placeholderNotes": "أي متطلبات خاصة...",
+  "bm.placeholderAge": "مثال: 28",
+  "bm.placeholderLicense": "رقم الرخصة",
+  "bm.placeholderFullName": "الاسم الكامل",
+  "bm.placeholderContactPhone": "رقم الهاتف",
+  "bm.agreeTerms": "أوافق على شروط وأحكام التأجير، بما في ذلك سياسة الإلغاء والتغطية التأمينية.",
+  "bm.confirmInfo": "أؤكد أن جميع المعلومات المقدمة صحيحة وكاملة.",
+  "bm.back": "رجوع",
+  "bm.confirmReservation": "تأكيد الحجز",
+  "bm.requestSent": "تم إرسال طلب الحجز",
+  "bm.successDesc": "لقد تم استلام طلب الحجز الخاص بك. سيتصل بك فريقنا قريباً لتأكيد التوفر وإتمام حجزك.",
+  "bm.bookingRef": "مرجع الحجز",
+  "bm.browseCars": "تصفح المزيد من السيارات",
+  "bm.backHome": "العودة للرئيسية",
 };
 
 export const TRANSLATIONS: Record<LanguageCode, Translations> = { fr, en, ar };

@@ -2,8 +2,8 @@ import { useState } from "react";
 import { RentalFilters } from "./Operations";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Phone, Check, Ban, MapPin, Eye, Globe, PhoneCall } from "lucide-react";
-import { bookingRequests, BookingRequest, RequestStatus } from "@/data/dashboardData";
-import { useT } from "@/data/localStore";
+import { BookingRequest, RequestStatus } from "@/data/dashboardData";
+import { useT, useBookingRequests, updateBookingRequest } from "@/data/localStore";
 
 const STATUS_STYLE: Record<RequestStatus, { cls: string; dot: string }> = {
   new:       { cls: "bg-blue-50 text-blue-700 border border-blue-100",           dot: "bg-blue-500"    },
@@ -205,7 +205,7 @@ export function BookingRequests({ search = "", filters }: { search?: string; fil
   const t = useT();
   const [filter, setFilter]     = useState<FilterId>("all");
   const [selected, setSelected] = useState<BookingRequest | null>(null);
-  const [local, setLocal]       = useState(bookingRequests);
+  const local = useBookingRequests();
 
   const FILTERS: { id: FilterId; labelKey: string }[] = [
     { id: "all",       labelKey: "filter.all"       },
@@ -222,7 +222,7 @@ export function BookingRequests({ search = "", filters }: { search?: string; fil
   };
 
   const updateStatus = (id: string, status: RequestStatus) => {
-    setLocal(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+    updateBookingRequest(id, { status });
     setSelected(prev => prev?.id === id ? { ...prev, status } : prev);
   };
 

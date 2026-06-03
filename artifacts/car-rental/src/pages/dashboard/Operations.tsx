@@ -3,8 +3,8 @@ import {
   Search, CalendarCheck, UserPlus, Key, Clock, CheckCircle2, AlertTriangle, FileDown,
 } from "lucide-react";
 import jsPDF from "jspdf";
-import { bookingRequests, rentals, kpis, BookingRequest, DashboardRental } from "@/data/dashboardData";
-import { useRentals, useT } from "@/data/localStore";
+import { BookingRequest, DashboardRental } from "@/data/dashboardData";
+import { useRentals, useBookingRequests, useKPIs, useT } from "@/data/localStore";
 import { BookingRequests } from "./BookingRequests";
 import { OfflineRentals } from "./OfflineRentals";
 import { RentalsManagement } from "./RentalsManagement";
@@ -154,14 +154,16 @@ interface Props {
   onTabChange: (t: OperationsTab) => void;
 }
 
-const newCount       = bookingRequests.filter(r => r.status === "new").length;
-const walkInActive   = rentals.filter(r => r.source === "walk-in" && (r.status === "active" || r.status === "overdue")).length;
-const confirmedToday = bookingRequests.filter(r => r.status === "confirmed").length;
-
 export function OperationsSection({ activeTab, onTabChange }: Props) {
   const [search, setSearch] = useState("");
   const allRentals = useRentals();
+  const bookingRequests = useBookingRequests();
+  const kpis = useKPIs();
   const t = useT();
+
+  const newCount       = bookingRequests.filter(r => r.status === "new").length;
+  const walkInActive   = allRentals.filter(r => r.source === "walk-in" && (r.status === "active" || r.status === "overdue")).length;
+  const confirmedToday = bookingRequests.filter(r => r.status === "confirmed").length;
 
   const OPS_KPIS = [
     { labelKey: "kpi.bookingRequests", value: bookingRequests.length, subKey: "kpi.sub.newCount",      subVal: newCount,       color: "text-violet-600",  bg: "bg-violet-50",  icon: CalendarCheck  },

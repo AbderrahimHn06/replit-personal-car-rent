@@ -7,8 +7,7 @@ import {
   AlertTriangle, CalendarCheck2, Clock, ShieldOff, CheckCircle2,
 } from "lucide-react";
 import { GlobalSearch } from "./dashboard/GlobalSearch";
-import { Booking } from "@/data/mockData";
-import { kpis, alerts } from "@/data/dashboardData";
+import { useKPIs, useAlerts } from "@/data/localStore";
 import { Overview } from "./dashboard/Overview";
 import { OperationsSection, OperationsTab } from "./dashboard/Operations";
 import { Fleet } from "./dashboard/Fleet";
@@ -33,7 +32,6 @@ type Section =
   | "blocked" | "availability" | "maintenance"
   | "alerts" | "reports" | "settings";
 
-const urgentCount = alerts.filter(a => a.severity === "high").length;
 
 /* ── Notifications Icon Helper ── */
 function NotifIcon({ type }: { type: AppNotification["type"] }) {
@@ -147,7 +145,7 @@ function NotificationsModal({
   );
 }
 
-export function Dashboard({ bookings }: { bookings: Booking[] }) {
+export function Dashboard() {
   const [section, setSection]             = useState<Section>("overview");
   const [opsTab, setOpsTab]               = useState<OperationsTab>("bookings");
   const [sidebarOpen, setSidebarOpen]     = useState(false);
@@ -160,44 +158,60 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
   const notifications = useNotifications();
   const unreadCount   = notifications.filter(n => !n.read).length;
 
-  const NAV_GROUPS = [
+  const kpisState = useKPIs();
+  const alertsState = useAlerts();
+  const urgentCount = alertsState.filter(a => a.severity === "high").length;
+
+  interface NavItem {
+    id: Section;
+    label: string;
+    icon: React.ComponentType<any>;
+    badge?: number;
+  }
+
+  interface NavGroup {
+    label?: string;
+    items: NavItem[];
+  }
+
+  const NAV_GROUPS: NavGroup[] = [
     {
       items: [
-        { id: "overview" as Section, label: t("nav.overview"), icon: LayoutDashboard },
+        { id: "overview", label: t("nav.overview"), icon: LayoutDashboard },
       ],
     },
     {
       label: t("nav.group.rentals"),
       items: [
-        { id: "operations" as Section, label: t("nav.rentals"), icon: Key, badge: kpis.pendingRequests },
+        { id: "operations", label: t("nav.rentals"), icon: Key, badge: kpisState.pendingRequests },
       ],
     },
     {
       label: t("nav.group.fleet"),
       items: [
-        { id: "fleet" as Section,        label: t("nav.fleet"),         icon: Car },
-        { id: "availability" as Section, label: t("nav.availability"),  icon: CalendarDays },
-        { id: "maintenance" as Section,  label: t("nav.maintenance"),   icon: Wrench },
+        { id: "fleet",        label: t("nav.fleet"),         icon: Car },
+        { id: "availability", label: t("nav.availability"),  icon: CalendarDays },
+        { id: "maintenance",  label: t("nav.maintenance"),   icon: Wrench },
       ],
     },
     {
       label: t("nav.group.clients"),
       items: [
-        { id: "clients" as Section, label: t("nav.clients"),        icon: Users },
-        { id: "blocked" as Section, label: t("nav.blockedClients"), icon: UserX },
+        { id: "clients", label: t("nav.clients"),        icon: Users },
+        { id: "blocked", label: t("nav.blockedClients"), icon: UserX },
       ],
     },
     {
       label: t("nav.group.insights"),
       items: [
-        { id: "alerts" as Section,  label: t("nav.alerts"),   icon: Bell,      badge: urgentCount },
-        { id: "reports" as Section, label: t("nav.reports"),  icon: BarChart3 },
+        { id: "alerts",  label: t("nav.alerts"),   icon: Bell,      badge: urgentCount },
+        { id: "reports", label: t("nav.reports"),  icon: BarChart3 },
       ],
     },
     {
       label: t("nav.group.system"),
       items: [
-        { id: "settings" as Section, label: t("nav.settings"), icon: Settings },
+        { id: "settings", label: t("nav.settings"), icon: Settings },
       ],
     },
   ];
@@ -384,7 +398,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
               transition={{ duration: 0.18 }}
               className="min-h-full"
             >
-              {section === "overview"     && <Overview bookings={bookings} onNavigate={navigate} />}
+              {section === "overview"     && <Overview onNavigate={navigate} />}
               {section === "operations"   && (
                 <OperationsSection
                   activeTab={opsTab}

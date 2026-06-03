@@ -1,6 +1,5 @@
 import { TrendingUp, TrendingDown, Car, Users, DollarSign, BarChart3 } from "lucide-react";
-import { kpis, fleet, rentals, clients } from "@/data/dashboardData";
-import { useT } from "@/data/localStore";
+import { useT, useKPIs, useFleet, useRentals, useClients } from "@/data/localStore";
 
 function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
   const pct = max > 0 ? Math.min(100, Math.round((value / max) * 100)) : 0;
@@ -40,6 +39,11 @@ function MetricCard({ label, value, sub, icon: Icon, color, trend }: {
 
 export function Reports() {
   const t = useT();
+  const kpis = useKPIs();
+  const fleet = useFleet();
+  const rentals = useRentals();
+  const clients = useClients();
+
   const totalRentals     = rentals.length;
   const completedRentals = rentals.filter(r => r.status === "completed").length;
   const totalRevenue     = rentals.reduce((sum, r) => sum + r.totalPrice, 0);

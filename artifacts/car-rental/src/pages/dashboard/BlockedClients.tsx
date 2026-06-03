@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { X, ShieldOff, AlertTriangle, RotateCcw } from "lucide-react";
-import { blockedClients, BlockedClient } from "@/data/dashboardData";
-import { useT } from "@/data/localStore";
+import { BlockedClient } from "@/data/dashboardData";
+import { useBlockedClients, removeBlockedClient, useT } from "@/data/localStore";
 
 export function BlockedClientsSection() {
   const t = useT();
-  const [clients, setClients] = useState<BlockedClient[]>(blockedClients);
+  const clients = useBlockedClients();
   const [selected, setSelected] = useState<BlockedClient | null>(null);
 
   const unblock = (id: string) => {
-    setClients(p => p.filter(c => c.id !== id));
+    removeBlockedClient(id);
     if (selected?.id === id) setSelected(null);
   };
 

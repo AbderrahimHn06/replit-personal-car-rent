@@ -8,11 +8,15 @@ import { Navbar } from "@/components/Navbar";
 import { Home } from "@/pages/Home";
 import { Cars } from "@/pages/Cars";
 import { Dashboard } from "@/pages/Dashboard";
-import { Booking, initialBookings } from "@/data/mockData";
+import { addBookingRequest } from "@/data/localStore";
 
 const queryClient = new QueryClient();
 
-function PublicSite({ bookings, addBooking }: { bookings: Booking[]; addBooking: (b: Booking) => void }) {
+interface PublicSiteProps {
+  addBooking: (booking: any) => void;
+}
+
+function PublicSite({ addBooking }: PublicSiteProps) {
   return (
     <div className="relative min-h-screen flex flex-col bg-background text-foreground">
       <Navbar />
@@ -31,32 +35,47 @@ function PublicSite({ bookings, addBooking }: { bookings: Booking[]; addBooking:
   );
 }
 
-function AppRouter({ bookings, addBooking }: { bookings: Booking[]; addBooking: (b: Booking) => void }) {
+function AppRouter({ addBooking }: PublicSiteProps) {
   const [, navigate] = useLocation();
   return (
     <Switch>
       <Route path="/dashboard">
-        <Dashboard bookings={bookings} />
+        <Dashboard />
       </Route>
       <Route path="/">
         {() => { navigate("/dashboard"); return null; }}
       </Route>
       <Route>
-        <PublicSite bookings={bookings} addBooking={addBooking} />
+        <PublicSite addBooking={addBooking} />
       </Route>
     </Switch>
   );
 }
 
 function App() {
-  const [bookings, setBookings] = useState<Booking[]>(initialBookings);
-  const addBooking = (booking: Booking) => setBookings((prev) => [booking, ...prev]);
+  const addBooking = (booking: any) => {
+    addBookingRequest({
+      id: booking.id,
+      customer: booking.clientName,
+      phone: booking.phone || "0555 000 000",
+      email: booking.email || "",
+      car: booking.car,
+      pickupDate: booking.pickupDate,
+      returnDate: booking.returnDate,
+      pickupLocation: booking.pickupLocation,
+      returnLocation: booking.returnLocation || booking.pickupLocation,
+      status: "new",
+      source: "online",
+      submittedAt: new Date().toISOString().replace("T", " ").slice(0, 16),
+      notes: booking.notes || "",
+    });
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <AppRouter bookings={bookings} addBooking={addBooking} />
+          <AppRouter addBooking={addBooking} />
         </WouterRouter>
         <Toaster />
       </TooltipProvider>

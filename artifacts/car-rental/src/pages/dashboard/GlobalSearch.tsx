@@ -4,8 +4,8 @@ import {
   Search, X, User, Car, Key, MapPin, Wrench, CalendarCheck,
   ChevronRight, AlertTriangle,
 } from "lucide-react";
-import { fleet, bookingRequests, maintenance } from "@/data/dashboardData";
-import { useClients, useRentals, useActiveLocations } from "@/data/localStore";
+import { useClients, useRentals, useActiveLocations, useFleet, useBookingRequests, useMaintenance } from "@/data/localStore";
+import { useT } from "@/store/settingsStore";
 
 type ResultType = "client" | "vehicle" | "rental" | "booking" | "location" | "maintenance";
 type OpsTab = "bookings" | "offline" | "rentals";
@@ -44,15 +44,6 @@ const STATUS_CLS: Record<string, string> = {
   "in-progress":"bg-sky-50 text-sky-700",
 };
 
-const GROUP_CFG: Record<ResultType, { label: string; Icon: React.ElementType; color: string }> = {
-  client:      { label: "Clients",          Icon: User,          color: "text-violet-600"  },
-  vehicle:     { label: "Vehicles",         Icon: Car,           color: "text-sky-600"     },
-  rental:      { label: "Rentals",          Icon: Key,           color: "text-emerald-600" },
-  booking:     { label: "Booking Requests", Icon: CalendarCheck, color: "text-indigo-600"  },
-  location:    { label: "Locations",        Icon: MapPin,        color: "text-amber-600"   },
-  maintenance: { label: "Maintenance",      Icon: Wrench,        color: "text-rose-600"    },
-};
-
 const GROUP_ORDER: ResultType[] = ["client", "vehicle", "rental", "booking", "location", "maintenance"];
 const MAX = 4;
 
@@ -69,6 +60,7 @@ const panelVariants = {
 };
 
 export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
+  const t = useT();
   const [open,      setOpen]      = useState(false);
   const [query,     setQuery]     = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
@@ -77,6 +69,19 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
   const clients   = useClients();
   const rentals   = useRentals();
   const locations = useActiveLocations();
+  const fleet     = useFleet();
+  const bookingRequests = useBookingRequests();
+  const maintenance = useMaintenance();
+
+  // Group config uses translated labels — built inside component so t() is available
+  const GROUP_CFG: Record<ResultType, { label: string; Icon: React.ElementType; color: string }> = {
+    client:      { label: t("search.group.clients"),     Icon: User,          color: "text-violet-600"  },
+    vehicle:     { label: t("search.group.vehicles"),    Icon: Car,           color: "text-sky-600"     },
+    rental:      { label: t("search.group.rentals"),     Icon: Key,           color: "text-emerald-600" },
+    booking:     { label: t("search.group.bookings"),    Icon: CalendarCheck, color: "text-indigo-600"  },
+    location:    { label: t("search.group.locations"),   Icon: MapPin,        color: "text-amber-600"   },
+    maintenance: { label: t("search.group.maintenance"), Icon: Wrench,        color: "text-rose-600"    },
+  };
 
   /* ── Ctrl / Cmd + K ── */
   useEffect(() => {
@@ -170,7 +175,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
       }));
 
     return out;
-  }, [query, clients, rentals, locations]);
+  }, [query, clients, rentals, locations, fleet, bookingRequests, maintenance]);
 
   const grouped = useMemo(() => {
     const g: Record<ResultType, SearchResult[]> = {
@@ -192,6 +197,10 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
     if (e.key === "Escape") setOpen(false);
   }
 
+  const resultCountLabel = results.length > 0
+    ? `${results.length} ${results.length !== 1 ? t("search.results") : t("search.result")}`
+    : "";
+
   return (
     <>
       {/* ── Top-bar trigger (desktop) ── */}
@@ -200,7 +209,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
         className="hidden sm:flex items-center gap-2.5 h-9 pl-3.5 pr-3 rounded-xl border border-slate-200 bg-slate-50/80 text-[12.5px] text-slate-400 hover:bg-white hover:border-slate-300 transition-all duration-200 w-[300px] lg:w-[360px] text-left cursor-pointer"
       >
         <Search className="h-3.5 w-3.5 flex-shrink-0" />
-        <span className="flex-1 truncate">Search clients, cars, rentals…</span>
+        <span className="flex-1 truncate">{t("search.placeholder")}</span>
         <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-slate-200 text-[9px] font-bold text-slate-500 leading-none flex-shrink-0">
           ⌘K
         </span>
@@ -247,7 +256,7 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                     value={query}
                     onChange={e => { setQuery(e.target.value); setActiveIdx(0); }}
                     onKeyDown={handleKey}
-                    placeholder="Search clients, cars, rentals, bookings…"
+                    placeholder={t("search.inputPlaceholder")}
                     className="flex-1 text-[14.5px] text-slate-800 placeholder-slate-400 outline-none bg-transparent"
                   />
                   {query ? (
@@ -269,14 +278,19 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                       <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
                         <Search className="h-6 w-6 text-slate-300" />
                       </div>
-                      <p className="text-[13.5px] font-semibold text-slate-500">Search across the dashboard</p>
+                      <p className="text-[13.5px] font-semibold text-slate-500">{t("search.acrossTitle")}</p>
                       <p className="text-[12px] text-slate-400 mt-1.5 max-w-sm">
-                        Find clients, vehicles, rentals, booking requests, locations, and maintenance records instantly.
+                        {t("search.acrossDesc")}
                       </p>
                       <div className="flex items-center gap-3 mt-5 flex-wrap justify-center">
-                        {[{ icon: User, label: "Clients" }, { icon: Car, label: "Vehicles" }, { icon: Key, label: "Rentals" }, { icon: MapPin, label: "Locations" }].map(({ icon: Icon, label }) => (
-                          <span key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-[11.5px] font-medium text-slate-500">
-                            <Icon className="h-3 w-3" /> {label}
+                        {([
+                          { icon: User,   labelKey: "search.group.clients"   },
+                          { icon: Car,    labelKey: "search.group.vehicles"  },
+                          { icon: Key,    labelKey: "search.group.rentals"   },
+                          { icon: MapPin, labelKey: "search.group.locations" },
+                        ] as const).map(({ icon: Icon, labelKey }) => (
+                          <span key={labelKey} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-[11.5px] font-medium text-slate-500">
+                            <Icon className="h-3 w-3" /> {t(labelKey)}
                           </span>
                         ))}
                       </div>
@@ -288,8 +302,8 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                       <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
                         <AlertTriangle className="h-6 w-6 text-slate-300" />
                       </div>
-                      <p className="text-[13.5px] font-semibold text-slate-500">No results for "{query}"</p>
-                      <p className="text-[12px] text-slate-400 mt-1.5">Try different keywords or check the spelling.</p>
+                      <p className="text-[13.5px] font-semibold text-slate-500">{t("search.noResultsFor")} "{query}"</p>
+                      <p className="text-[12px] text-slate-400 mt-1.5">{t("search.tryKeywords")}</p>
                     </div>
                   )}
 
@@ -346,18 +360,18 @@ export function GlobalSearch({ onNavigate }: GlobalSearchProps) {
                 <div className="border-t border-slate-100 px-5 py-2.5 flex items-center gap-4 bg-slate-50/60 flex-shrink-0">
                   <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
                     <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-[9.5px] font-bold text-slate-500">↑↓</kbd>
-                    <span>Navigate</span>
+                    <span>{t("search.navigate")}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
                     <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-[9.5px] font-bold text-slate-500">↵</kbd>
-                    <span>Select</span>
+                    <span>{t("search.select")}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
                     <kbd className="px-1.5 py-0.5 rounded bg-slate-200 text-[9.5px] font-bold text-slate-500">ESC</kbd>
-                    <span>Close</span>
+                    <span>{t("search.close")}</span>
                   </div>
                   <div className="ml-auto text-[11px] text-slate-300">
-                    {results.length > 0 ? `${results.length} result${results.length !== 1 ? "s" : ""}` : ""}
+                    {resultCountLabel}
                   </div>
                 </div>
               </motion.div>
