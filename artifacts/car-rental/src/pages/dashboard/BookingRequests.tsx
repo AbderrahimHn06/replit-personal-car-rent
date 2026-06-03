@@ -225,7 +225,7 @@ export function BookingRequests({ search = "", filters }: { search?: string; fil
           {FILTERS.map(f => {
             const active = filter === f.id;
             return (
-              <button key={f.id} onClick={() => setFilter(f.id)}
+              <button key={f.id} onClick={() => setFilter(f.id)} onMouseDown={e => e.preventDefault()}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold transition-all ${
                   active ? "bg-[#1a2332] text-white shadow-sm" : "bg-white border border-slate-200 text-slate-500 hover:bg-slate-50"
                 }`}>

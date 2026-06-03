@@ -363,7 +363,7 @@ export function RentalsManagement({ search = "", filters }: { search?: string; f
             const count  = counts[f.id] ?? 0;
             const isAlert = f.id === "overdue" && count > 0 && !active;
             return (
-              <button key={f.id} onClick={() => setFilter(f.id)}
+              <button key={f.id} onClick={() => setFilter(f.id)} onMouseDown={e => e.preventDefault()}
                 className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12px] font-semibold transition-all duration-200 cursor-pointer ${
                   active
                     ? "bg-[#1a2332] text-white shadow-sm"
