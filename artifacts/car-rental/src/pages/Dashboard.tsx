@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import {
   LayoutDashboard, CalendarCheck, UserPlus, Key, Car, Users, UserX,
   CalendarDays, Wrench, Bell, BarChart3, Settings, Menu, X, ChevronLeft,
-  AlertTriangle, CalendarCheck2, Clock, ShieldOff, Bike, CheckCircle2,
+  AlertTriangle, CalendarCheck2, Clock, ShieldOff, CheckCircle2,
 } from "lucide-react";
 import { GlobalSearch } from "./dashboard/GlobalSearch";
 import { Booking } from "@/data/mockData";
@@ -24,6 +24,8 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
   AppNotification,
+  useT,
+  useLanguageSettings,
 } from "@/data/localStore";
 
 type Section =
@@ -31,73 +33,7 @@ type Section =
   | "blocked" | "availability" | "maintenance"
   | "alerts" | "reports" | "settings";
 
-interface NavGroup {
-  label?: string;
-  items: {
-    id: Section;
-    label: string;
-    icon: React.ElementType;
-    badge?: number;
-    opsTab?: OperationsTab;
-  }[];
-}
-
 const urgentCount = alerts.filter(a => a.severity === "high").length;
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    items: [
-      { id: "overview", label: "Overview", icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: "Rentals",
-    items: [
-      { id: "operations", label: "Rentals", icon: Key, badge: kpis.pendingRequests },
-    ],
-  },
-  {
-    label: "Fleet",
-    items: [
-      { id: "fleet",        label: "Fleet",        icon: Car },
-      { id: "availability", label: "Availability", icon: CalendarDays },
-      { id: "maintenance",  label: "Maintenance",  icon: Wrench },
-    ],
-  },
-  {
-    label: "Clients",
-    items: [
-      { id: "clients", label: "Clients",         icon: Users },
-      { id: "blocked", label: "Blocked Clients", icon: UserX },
-    ],
-  },
-  {
-    label: "Insights",
-    items: [
-      { id: "alerts",  label: "Alerts",   icon: Bell,      badge: urgentCount },
-      { id: "reports", label: "Reports",  icon: BarChart3 },
-    ],
-  },
-  {
-    label: "System",
-    items: [
-      { id: "settings", label: "Settings", icon: Settings },
-    ],
-  },
-];
-
-const LABELS: Record<Section, { title: string; sub: string }> = {
-  overview:     { title: "Overview",         sub: "Today's summary and key metrics" },
-  operations:   { title: "Rentals",           sub: "Bookings, walk-ins, and rental lifecycle in one workspace" },
-  fleet:        { title: "Fleet",            sub: "Vehicle inventory and status" },
-  clients:      { title: "Clients",          sub: "Registered client profiles" },
-  blocked:      { title: "Blocked Clients",  sub: "Clients restricted from renting" },
-  availability: { title: "Availability",     sub: "Weekly vehicle schedule" },
-  maintenance:  { title: "Maintenance",      sub: "Service queue and scheduling" },
-  alerts:       { title: "Alerts",           sub: "Operational alerts requiring attention" },
-  reports:      { title: "Reports",          sub: "Business performance summary" },
-  settings:     { title: "Settings",         sub: "Agency configuration" },
-};
 
 /* ── Notifications Icon Helper ── */
 function NotifIcon({ type }: { type: AppNotification["type"] }) {
@@ -124,6 +60,7 @@ function NotificationsModal({
   onClose: () => void;
   onNavigateAlerts: () => void;
 }) {
+  const t = useT();
   const notifications = useNotifications();
   const unread = notifications.filter(n => !n.read).length;
 
@@ -142,7 +79,7 @@ function NotificationsModal({
         <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <Bell className="h-4 w-4 text-slate-500" />
-            <p className="text-[13.5px] font-bold text-[#1a2332]">Notifications</p>
+            <p className="text-[13.5px] font-bold text-[#1a2332]">{t("notif.title")}</p>
             {unread > 0 && (
               <span className="bg-red-500 text-white text-[9.5px] font-bold px-1.5 py-0.5 rounded-full">{unread}</span>
             )}
@@ -152,7 +89,7 @@ function NotificationsModal({
               onClick={markAllNotificationsRead}
               className="text-[11.5px] font-semibold text-violet-600 hover:text-violet-700 transition-colors cursor-pointer"
             >
-              Mark all read
+              {t("action.markAllRead")}
             </button>
           )}
         </div>
@@ -162,8 +99,8 @@ function NotificationsModal({
           {notifications.length === 0 ? (
             <div className="py-12 text-center">
               <CheckCircle2 className="h-7 w-7 text-slate-200 mx-auto mb-2.5" />
-              <p className="text-[12.5px] font-semibold text-slate-400">No notifications</p>
-              <p className="text-[11.5px] text-slate-300 mt-1">You're all caught up!</p>
+              <p className="text-[12.5px] font-semibold text-slate-400">{t("notif.empty")}</p>
+              <p className="text-[11.5px] text-slate-300 mt-1">{t("notif.caughtUp")}</p>
             </div>
           ) : (
             <div className="divide-y divide-slate-50">
@@ -202,7 +139,7 @@ function NotificationsModal({
             onClick={() => { onNavigateAlerts(); onClose(); }}
             className="w-full text-center text-[12px] font-semibold text-violet-600 hover:text-violet-700 transition-colors cursor-pointer"
           >
-            View all alerts →
+            {t("notif.viewAllAlerts")}
           </button>
         </div>
       </motion.div>
@@ -216,8 +153,67 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
   const [sidebarOpen, setSidebarOpen]     = useState(false);
   const [showNotifications, setShowNotif] = useState(false);
 
+  const t = useT();
+  const { mainLanguage } = useLanguageSettings();
+  const dir = mainLanguage === "ar" ? "rtl" : "ltr";
+
   const notifications = useNotifications();
   const unreadCount   = notifications.filter(n => !n.read).length;
+
+  const NAV_GROUPS = [
+    {
+      items: [
+        { id: "overview" as Section, label: t("nav.overview"), icon: LayoutDashboard },
+      ],
+    },
+    {
+      label: t("nav.group.rentals"),
+      items: [
+        { id: "operations" as Section, label: t("nav.rentals"), icon: Key, badge: kpis.pendingRequests },
+      ],
+    },
+    {
+      label: t("nav.group.fleet"),
+      items: [
+        { id: "fleet" as Section,        label: t("nav.fleet"),         icon: Car },
+        { id: "availability" as Section, label: t("nav.availability"),  icon: CalendarDays },
+        { id: "maintenance" as Section,  label: t("nav.maintenance"),   icon: Wrench },
+      ],
+    },
+    {
+      label: t("nav.group.clients"),
+      items: [
+        { id: "clients" as Section, label: t("nav.clients"),        icon: Users },
+        { id: "blocked" as Section, label: t("nav.blockedClients"), icon: UserX },
+      ],
+    },
+    {
+      label: t("nav.group.insights"),
+      items: [
+        { id: "alerts" as Section,  label: t("nav.alerts"),   icon: Bell,      badge: urgentCount },
+        { id: "reports" as Section, label: t("nav.reports"),  icon: BarChart3 },
+      ],
+    },
+    {
+      label: t("nav.group.system"),
+      items: [
+        { id: "settings" as Section, label: t("nav.settings"), icon: Settings },
+      ],
+    },
+  ];
+
+  const LABELS: Record<Section, { title: string; sub: string }> = {
+    overview:     { title: t("section.overview.title"),     sub: t("section.overview.sub")     },
+    operations:   { title: t("section.rentals.title"),      sub: t("section.rentals.sub")      },
+    fleet:        { title: t("section.fleet.title"),        sub: t("section.fleet.sub")        },
+    clients:      { title: t("section.clients.title"),      sub: t("section.clients.sub")      },
+    blocked:      { title: t("section.blocked.title"),      sub: t("section.blocked.sub")      },
+    availability: { title: t("section.availability.title"), sub: t("section.availability.sub") },
+    maintenance:  { title: t("section.maintenance.title"),  sub: t("section.maintenance.sub")  },
+    alerts:       { title: t("section.alerts.title"),       sub: t("section.alerts.sub")       },
+    reports:      { title: t("section.reports.title"),      sub: t("section.reports.sub")      },
+    settings:     { title: t("section.settings.title"),     sub: t("section.settings.sub")     },
+  };
 
   const navigate = (s: string, opsTabOverride?: OperationsTab) => {
     const OPS_TAB_MAP: Record<string, OperationsTab> = {
@@ -238,7 +234,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
   const { title, sub } = LABELS[section];
 
   return (
-    <div className="flex h-screen bg-[#F5F6F8] overflow-hidden">
+    <div className="flex h-screen bg-[#F5F6F8] overflow-hidden" dir={dir}>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
@@ -249,8 +245,8 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
 
       {/* ── Sidebar ── */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 flex flex-col w-[220px] bg-white border-r border-slate-200/80 shadow-sm transition-transform duration-200 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        className={`fixed lg:static inset-y-0 ${dir === "rtl" ? "right-0" : "left-0"} z-40 flex flex-col w-[220px] bg-white border-r border-slate-200/80 shadow-sm transition-transform duration-200 ${
+          sidebarOpen ? "translate-x-0" : (dir === "rtl" ? "translate-x-full lg:translate-x-0" : "-translate-x-full lg:translate-x-0")
         }`}
       >
         {/* Logo */}
@@ -279,15 +275,12 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
                 </p>
               )}
               <div className="space-y-0.5">
-                {group.items.map(({ id, label, icon: Icon, badge, opsTab: tabTarget }, ii) => {
-                  const active =
-                    section === id &&
-                    (!tabTarget || opsTab === tabTarget);
-
+                {group.items.map(({ id, label, icon: Icon, badge }, ii) => {
+                  const active = section === id;
                   return (
                     <button
                       key={`${id}-${ii}`}
-                      onClick={() => navigate(id, tabTarget)}
+                      onClick={() => navigate(id)}
                       className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12.5px] font-medium transition-all cursor-pointer ${
                         active
                           ? "bg-primary text-white shadow-sm"
@@ -318,7 +311,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
           <Link href="/">
             <button className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[12px] text-slate-500 hover:bg-slate-100 hover:text-slate-800 transition-colors cursor-pointer">
               <ChevronLeft className="h-4 w-4" />
-              <span>Back to Website</span>
+              <span>{t("nav.backToWebsite")}</span>
             </button>
           </Link>
           <div className="flex items-center gap-3 px-3 py-2">
@@ -326,7 +319,7 @@ export function Dashboard({ bookings }: { bookings: Booking[] }) {
               <span className="text-[10px] font-bold text-primary">AG</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11.5px] font-semibold text-slate-700 truncate">Agency Manager</p>
+              <p className="text-[11.5px] font-semibold text-slate-700 truncate">{t("misc.agency")}</p>
               <p className="text-[10px] text-slate-400 truncate">admin@eliteride.dz</p>
             </div>
           </div>

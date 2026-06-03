@@ -8,6 +8,7 @@ import {
   useLocations, addLocation, updateLocation, removeLocation, AgencyLocation,
   useCurrencySettings, updateCurrencySettings, CurrencyCode, CURRENCY_NAMES, CURRENCY_SYMBOLS,
   useLanguageSettings, updateLanguageSettings, LanguageCode, LANGUAGE_NAMES,
+  useT,
 } from "@/data/localStore";
 
 const INITIAL = {
@@ -125,6 +126,7 @@ function LocationModal({ initial, onSave, onClose }: {
 
 /* ─── Locations Section ────────────────────────────────────────── */
 function LocationsSection() {
+  const t = useT();
   const locations = useLocations();
   const [editing, setEditing] = useState<AgencyLocation | null>(null);
   const [adding, setAdding] = useState(false);
@@ -135,23 +137,22 @@ function LocationsSection() {
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-primary" />
           <div>
-            <h3 className="text-sm font-bold text-slate-700">Locations</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Pickup & return points shown to clients and staff</p>
+            <h3 className="text-sm font-bold text-slate-700">{t("settings.locations")}</h3>
+            <p className="text-xs text-slate-400 mt-0.5">{t("settings.locationsSubtitle")}</p>
           </div>
         </div>
         <button
           onClick={() => setAdding(true)}
           className="flex items-center gap-1.5 h-9 px-4 bg-[#1a2332] text-white rounded-xl text-xs font-semibold hover:bg-[#243044] transition-colors cursor-pointer"
         >
-          <Plus className="h-3.5 w-3.5" /> Add Location
+          <Plus className="h-3.5 w-3.5" /> {t("settings.addLocation")}
         </button>
       </div>
 
       {locations.length === 0 ? (
         <div className="text-center py-10 border-2 border-dashed border-slate-200 rounded-xl">
           <MapPin className="h-8 w-8 text-slate-200 mx-auto mb-2" />
-          <p className="text-sm font-semibold text-slate-400">No locations yet</p>
-          <p className="text-xs text-slate-400 mt-0.5">Add your agency's pickup and return points</p>
+          <p className="text-sm font-semibold text-slate-400">{t("empty.noLocations")}</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -167,13 +168,13 @@ function LocationsSection() {
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0 ml-4">
                 <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-semibold ${loc.isActive ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-500"}`}>
-                  {loc.isActive ? "Active" : "Inactive"}
+                  {loc.isActive ? t("status.active") : t("settings.inactive")}
                 </span>
                 <button
                   onClick={() => updateLocation({ ...loc, isActive: !loc.isActive })}
                   className="h-7 px-2.5 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 transition-colors cursor-pointer"
                 >
-                  {loc.isActive ? "Disable" : "Enable"}
+                  {loc.isActive ? t("settings.disable") : t("settings.enable")}
                 </button>
                 <button
                   onClick={() => setEditing(loc)}
@@ -209,6 +210,7 @@ function LocationsSection() {
 const ALL_CURRENCIES: CurrencyCode[] = ["DZD", "USD", "EUR"];
 
 function CurrencySection() {
+  const t = useT();
   const { mainCurrency, supportedCurrencies } = useCurrencySettings();
   const [saved, setSaved] = useState(false);
 
@@ -239,13 +241,13 @@ function CurrencySection() {
         <div className="flex items-center gap-2">
           <DollarSign className="h-4 w-4 text-primary" />
           <div>
-            <h3 className="text-sm font-bold text-slate-700">Currency</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Set main currency and accepted payment currencies</p>
+            <h3 className="text-sm font-bold text-slate-700">{t("settings.currency")}</h3>
+            <p className="text-xs text-slate-400 mt-0.5">{t("settings.currencySubtitle")}</p>
           </div>
         </div>
         {saved && (
           <span className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-600">
-            <CheckCircle className="h-3.5 w-3.5" /> Saved
+            <CheckCircle className="h-3.5 w-3.5" /> {t("action.saved")}
           </span>
         )}
       </div>
@@ -253,7 +255,7 @@ function CurrencySection() {
       <div className="space-y-5">
         {/* Main currency */}
         <div>
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">Main Currency</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("settings.mainCurrency")}</p>
           <div className="grid grid-cols-3 gap-2.5">
             {ALL_CURRENCIES.map(c => {
               const isMain = mainCurrency === c;
@@ -439,6 +441,7 @@ function LanguageSection() {
 
 /* ─── Main Settings Section ────────────────────────────────────── */
 export function SettingsSection() {
+  const t = useT();
   const [form, setForm] = useState(INITIAL);
   const [saved, setSaved] = useState(false);
   const setF = (k: string, v: string) => setForm(p => ({ ...p, [k]: v }));
@@ -449,15 +452,15 @@ export function SettingsSection() {
     <div className="p-4 sm:p-6 space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[18px] font-bold text-[#1a2332]">Settings</h2>
-          <p className="text-[12.5px] text-slate-400 mt-0.5">Agency configuration and preferences</p>
+          <h2 className="text-[18px] font-bold text-[#1a2332]">{t("nav.settings")}</h2>
+          <p className="text-[12.5px] text-slate-400 mt-0.5">{t("settings.subtitle")}</p>
         </div>
         <button
           onClick={handleSave}
           className={`flex items-center gap-2 h-9 px-4 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${saved ? "bg-emerald-600 text-white" : "bg-[#1a2332] text-white hover:bg-[#243044]"}`}
         >
           {saved ? <CheckCircle className="h-3.5 w-3.5" /> : <Save className="h-3.5 w-3.5" />}
-          {saved ? "Saved!" : "Save Changes"}
+          {saved ? t("action.saved") : t("action.saveChanges")}
         </button>
       </div>
 
@@ -465,17 +468,17 @@ export function SettingsSection() {
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Building2 className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-bold text-slate-700">Agency Information</h3>
+          <h3 className="text-sm font-bold text-slate-700">{t("settings.agencyInfo")}</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Agency Name" value={form.agencyName} onChange={v => setF("agencyName", v)} full />
-          <Field label="Address" value={form.address} onChange={v => setF("address", v)} full />
-          <Field label="Phone" value={form.phone} onChange={v => setF("phone", v)} />
-          <Field label="Mobile" value={form.mobile} onChange={v => setF("mobile", v)} />
-          <Field label="Email" value={form.email} onChange={v => setF("email", v)} type="email" />
+          <Field label={t("settings.agencyName")} value={form.agencyName} onChange={v => setF("agencyName", v)} full />
+          <Field label={t("settings.address")} value={form.address} onChange={v => setF("address", v)} full />
+          <Field label={t("table.phone")} value={form.phone} onChange={v => setF("phone", v)} />
+          <Field label={t("settings.mobile")} value={form.mobile} onChange={v => setF("mobile", v)} />
+          <Field label={t("form.email")} value={form.email} onChange={v => setF("email", v)} type="email" />
           <Field label="WhatsApp" value={form.whatsapp} onChange={v => setF("whatsapp", v)} />
-          <Field label="Website" value={form.website} onChange={v => setF("website", v)} />
-          <Field label="Tax ID / RC Number" value={form.taxId} onChange={v => setF("taxId", v)} />
+          <Field label={t("settings.website")} value={form.website} onChange={v => setF("website", v)} />
+          <Field label={t("settings.taxId")} value={form.taxId} onChange={v => setF("taxId", v)} />
         </div>
       </div>
 
@@ -483,18 +486,18 @@ export function SettingsSection() {
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Clock className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-bold text-slate-700">Business Hours</h3>
+          <h3 className="text-sm font-bold text-slate-700">{t("settings.businessHours")}</h3>
         </div>
         <div className="space-y-2">
           {HOURS.map((h, i) => (
             <div key={i} className="flex items-center justify-between py-2.5 border-b border-slate-100 last:border-0">
               <span className="text-sm font-medium text-slate-700 w-48">{h.day}</span>
               {h.closed ? (
-                <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">Closed</span>
+                <span className="inline-flex items-center px-3 py-1 rounded-full bg-slate-100 text-slate-500 text-xs font-semibold">{t("settings.closed")}</span>
               ) : (
                 <div className="flex items-center gap-3">
                   <input defaultValue={h.open} className="w-24 h-8 px-2 border border-slate-200 rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
-                  <span className="text-slate-400 text-xs">to</span>
+                  <span className="text-slate-400 text-xs">{t("availability.to")}</span>
                   <input defaultValue={h.close} className="w-24 h-8 px-2 border border-slate-200 rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary" />
                 </div>
               )}
@@ -516,9 +519,8 @@ export function SettingsSection() {
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <FileText className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-bold text-slate-700">Terms & Conditions</h3>
+          <h3 className="text-sm font-bold text-slate-700">{t("settings.terms")}</h3>
         </div>
-        <p className="text-xs text-slate-400 mb-3">These terms are shown to clients during the booking process.</p>
         <textarea
           value={form.terms} onChange={e => setF("terms", e.target.value)} rows={10}
           className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-700 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
@@ -529,30 +531,29 @@ export function SettingsSection() {
       <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Palette className="h-4 w-4 text-primary" />
-          <h3 className="text-sm font-bold text-slate-700">Branding</h3>
+          <h3 className="text-sm font-bold text-slate-700">{t("settings.branding")}</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <div>
-            <label className="text-xs font-semibold text-slate-600 block mb-2">Agency Logo</label>
+            <label className="text-xs font-semibold text-slate-600 block mb-2">{t("settings.logo")}</label>
             <div className="h-28 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center bg-slate-50 cursor-pointer hover:bg-slate-100 hover:border-primary/30 transition-colors">
               <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center mb-2">
                 <Building2 className="h-5 w-5 text-white" />
               </div>
               <p className="text-xs text-slate-400 font-medium">EliteRide</p>
-              <p className="text-[11px] text-slate-400 mt-1">Click to upload new logo</p>
             </div>
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-600 block mb-2">Brand Colors</label>
+            <label className="text-xs font-semibold text-slate-600 block mb-2">{t("settings.brandColors")}</label>
             <div className="space-y-3">
-              {[{ label: "Primary Color", value: "#3E5F7D" }, { label: "Accent Color", value: "#D6A85C" }].map(({ label, value }) => (
+              {[{ label: t("settings.primaryColor"), value: "#3E5F7D" }, { label: t("settings.accentColor"), value: "#D6A85C" }].map(({ label, value }) => (
                 <div key={label} className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg border-2 border-white shadow-sm flex-shrink-0" style={{ backgroundColor: value }} />
                   <div className="flex-1">
                     <p className="text-xs font-semibold text-slate-600">{label}</p>
                     <p className="text-[11px] text-slate-400 font-mono">{value}</p>
                   </div>
-                  <button className="h-7 px-3 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer">Change</button>
+                  <button className="h-7 px-3 rounded-lg border border-slate-200 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer">{t("action.edit")}</button>
                 </div>
               ))}
             </div>

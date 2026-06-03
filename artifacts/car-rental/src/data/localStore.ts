@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { TRANSLATIONS, type TranslationKey } from "@/i18n/translations";
 import { DashboardRental, rentals as initialRentals, DashboardClient, clients as initialClients, FleetCar } from "./dashboardData";
 
 /* ─── Agency Locations ─────────────────────────────────────────── */
@@ -169,6 +170,26 @@ export function useLanguageSettings(): LanguageSettings {
 export function updateLanguageSettings(s: Partial<LanguageSettings>): void {
   _languageSettings = { ..._languageSettings, ...s };
   notifyLanguage();
+}
+
+export function useT(): (key: TranslationKey, vars?: Record<string, string | number>) => string {
+  const [, tick] = useState(0);
+  useEffect(() => {
+    const refresh = () => tick(t => t + 1);
+    _langListeners.add(refresh);
+    return () => { _langListeners.delete(refresh); };
+  }, []);
+  const lang = _languageSettings.mainLanguage;
+  return (key: TranslationKey) => TRANSLATIONS[lang][key] ?? TRANSLATIONS["fr"][key] ?? key;
+}
+
+export function getT(): (key: TranslationKey) => string {
+  const lang = _languageSettings.mainLanguage;
+  return (key: TranslationKey) => TRANSLATIONS[lang][key] ?? TRANSLATIONS["fr"][key] ?? key;
+}
+
+export function isRTL(): boolean {
+  return _languageSettings.mainLanguage === "ar";
 }
 
 /* ─── Notifications ────────────────────────────────────────────── */

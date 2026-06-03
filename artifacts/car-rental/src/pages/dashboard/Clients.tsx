@@ -7,7 +7,7 @@ import {
   ChevronRight, Calendar, Hash, Trash2, CheckCircle2,
 } from "lucide-react";
 import { rentals, DashboardClient, ClientStatus } from "@/data/dashboardData";
-import { useClients, addClientToStore, updateClientInStore, removeClientFromStore, addRental } from "@/data/localStore";
+import { useClients, addClientToStore, updateClientInStore, removeClientFromStore, addRental, useT } from "@/data/localStore";
 import { RentalCreationModal } from "./RentalCreationModal";
 
 /* ─── Helpers ──────────────────────────────────────────────────── */
@@ -37,16 +37,17 @@ function fmtDate(d: string) {
 
 type ClientTab = "all" | "online" | "walk-in" | "blocked" | "vip";
 
-const STATUS_CFG: Record<ClientStatus, { label: string; cls: string }> = {
-  active:  { label: "Active",  cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  blocked: { label: "Blocked", cls: "bg-red-50 text-red-700 border-red-200"             },
-  new:     { label: "New",     cls: "bg-sky-50 text-sky-700 border-sky-200"              },
-  vip:     { label: "VIP",     cls: "bg-amber-50 text-amber-700 border-amber-200"        },
+const STATUS_CLS: Record<ClientStatus, string> = {
+  active:  "bg-emerald-50 text-emerald-700 border-emerald-200",
+  blocked: "bg-red-50 text-red-700 border-red-200",
+  new:     "bg-sky-50 text-sky-700 border-sky-200",
+  vip:     "bg-amber-50 text-amber-700 border-amber-200",
 };
 
 function StatusBadge({ s }: { s: ClientStatus }) {
-  const { label, cls } = STATUS_CFG[s];
-  return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${cls}`}>{label}</span>;
+  const t = useT();
+  const labelKey = s === "active" ? "status.active" : s === "blocked" ? "action.block" : s === "new" ? "filter.new" : "status.vip";
+  return <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${STATUS_CLS[s]}`}>{t(labelKey as any)}</span>;
 }
 
 function TrustBar({ score }: { score: number }) {
@@ -64,6 +65,7 @@ function TrustBar({ score }: { score: number }) {
 
 /* ─── KPI Cards ────────────────────────────────────────────────── */
 function KpiCards({ list }: { list: DashboardClient[] }) {
+  const t = useT();
   const total   = list.length;
   const online  = list.filter(c => c.source === "online").length;
   const walkin  = list.filter(c => c.source === "walk-in").length;
@@ -72,12 +74,12 @@ function KpiCards({ list }: { list: DashboardClient[] }) {
   const active  = list.filter(c => (c.activeRentals ?? 0) > 0).length;
 
   const kpis = [
-    { label: "Total Clients",     value: total,   icon: Users,        color: "text-slate-700",   bg: "bg-slate-100",   trend: "+2 this month"    },
-    { label: "Online",            value: online,  icon: Globe,        color: "text-indigo-600",  bg: "bg-indigo-50",   trend: "Registered online" },
-    { label: "Walk-in",           value: walkin,  icon: Users,        color: "text-teal-600",    bg: "bg-teal-50",     trend: "In-person clients" },
-    { label: "Repeat Clients",    value: repeat,  icon: TrendingUp,   color: "text-emerald-600", bg: "bg-emerald-50",  trend: "More than 2 rentals"},
-    { label: "Blocked",           value: blocked, icon: Ban,          color: "text-red-600",     bg: "bg-red-50",      trend: "Restricted access" },
-    { label: "Active Rentals",    value: active,  icon: Car,          color: "text-violet-600",  bg: "bg-violet-50",   trend: "Currently renting" },
+    { label: t("kpi.totalClients"),   value: total,   icon: Users,        color: "text-slate-700",   bg: "bg-slate-100",   trend: t("kpi.sub.online")    },
+    { label: t("kpi.online"),         value: online,  icon: Globe,        color: "text-indigo-600",  bg: "bg-indigo-50",   trend: t("booking.source.website") },
+    { label: t("booking.source.walkin"), value: walkin, icon: Users,     color: "text-teal-600",    bg: "bg-teal-50",     trend: t("kpi.sub.walkin") },
+    { label: t("kpi.repeatClients"),  value: repeat,  icon: TrendingUp,   color: "text-emerald-600", bg: "bg-emerald-50",  trend: t("kpi.sub.repeat") },
+    { label: t("action.block"),       value: blocked, icon: Ban,          color: "text-red-600",     bg: "bg-red-50",      trend: t("kpi.sub.restrictedFromRenting") },
+    { label: t("kpi.activeRentals"),  value: active,  icon: Car,          color: "text-violet-600",  bg: "bg-violet-50",   trend: t("kpi.sub.currentlyRenting") },
   ];
 
   return (
@@ -949,12 +951,14 @@ export function ClientsSection() {
     });
   }, [localClients, tab, search]);
 
+  const t = useT();
+
   const tabs: { id: ClientTab; label: string; count: number }[] = [
-    { id: "all",     label: "All",      count: localClients.length },
-    { id: "online",  label: "Online",   count: localClients.filter(c => c.source === "online").length },
-    { id: "walk-in", label: "Walk-in",  count: localClients.filter(c => c.source === "walk-in").length },
-    { id: "vip",     label: "VIP / Repeat", count: localClients.filter(c => c.status === "vip" || c.totalRentals > 4).length },
-    { id: "blocked", label: "Blocked",  count: localClients.filter(c => c.status === "blocked").length },
+    { id: "all",     label: t("filter.all"),          count: localClients.length },
+    { id: "online",  label: t("kpi.online"),           count: localClients.filter(c => c.source === "online").length },
+    { id: "walk-in", label: t("booking.source.walkin"), count: localClients.filter(c => c.source === "walk-in").length },
+    { id: "vip",     label: t("status.vip"),           count: localClients.filter(c => c.status === "vip" || c.totalRentals > 4).length },
+    { id: "blocked", label: t("section.blocked.title"), count: localClients.filter(c => c.status === "blocked").length },
   ];
 
   return (
@@ -964,8 +968,8 @@ export function ClientsSection() {
       <div className="px-6 sm:px-8 pt-7 pb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">Clients</h2>
-            <p className="text-[13px] text-slate-400 mt-1 font-medium">Manage customer profiles, history, documents, and trust status</p>
+            <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">{t("nav.clients")}</h2>
+            <p className="text-[13px] text-slate-400 mt-1 font-medium">{t("clients.subtitle")}</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -980,7 +984,7 @@ export function ClientsSection() {
               onClick={() => setShowAddModal(true)}
               className="h-10 px-5 flex items-center gap-2 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-colors"
             >
-              <Plus className="h-4 w-4" /> Add Client
+              <Plus className="h-4 w-4" /> {t("action.addClient")}
             </button>
           </div>
         </div>
@@ -1016,14 +1020,14 @@ export function ClientsSection() {
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Client</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">Phone</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden lg:table-cell">City</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden sm:table-cell">Rentals</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden xl:table-cell">Last Rental</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden lg:table-cell">Trust</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">Action</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t("table.client")}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden md:table-cell">{t("table.phone")}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden lg:table-cell">{t("table.city")}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden sm:table-cell">{t("nav.rentals")}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden xl:table-cell">{t("table.lastRental")}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider hidden lg:table-cell">{t("table.trust")}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t("table.status")}</th>
+                  <th className="px-4 py-3 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider">{t("table.actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
