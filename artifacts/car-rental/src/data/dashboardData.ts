@@ -131,7 +131,6 @@ export interface DashboardRental {
   startDate: string;
   endDate: string;
   totalPrice: number;
-  currency?: string;
   deposit: number;
   status: RentalStatus;
   source: RentalSource;

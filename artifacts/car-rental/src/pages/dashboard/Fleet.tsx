@@ -944,78 +944,52 @@ export function Fleet() {
 
       {/* Header */}
       <div className="px-6 sm:px-8 pt-7 pb-0">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
-          {/* Left: title + subtitle */}
-          <div className="flex-shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
             <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">Fleet</h2>
-            <p className="text-[13px] text-slate-400 mt-0.5 font-medium">Manage vehicles, availability and fleet operations</p>
+            <p className="text-[13px] text-slate-400 mt-1 font-medium">Manage vehicles, availability, maintenance, and fleet operations</p>
           </div>
-
-          {/* Right: controls row */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
-            {/* Search */}
-            <div className="relative flex-1 sm:flex-none">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               <input
                 type="text"
                 placeholder="Search brand, model, plate…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="pl-10 pr-9 h-10 w-full sm:w-52 rounded-xl border border-slate-200 bg-white text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 shadow-sm transition"
+                className="pl-10 pr-4 h-10 w-56 rounded-xl border border-slate-200 bg-white text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 shadow-sm transition"
               />
-              {search && (
-                <button
-                  onClick={() => setSearch("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              )}
             </div>
-
-            {/* Filters + Clear + Add Vehicle grouped */}
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <button
-                  onClick={() => setShowFilters(p => !p)}
-                  className={`h-10 px-3.5 flex items-center gap-2 border rounded-xl text-[13px] font-medium shadow-sm transition-colors ${
-                    activeFCount > 0 ? "bg-[#1a2332] text-white border-[#1a2332]" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  <span>Filters</span>
-                  {activeFCount > 0 && (
-                    <span className="bg-white/25 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
-                      {activeFCount}
-                    </span>
-                  )}
-                </button>
-                {showFilters && (
-                  <FilterPanel
-                    filters={filters}
-                    onChange={mergeFilters}
-                    onClose={() => setShowFilters(false)}
-                    onClear={() => { setFilters(BLANK_FILTERS); setShowFilters(false); }}
-                  />
-                )}
-              </div>
-
-              {hasAnyFilter && (
-                <button
-                  onClick={() => { setFilters(BLANK_FILTERS); setSearch(""); }}
-                  className="h-10 px-3 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-500 rounded-xl text-[12.5px] font-medium hover:bg-red-50 hover:text-red-500 hover:border-red-100 shadow-sm transition-all"
-                >
-                  <X className="h-3.5 w-3.5" /> Clear
-                </button>
-              )}
-
+            <div className="relative">
               <button
-                onClick={() => setShowAddModal(true)}
-                className="h-10 px-5 flex items-center gap-2 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-colors whitespace-nowrap"
+                onClick={() => setShowFilters(p => !p)}
+                className={`h-10 px-3.5 flex items-center gap-2 border rounded-xl text-[13px] font-medium shadow-sm transition-colors ${
+                  activeFCount > 0 ? "bg-[#1a2332] text-white border-[#1a2332]" : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                }`}
               >
-                <Plus className="h-4 w-4" /> Add Vehicle
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline">Filters</span>
+                {activeFCount > 0 && <span className="bg-white/25 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{activeFCount}</span>}
               </button>
+              {showFilters && (
+                <FilterPanel
+                  filters={filters}
+                  onChange={mergeFilters}
+                  onClose={() => setShowFilters(false)}
+                  onClear={() => { setFilters(BLANK_FILTERS); setShowFilters(false); }}
+                />
+              )}
             </div>
+            <button onClick={() => { setFilters(BLANK_FILTERS); setSearch(""); }}
+              className={`h-10 px-3.5 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-500 rounded-xl text-[12.5px] font-medium hover:bg-red-50 hover:text-red-500 hover:border-red-100 shadow-sm transition-all duration-200 ${
+                hasAnyFilter ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}>
+              <X className="h-3.5 w-3.5" /> Clear
+            </button>
+            <button onClick={() => setShowAddModal(true)}
+              className="h-10 px-5 flex items-center gap-2 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-colors">
+              <Plus className="h-4 w-4" /> Add Vehicle
+            </button>
           </div>
         </div>
 

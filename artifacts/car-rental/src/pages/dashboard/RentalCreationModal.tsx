@@ -5,7 +5,7 @@ import {
   FileText, CheckCircle2, Search,
 } from "lucide-react";
 import { fleet, FleetCar, DashboardRental, DashboardClient } from "@/data/dashboardData";
-import { useActiveLocations, useClients, addClientToStore, useCurrencySettings, CURRENCY_SYMBOLS, CurrencyCode } from "@/data/localStore";
+import { useActiveLocations, useClients, addClientToStore } from "@/data/localStore";
 
 /* ─── Types ─────────────────────────────────────────────────────── */
 export interface RentalCreationProps {
@@ -27,10 +27,9 @@ function fmtShort(d: string) {
 }
 
 /* ─── Car Picker ────────────────────────────────────────────────── */
-function CarPicker({ selected, onSelect, formatPrice }: {
+function CarPicker({ selected, onSelect }: {
   selected: FleetCar | null;
   onSelect: (car: FleetCar) => void;
-  formatPrice: (car: FleetCar) => string;
 }) {
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState(!selected);
@@ -51,7 +50,7 @@ function CarPicker({ selected, onSelect, formatPrice }: {
           <p className="text-[11px] text-slate-500">{selected.transmission} · {selected.fuel} · {selected.seats} seats</p>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="text-[18px] font-bold text-[#1a2332]">{formatPrice(selected)}</p>
+          <p className="text-[18px] font-bold text-[#1a2332]">${selected.pricePerDay}</p>
           <p className="text-[10.5px] text-slate-400">/day</p>
         </div>
         <button
@@ -91,7 +90,7 @@ function CarPicker({ selected, onSelect, formatPrice }: {
                 <p className="text-[11px] text-slate-400 font-mono">{car.plate} · {car.type}</p>
               </div>
               <div className="flex-shrink-0 text-right">
-                <p className="text-[14px] font-bold text-[#1a2332]">{formatPrice(car)}</p>
+                <p className="text-[14px] font-bold text-[#1a2332]">${car.pricePerDay}</p>
                 <p className="text-[10px] text-slate-400">/day</p>
               </div>
             </div>
@@ -203,7 +202,6 @@ export function RentalCreationModal({
 }: RentalCreationProps) {
   const locations   = useActiveLocations();
   const allClients  = useClients();
-  const { mainCurrency } = useCurrencySettings();
 
   const [selectedCar,    setSelectedCar]    = useState<FleetCar | null>(prefilledCar ?? null);
   const [pickupDate,     setPickupDate]     = useState(prefilledPickupDate);
@@ -219,12 +217,6 @@ export function RentalCreationModal({
   const [internalNotes,  setInternalNotes]  = useState("");
   const [clientSearch,   setClientSearch]   = useState("");
   const [errors,         setErrors]         = useState<Record<string, string>>({});
-  const [currency,       setCurrency]       = useState<CurrencyCode>(mainCurrency);
-
-  const sym = CURRENCY_SYMBOLS[currency];
-  function getCarPrice(car: FleetCar): number {
-    return car.prices?.[currency] ?? car.pricePerDay;
-  }
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -242,7 +234,7 @@ export function RentalCreationModal({
     return Math.max(1, Math.ceil((new Date(returnDate).getTime() - new Date(pickupDate).getTime()) / 86400000));
   }, [pickupDate, returnDate]);
 
-  const totalPrice = selectedCar ? getCarPrice(selectedCar) * Math.max(1, dayCount) : 0;
+  const totalPrice = selectedCar ? selectedCar.pricePerDay * Math.max(1, dayCount) : 0;
 
   const filteredClients = useMemo(() =>
     allClients.filter(c => c.status !== "blocked").filter(c => {
@@ -275,7 +267,6 @@ export function RentalCreationModal({
       startDate: pickupDate,
       endDate: returnDate,
       totalPrice,
-      currency,
       deposit: Number(deposit) || 0,
       status: "reserved",
       source: "walk-in",
@@ -442,7 +433,7 @@ export function RentalCreationModal({
                     <p className="text-[11.5px] text-slate-500 mt-0.5">{prefilledCar.transmission} · {prefilledCar.fuel} · {prefilledCar.seats} seats</p>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <p className="text-[20px] font-bold text-[#1a2332]">{sym}{getCarPrice(prefilledCar)}</p>
+                    <p className="text-[20px] font-bold text-[#1a2332]">${prefilledCar.pricePerDay}</p>
                     <p className="text-[11px] text-slate-400">/day</p>
                   </div>
                 </div>
@@ -450,7 +441,6 @@ export function RentalCreationModal({
                 <CarPicker
                   selected={selectedCar}
                   onSelect={car => { setSelectedCar(car); setDeposit(car.depositAmount ? String(car.depositAmount) : ""); setErrors(prev => ({ ...prev, car: "" })); }}
-                  formatPrice={car => `${sym}${getCarPrice(car).toLocaleString()}`}
                 />
               )}
             </section>
@@ -516,31 +506,11 @@ export function RentalCreationModal({
             <section>
               <SecLabel icon={DollarSign}>Pricing</SecLabel>
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3">
-                {/* Currency selector */}
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Currency</p>
-                  <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 gap-1">
-                    {(["DZD", "USD", "EUR"] as CurrencyCode[]).map(c => (
-                      <button
-                        key={c}
-                        onClick={() => setCurrency(c)}
-                        className={`px-3 py-1 rounded-lg text-[11.5px] font-bold transition-all ${
-                          currency === c
-                            ? "bg-[#1a2332] text-white shadow-sm"
-                            : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
-                        }`}
-                      >
-                        {c}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {selectedCar && (
                   <div className="grid grid-cols-3 gap-3">
                     <div className="bg-white rounded-xl border border-slate-100 px-3 py-2.5 text-center">
                       <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Rate/day</p>
-                      <p className="text-[15px] font-bold text-[#1a2332]">{sym}{getCarPrice(selectedCar).toLocaleString()}</p>
+                      <p className="text-[15px] font-bold text-[#1a2332]">${selectedCar.pricePerDay}</p>
                     </div>
                     <div className="bg-white rounded-xl border border-slate-100 px-3 py-2.5 text-center">
                       <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Duration</p>
@@ -548,12 +518,12 @@ export function RentalCreationModal({
                     </div>
                     <div className="bg-emerald-50 rounded-xl border border-emerald-100 px-3 py-2.5 text-center">
                       <p className="text-[10px] font-bold text-emerald-600 uppercase mb-1">Total</p>
-                      <p className="text-[15px] font-bold text-emerald-700">{sym}{totalPrice.toLocaleString()}</p>
+                      <p className="text-[15px] font-bold text-emerald-700">${totalPrice}</p>
                     </div>
                   </div>
                 )}
                 <div>
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Deposit Amount ({currency})</label>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Deposit Amount ($)</label>
                   <input type="number" className={inp} value={deposit} onChange={e => setDeposit(e.target.value)} placeholder="0" min="0" />
                 </div>
               </div>
@@ -615,9 +585,9 @@ export function RentalCreationModal({
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Total · {currency}</p>
-                      <p className="text-[26px] font-bold leading-none">{sym}{totalPrice.toLocaleString()}</p>
-                      <p className="text-[11.5px] text-white/50 mt-1">+ {sym}{deposit || 0} deposit</p>
+                      <p className="text-[10px] text-white/50 font-bold uppercase tracking-wider mb-1">Total</p>
+                      <p className="text-[26px] font-bold leading-none">${totalPrice}</p>
+                      <p className="text-[11.5px] text-white/50 mt-1">+ ${deposit || 0} deposit</p>
                     </div>
                   </div>
                 </div>
