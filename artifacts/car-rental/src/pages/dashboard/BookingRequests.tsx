@@ -255,7 +255,15 @@ export function BookingRequests({ search = "", filters }: { search?: string; fil
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <AnimatePresence mode="wait">
+            <motion.tbody
+              key={filter + search}
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="divide-y divide-slate-100"
+            >
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} className="px-5 py-16 text-center">
@@ -333,7 +341,8 @@ export function BookingRequests({ search = "", filters }: { search?: string; fil
                   </td>
                 </tr>
               ))}
-            </tbody>
+            </motion.tbody>
+            </AnimatePresence>
           </table>
         </div>
         <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">

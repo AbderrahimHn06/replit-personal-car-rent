@@ -509,10 +509,9 @@ export function MaintenanceSection() {
                   <button
                     onClick={() => openEdit(item)}
                     onMouseDown={e => e.preventDefault()}
-                    title="Edit"
-                    className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-violet-100 text-slate-600 hover:text-violet-700 text-[11px] font-semibold transition-colors cursor-pointer"
                   >
-                    <Edit2 className="h-3.5 w-3.5" />
+                    <Edit2 className="h-3 w-3" /> Edit
                   </button>
                   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold border ${cfg.cls}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />

@@ -399,7 +399,15 @@ export function RentalsManagement({ search = "", filters }: { search?: string; f
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <AnimatePresence mode="wait">
+            <motion.tbody
+              key={filter + search}
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+              className="divide-y divide-slate-100"
+            >
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-5 py-16">
@@ -487,7 +495,8 @@ export function RentalsManagement({ search = "", filters }: { search?: string; f
                   </tr>
                 );
               })}
-            </tbody>
+            </motion.tbody>
+            </AnimatePresence>
           </table>
         </div>
         <div className="px-5 py-3.5 border-t border-slate-100 bg-slate-50/50">

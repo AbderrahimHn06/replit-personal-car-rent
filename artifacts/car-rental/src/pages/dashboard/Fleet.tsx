@@ -977,12 +977,12 @@ export function Fleet() {
                 />
               )}
             </div>
-            {hasAnyFilter && (
-              <button onClick={() => { setFilters(BLANK_FILTERS); setSearch(""); }}
-                className="h-10 px-3.5 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-500 rounded-xl text-[12.5px] font-medium hover:bg-red-50 hover:text-red-500 hover:border-red-100 transition-colors shadow-sm">
-                <X className="h-3.5 w-3.5" /> Clear
-              </button>
-            )}
+            <button onClick={() => { setFilters(BLANK_FILTERS); setSearch(""); }}
+              className={`h-10 px-3.5 flex items-center gap-1.5 bg-white border border-slate-200 text-slate-500 rounded-xl text-[12.5px] font-medium hover:bg-red-50 hover:text-red-500 hover:border-red-100 shadow-sm transition-all duration-200 ${
+                hasAnyFilter ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+              }`}>
+              <X className="h-3.5 w-3.5" /> Clear
+            </button>
             <button onClick={() => setShowAddModal(true)}
               className="h-10 px-5 flex items-center gap-2 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] shadow-sm transition-colors">
               <Plus className="h-4 w-4" /> Add Vehicle
