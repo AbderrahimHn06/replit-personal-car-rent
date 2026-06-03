@@ -32,10 +32,14 @@ function PublicSite({ bookings, addBooking }: { bookings: Booking[]; addBooking:
 }
 
 function AppRouter({ bookings, addBooking }: { bookings: Booking[]; addBooking: (b: Booking) => void }) {
+  const [, navigate] = useLocation();
   return (
     <Switch>
       <Route path="/dashboard">
         <Dashboard bookings={bookings} />
+      </Route>
+      <Route path="/">
+        {() => { navigate("/dashboard"); return null; }}
       </Route>
       <Route>
         <PublicSite bookings={bookings} addBooking={addBooking} />

@@ -58,6 +58,7 @@ function LocationModal({ initial, onSave, onClose }: {
       ? { name: initial.name, address: initial.address, city: initial.city, notes: initial.notes, isActive: initial.isActive }
       : { ...BLANK_LOC }
   );
+  const t = useT();
   const set = (k: keyof typeof form, v: string | boolean) => setForm(p => ({ ...p, [k]: v }));
 
   const inp = "w-full h-10 rounded-xl border border-slate-200 px-3.5 text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 bg-white transition";
@@ -75,26 +76,26 @@ function LocationModal({ initial, onSave, onClose }: {
         <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto" onClick={e => e.stopPropagation()}>
           <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
             <div>
-              <h3 className="text-[16px] font-bold text-[#1a2332]">{initial ? "Edit Location" : "Add Location"}</h3>
-              <p className="text-[12px] text-slate-400 mt-0.5">Agency pickup / return point</p>
+              <h3 className="text-[16px] font-bold text-[#1a2332]">{initial ? t("settings.editLocation") : t("settings.addLocationTitle")}</h3>
+              <p className="text-[12px] text-slate-400 mt-0.5">{t("settings.locationPoint")}</p>
             </div>
             <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-400 transition-colors cursor-pointer"><X className="h-4 w-4" /></button>
           </div>
           <div className="px-6 py-5 space-y-4">
             <div>
-              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Location Name *</label>
+              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">{t("settings.locationName")} *</label>
               <input className={inp} placeholder="e.g. Oran Airport" value={form.name} onChange={e => set("name", e.target.value)} />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Address</label>
+              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">{t("settings.locationAddress")}</label>
               <input className={inp} placeholder="e.g. Ahmed Ben Bella Airport, Es Senia" value={form.address} onChange={e => set("address", e.target.value)} />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">City</label>
+              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">{t("settings.locationCity")}</label>
               <input className={inp} placeholder="e.g. Oran" value={form.city} onChange={e => set("city", e.target.value)} />
             </div>
             <div>
-              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Notes <span className="text-slate-300">(optional)</span></label>
+              <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">{t("settings.locationNotes")} <span className="text-slate-300">({t("form.optional")})</span></label>
               <textarea
                 className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition"
                 rows={2} placeholder="e.g. Terminal 1 arrivals hall" value={form.notes} onChange={e => set("notes", e.target.value)}
@@ -102,8 +103,8 @@ function LocationModal({ initial, onSave, onClose }: {
             </div>
             <div className="flex items-center justify-between py-2 border-t border-slate-100">
               <div>
-                <p className="text-[13px] font-semibold text-slate-700">Active</p>
-                <p className="text-[11px] text-slate-400">Show in pickup/return dropdowns</p>
+                <p className="text-[13px] font-semibold text-slate-700">{t("settings.locationActive")}</p>
+                <p className="text-[11px] text-slate-400">{t("settings.locationActiveHelper")}</p>
               </div>
               <button onClick={() => set("isActive", !form.isActive)} className="transition-colors cursor-pointer">
                 {form.isActive
@@ -114,9 +115,9 @@ function LocationModal({ initial, onSave, onClose }: {
           </div>
           <div className="px-6 pb-5 flex gap-3">
             <button onClick={handleSave} disabled={!form.name.trim()} className="flex-1 h-10 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer">
-              {initial ? "Save Changes" : "Add Location"}
+              {initial ? t("settings.saveLocation") : t("settings.addLocationTitle")}
             </button>
-            <button onClick={onClose} className="h-10 px-5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">Cancel</button>
+            <button onClick={onClose} className="h-10 px-5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer">{t("action.cancel")}</button>
           </div>
         </motion.div>
       </div>

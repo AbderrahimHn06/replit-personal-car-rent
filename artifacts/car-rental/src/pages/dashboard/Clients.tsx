@@ -120,9 +120,9 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
   };
 
   const DOCS = [
-    { name: "Driver's License", number: client.licenseNumber, expiry: client.licenseExpiry, icon: Key        },
-    { name: "National ID",      number: client.idNumber ?? "—", expiry: "—",                icon: FileText   },
-    { name: "Passport",         number: client.nationality === "Algerian" ? "N/A" : "On file", expiry: "—",  icon: Globe      },
+    { name: t("clients.driversLicense"), number: client.licenseNumber,                                        expiry: client.licenseExpiry, icon: Key      },
+    { name: t("clients.nationalIdDoc"),  number: client.idNumber ?? "—",                                      expiry: "—",                  icon: FileText },
+    { name: t("clients.passport"),       number: client.nationality === "Algerian" ? "N/A" : t("drawer.onFile"), expiry: "—",               icon: Globe    },
   ];
 
   const inpCls = "w-7 h-7 flex items-center justify-center rounded-lg";
@@ -317,11 +317,11 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                   )}
                   <div className="grid grid-cols-2 gap-2">
                     <div className={`rounded-xl px-3.5 py-3 border ${(client.lateReturns ?? 0) > 0 ? "bg-amber-50 border-amber-100" : "bg-slate-50 border-slate-100"}`}>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Late Returns</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{t("drawer.lateReturns")}</p>
                       <p className={`text-[15px] font-bold ${(client.lateReturns ?? 0) > 0 ? "text-amber-600" : "text-slate-700"}`}>{client.lateReturns ?? 0}</p>
                     </div>
                     <div className={`rounded-xl px-3.5 py-3 border ${(client.damages ?? 0) > 0 ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100"}`}>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Damage Events</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">{t("drawer.damageEvents")}</p>
                       <p className={`text-[15px] font-bold ${(client.damages ?? 0) > 0 ? "text-red-600" : "text-slate-700"}`}>{client.damages ?? 0}</p>
                     </div>
                   </div>
@@ -329,7 +329,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                     <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3">
                       <div className="flex items-center gap-2 mb-1">
                         <Ban className="h-3.5 w-3.5 text-red-500" />
-                        <p className="text-[11.5px] font-bold text-red-700">Blocked Reason</p>
+                        <p className="text-[11.5px] font-bold text-red-700">{t("drawer.blockedReason")}</p>
                       </div>
                       <p className="text-[12px] text-red-600">{client.blockedReason}</p>
                     </div>
@@ -338,7 +338,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                     <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
                       <div className="flex items-center gap-2 mb-1">
                         <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                        <p className="text-[11.5px] font-bold text-amber-700">Warning</p>
+                        <p className="text-[11.5px] font-bold text-amber-700">{t("drawer.warning")}</p>
                       </div>
                       <p className="text-[12px] text-amber-700">{client.warningNotes}</p>
                     </div>
@@ -352,12 +352,12 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
           {section === "history" && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">
-                Rental History · {clientRentals.length} rental{clientRentals.length !== 1 ? "s" : ""}
+                {t("drawer.history")} · {clientRentals.length} {t("clients.rentalHistoryLabel")}
               </p>
               {clientRentals.length === 0 ? (
                 <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
                   <Car className="h-8 w-8 text-slate-200 mx-auto mb-2" />
-                  <p className="text-[13px] font-semibold text-slate-400">No rental history</p>
+                  <p className="text-[13px] font-semibold text-slate-400">{t("drawer.noRentalHistory")}</p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -389,7 +389,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
           {/* ── Documents ── */}
           {section === "docs" && (
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Documents</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("drawer.docs")}</p>
               <div className="space-y-3">
                 {DOCS.map(({ name, number, expiry, icon: Icon }) => (
                   <div key={name} className="flex items-center gap-4 bg-slate-50 border border-slate-200 rounded-2xl p-4">
@@ -399,10 +399,10 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                     <div className="flex-1 min-w-0">
                       <p className="text-[13px] font-semibold text-slate-800">{name}</p>
                       <p className="text-[11.5px] text-slate-400 font-mono">{number}</p>
-                      {expiry && expiry !== "—" && <p className="text-[11px] text-slate-400 mt-0.5">Expires: {fmtDate(expiry)}</p>}
+                      {expiry && expiry !== "—" && <p className="text-[11px] text-slate-400 mt-0.5">{t("drawer.expires")}: {fmtDate(expiry)}</p>}
                     </div>
                     <span className="flex-shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                      <CheckCircle className="h-3 w-3" /> On file
+                      <CheckCircle className="h-3 w-3" /> {t("drawer.onFile")}
                     </span>
                   </div>
                 ))}
@@ -413,12 +413,12 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
           {/* ── Notes ── */}
           {section === "notes" && (
             <div className="space-y-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Notes & Observations</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("clients.notesObs")}</p>
               {client.internalNotes && (
                 <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <MessageSquare className="h-3.5 w-3.5 text-blue-500" />
-                    <p className="text-[11.5px] font-bold text-blue-700 uppercase tracking-wide">Internal Note</p>
+                    <p className="text-[11.5px] font-bold text-blue-700 uppercase tracking-wide">{t("clients.internalNote")}</p>
                   </div>
                   <p className="text-[13px] text-blue-800">{client.internalNotes}</p>
                 </div>
@@ -427,7 +427,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                 <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                    <p className="text-[11.5px] font-bold text-amber-700 uppercase tracking-wide">Warning</p>
+                    <p className="text-[11.5px] font-bold text-amber-700 uppercase tracking-wide">{t("drawer.warning")}</p>
                   </div>
                   <p className="text-[13px] text-amber-800">{client.warningNotes}</p>
                 </div>
@@ -435,14 +435,14 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
               {!client.internalNotes && !client.warningNotes && (
                 <div className="text-center py-10 bg-slate-50 rounded-2xl border border-slate-100">
                   <MessageSquare className="h-8 w-8 text-slate-200 mx-auto mb-2" />
-                  <p className="text-[13px] font-semibold text-slate-400">No notes yet</p>
+                  <p className="text-[13px] font-semibold text-slate-400">{t("clients.noNotes")}</p>
                 </div>
               )}
               <button
                 onClick={() => setNoteOpen(true)}
                 className="w-full h-10 border-2 border-dashed border-slate-200 rounded-xl text-[12px] font-semibold text-slate-400 hover:border-violet-300 hover:text-violet-600 transition-colors flex items-center justify-center gap-2"
               >
-                <Plus className="h-4 w-4" /> Add Note
+                <Plus className="h-4 w-4" /> {t("clients.addNoteTitle")}
               </button>
             </div>
           )}
@@ -450,13 +450,13 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
           {/* ── Payments ── */}
           {section === "payments" && (
             <div className="space-y-4">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Payment & Deposit Info</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("clients.paymentDepositInfo")}</p>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: "Total Spend",       value: `$${client.totalSpend ?? 0}`,          color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-100" },
-                  { label: "Deposit Held",       value: `$${client.depositHeld ?? 0}`,         color: "text-amber-700",   bg: "bg-amber-50 border-amber-100"     },
-                  { label: "Deposit Returned",   value: `$${client.depositReturned ?? 0}`,     color: "text-slate-700",   bg: "bg-slate-50 border-slate-100"     },
-                  { label: "Pending Balance",    value: `$${client.pendingBalance ?? 0}`,      color: (client.pendingBalance ?? 0) > 0 ? "text-red-600" : "text-slate-700", bg: (client.pendingBalance ?? 0) > 0 ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100" },
+                  { label: t("clients.totalSpend"),       value: `$${client.totalSpend ?? 0}`,      color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-100" },
+                  { label: t("clients.depositHeld"),      value: `$${client.depositHeld ?? 0}`,     color: "text-amber-700",   bg: "bg-amber-50 border-amber-100"     },
+                  { label: t("clients.depositReturned"),  value: `$${client.depositReturned ?? 0}`, color: "text-slate-700",   bg: "bg-slate-50 border-slate-100"     },
+                  { label: t("clients.pendingBalance"),   value: `$${client.pendingBalance ?? 0}`,  color: (client.pendingBalance ?? 0) > 0 ? "text-red-600" : "text-slate-700", bg: (client.pendingBalance ?? 0) > 0 ? "bg-red-50 border-red-100" : "bg-slate-50 border-slate-100" },
                 ].map(({ label, value, color, bg }) => (
                   <div key={label} className={`rounded-2xl border p-4 ${bg}`}>
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
@@ -467,7 +467,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
 
               {clientRentals.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Payment History</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("clients.paymentHistory")}</p>
                   <div className="space-y-2">
                     {clientRentals.slice(0, 5).map(r => (
                       <div key={r.id} className="flex items-center justify-between px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl">
@@ -477,7 +477,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                         </div>
                         <div className="text-right">
                           <p className="text-[13px] font-bold text-slate-800">${r.totalPrice}</p>
-                          <p className="text-[10.5px] text-slate-400">Deposit: ${r.deposit}</p>
+                          <p className="text-[10.5px] text-slate-400">{t("form.deposit")}: ${r.deposit}</p>
                         </div>
                       </div>
                     ))}
@@ -496,7 +496,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
               <h4 className="text-[16px] font-bold text-[#1a2332] mb-2">
-                {client.status === "blocked" ? "Unblock Client" : "Block Client"}
+                {client.status === "blocked" ? t("clients.unblockTitle") : t("clients.blockTitle")}
               </h4>
               <p className="text-[13px] text-slate-500 mb-4">
                 {client.status === "blocked"
@@ -505,7 +505,7 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
               </p>
               {client.status !== "blocked" && (
                 <div className="mb-4">
-                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Reason <span className="text-slate-400 font-normal">(optional)</span></label>
+                  <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">{t("clients.blockReasonLabel")} <span className="text-slate-400 font-normal">({t("form.optional")})</span></label>
                   <textarea
                     className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-400 transition bg-white"
                     rows={2}
@@ -533,13 +533,13 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                       : "bg-red-600 text-white hover:bg-red-700"
                   }`}
                 >
-                  {client.status === "blocked" ? "Yes, Unblock" : "Block Client"}
+                  {client.status === "blocked" ? t("clients.yesUnblock") : t("clients.blockClient")}
                 </button>
                 <button
                   onClick={() => { setBlockOpen(false); setBlockReason(""); }}
                   className="px-5 h-10 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t("action.cancel")}
                 </button>
               </div>
             </motion.div>
@@ -553,9 +553,9 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm" onClick={() => setNoteOpen(false)} />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0, scale: 0.95, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 8 }} transition={{ duration: 0.22, ease: "easeOut" }} className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-              <h4 className="text-[16px] font-bold text-[#1a2332] mb-4">Add Note</h4>
+              <h4 className="text-[16px] font-bold text-[#1a2332] mb-4">{t("clients.addNoteTitle")}</h4>
               <div className="mb-4">
-                <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">Internal Note</label>
+                <label className="block text-[12px] font-semibold text-slate-600 mb-1.5">{t("clients.staffNote")}</label>
                 <textarea
                   autoFocus
                   className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-[13px] text-slate-700 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 transition bg-white"
@@ -580,13 +580,13 @@ function ClientDrawer({ client, onClose }: { client: DashboardClient; onClose: (
                   disabled={!noteText.trim()}
                   className="flex-1 h-10 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] disabled:opacity-40 transition-colors"
                 >
-                  Save Note
+                  {t("clients.saveNoteBtn")}
                 </button>
                 <button
                   onClick={() => { setNoteOpen(false); setNoteText(""); }}
                   className="px-5 h-10 bg-white border border-slate-200 text-slate-600 rounded-xl text-[13px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t("action.cancel")}
                 </button>
               </div>
             </motion.div>

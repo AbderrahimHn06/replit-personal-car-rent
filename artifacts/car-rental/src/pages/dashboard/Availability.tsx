@@ -6,31 +6,52 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { fleet, FleetCar, FleetStatus, DashboardRental } from "@/data/dashboardData";
-import { useActiveLocations, addRental, useRentals } from "@/data/localStore";
+import { useActiveLocations, addRental, useRentals, useT } from "@/data/localStore";
 import { RentalCreationModal } from "./RentalCreationModal";
+import type { TranslationKey } from "@/i18n/translations";
 
 /* ─── helpers ──────────────────────────────────────────────────── */
-const STATUS_CFG: Record<FleetStatus, { label: string; dot: string; badge: string }> = {
-  available:   { label: "Available",   dot: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
-  reserved:    { label: "Reserved",    dot: "bg-indigo-500",  badge: "bg-indigo-50 text-indigo-700 border border-indigo-200"   },
-  rented:      { label: "Rented",      dot: "bg-amber-500",   badge: "bg-amber-50 text-amber-700 border border-amber-200"     },
-  maintenance: { label: "Maintenance", dot: "bg-red-500",     badge: "bg-red-50 text-red-700 border border-red-200"           },
+const STATUS_DOT: Record<FleetStatus, string> = {
+  available:   "bg-emerald-500",
+  reserved:    "bg-indigo-500",
+  rented:      "bg-amber-500",
+  maintenance: "bg-red-500",
 };
+const STATUS_BADGE: Record<FleetStatus, string> = {
+  available:   "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  reserved:    "bg-indigo-50 text-indigo-700 border border-indigo-200",
+  rented:      "bg-amber-50 text-amber-700 border border-amber-200",
+  maintenance: "bg-red-50 text-red-700 border border-red-200",
+};
+const STATUS_KEY: Record<FleetStatus, TranslationKey> = {
+  available:   "filter.available",
+  reserved:    "filter.reserved",
+  rented:      "filter.rented",
+  maintenance: "maintenance.title",
+};
+
 function StatusBadge({ s }: { s: FleetStatus }) {
-  const { label, dot, badge } = STATUS_CFG[s];
+  const t = useT();
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${badge}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
-      {label}
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold ${STATUS_BADGE[s]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[s]}`} />
+      {t(STATUS_KEY[s])}
     </span>
   );
 }
+
 function fmtShort(d: string) {
   return new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
-function isCarAvailable(car: FleetCar, pickupDate: string, returnDate: string, allRentals: DashboardRental[]): { available: boolean; reason?: string; conflict?: { client: string; from: string; to: string } } {
-  if (car.status === "maintenance") return { available: false, reason: "In maintenance" };
+type AvailResult = {
+  available: boolean;
+  reasonKey?: TranslationKey;
+  conflict?: { client: string; from: string; to: string };
+};
+
+function isCarAvailable(car: FleetCar, pickupDate: string, returnDate: string, allRentals: DashboardRental[]): AvailResult {
+  if (car.status === "maintenance") return { available: false, reasonKey: "availability.inMaintenance" };
   const overlap = allRentals.find(r => {
     if (r.plate !== car.plate && !r.car.includes(car.model)) return false;
     if (r.status === "completed") return false;
@@ -39,7 +60,7 @@ function isCarAvailable(car: FleetCar, pickupDate: string, returnDate: string, a
   if (overlap) {
     return {
       available: false,
-      reason: overlap.status === "reserved" ? "Already reserved" : "Currently rented",
+      reasonKey: overlap.status === "reserved" ? "availability.alreadyReserved" : "availability.currentlyRented",
       conflict: { client: overlap.client, from: overlap.startDate, to: overlap.endDate },
     };
   }
@@ -59,6 +80,7 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo, allRentals
   car: FleetCar; onClose: () => void; highlightFrom?: string; highlightTo?: string;
   allRentals: DashboardRental[];
 }) {
+  const t = useT();
   const [year,  setYear]  = useState(2026);
   const [month, setMonth] = useState(5);
   useEffect(() => { document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = ""; }; }, []);
@@ -111,7 +133,9 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo, allRentals
             {highlightFrom && highlightTo && (
               <div className="px-6 py-3 border-b border-slate-100 flex items-center gap-2">
                 <Info className="h-3.5 w-3.5 text-violet-400" />
-                <p className="text-[12px] text-slate-500">Your search period: <span className="font-semibold text-violet-600">{fmtShort(highlightFrom)} → {fmtShort(highlightTo)}</span> highlighted in violet</p>
+                <p className="text-[12px] text-slate-500">
+                  {t("availability.searchPeriod")}: <span className="font-semibold text-violet-600">{fmtShort(highlightFrom)} → {fmtShort(highlightTo)}</span> {t("availability.highlightedViolet")}
+                </p>
               </div>
             )}
             <div className="px-6 pb-6 pt-4">
@@ -133,14 +157,14 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo, allRentals
                     }`}>
                       <span className={`text-[11px] font-bold block ${isToday ? "w-5 h-5 rounded-full bg-[#1a2332] text-white flex items-center justify-center text-[10px]" : rental ? "text-inherit" : inHighlight ? "text-violet-600" : "text-emerald-700"}`}>{day}</span>
                       {rental && <p className="text-[9px] font-semibold leading-tight mt-0.5 line-clamp-2 opacity-90">{rental.client.split(" ")[0]}</p>}
-                      {!rental && inHighlight && <p className="text-[9px] font-semibold text-violet-500 mt-0.5">free</p>}
+                      {!rental && inHighlight && <p className="text-[9px] font-semibold text-violet-500 mt-0.5">{t("availability.free")}</p>}
                     </div>
                   );
                 })}
               </div>
               {carRentals.length > 0 && (
                 <div className="mt-5 space-y-2">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">Existing Bookings</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-3">{t("availability.existingBookings")}</p>
                   {carRentals.map((r, i) => (
                     <div key={r.id} className={`flex items-center justify-between px-4 py-3 rounded-xl border ${RENTAL_COLORS[i % RENTAL_COLORS.length]}`}>
                       <div>
@@ -155,7 +179,7 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo, allRentals
               {carRentals.length === 0 && (
                 <div className="mt-5 text-center py-6 bg-emerald-50 rounded-xl border border-emerald-100">
                   <CheckCircle className="h-7 w-7 text-emerald-400 mx-auto mb-2" />
-                  <p className="text-[13px] font-semibold text-emerald-700">No bookings — fully available</p>
+                  <p className="text-[13px] font-semibold text-emerald-700">{t("availability.noBookingsAvailable")}</p>
                 </div>
               )}
             </div>
@@ -169,8 +193,8 @@ function CarScheduleModal({ car, onClose, highlightFrom, highlightTo, allRentals
 /* ─── Success Toast ────────────────────────────────────────────── */
 function SuccessToast({ message, onClose }: { message: string; onClose: () => void }) {
   useEffect(() => {
-    const t = setTimeout(onClose, 4000);
-    return () => clearTimeout(t);
+    const timer = setTimeout(onClose, 4000);
+    return () => clearTimeout(timer);
   }, [onClose]);
   return (
     <div className="fixed bottom-6 right-6 z-[70] flex items-center gap-3 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl animate-in slide-in-from-bottom-4">
@@ -183,6 +207,7 @@ function SuccessToast({ message, onClose }: { message: string; onClose: () => vo
 
 /* ─── Main Availability Section ────────────────────────────────── */
 export function AvailabilitySection() {
+  const t = useT();
   const [pickupDate,  setPickupDate]  = useState("2026-06-10");
   const [pickupTime,  setPickupTime]  = useState("09:00");
   const [returnDate,  setReturnDate]  = useState("2026-06-15");
@@ -205,7 +230,7 @@ export function AvailabilitySection() {
   }
 
   const results = useMemo(() => {
-    if (!searched) return [];
+    if (!searched) return [] as (AvailResult & { car: FleetCar })[];
     return fleet.map(car => ({ car, ...isCarAvailable(car, pickupDate, returnDate, allRentals) }));
   }, [searched, pickupDate, returnDate, allRentals]);
 
@@ -226,35 +251,35 @@ export function AvailabilitySection() {
       {/* Header */}
       <div className="px-6 sm:px-8 pt-7 pb-0">
         <div className="mb-6">
-          <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">Availability</h2>
-          <p className="text-[13px] text-slate-400 mt-1 font-medium">Check which vehicles are available for your selected dates and locations</p>
+          <h2 className="text-[22px] font-bold text-[#1a2332] tracking-tight">{t("availability.title")}</h2>
+          <p className="text-[13px] text-slate-400 mt-1 font-medium">{t("availability.subtitle")}</p>
         </div>
 
         {/* Search form */}
         <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm px-6 py-5 mb-6">
-          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">Search Availability</p>
+          <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400 mb-4">{t("availability.searchLabel")}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
             <div>
               <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
-                <CalendarDays className="h-3.5 w-3.5 text-slate-400" /> Pickup Date
+                <CalendarDays className="h-3.5 w-3.5 text-slate-400" /> {t("availability.pickupDate")}
               </label>
               <input type="date" className={inp} value={pickupDate} onChange={e => setPickupDate(e.target.value)} />
             </div>
             <div>
               <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-slate-400" /> Pickup Time
+                <Clock className="h-3.5 w-3.5 text-slate-400" /> {t("availability.pickupTime")}
               </label>
               <input type="time" className={inp} value={pickupTime} onChange={e => setPickupTime(e.target.value)} />
             </div>
             <div>
               <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
-                <CalendarDays className="h-3.5 w-3.5 text-slate-400" /> Return Date
+                <CalendarDays className="h-3.5 w-3.5 text-slate-400" /> {t("availability.returnDate")}
               </label>
               <input type="date" className={inp} value={returnDate} min={pickupDate} onChange={e => setReturnDate(e.target.value)} />
             </div>
             <div>
               <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-slate-400" /> Return Time
+                <Clock className="h-3.5 w-3.5 text-slate-400" /> {t("availability.returnTime")}
               </label>
               <input type="time" className={inp} value={returnTime} onChange={e => setReturnTime(e.target.value)} />
             </div>
@@ -263,7 +288,7 @@ export function AvailabilitySection() {
               disabled={!pickupDate || !returnDate || returnDate < pickupDate}
               className="h-10 px-6 bg-[#1a2332] text-white rounded-xl text-[13px] font-semibold hover:bg-[#243044] transition-colors shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <Search className="h-4 w-4" /> Check Availability
+              <Search className="h-4 w-4" /> {t("availability.checkAvailability")}
             </button>
           </div>
 
@@ -271,31 +296,31 @@ export function AvailabilitySection() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
             <div>
               <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 text-slate-400" /> Pickup Location
+                <MapPin className="h-3.5 w-3.5 text-slate-400" /> {t("form.pickupLocation")}
               </label>
               {activeLocations.length > 0 ? (
                 <select className={sel} value={pickupLoc} onChange={e => setPickupLoc(e.target.value)}>
-                  <option value="">— Select pickup location —</option>
+                  <option value="">{t("availability.selectPickup")}</option>
                   {activeLocations.map(l => <option key={l.id} value={l.name}>{l.name}{l.address ? ` · ${l.address}` : ""}</option>)}
                 </select>
               ) : (
                 <div className="h-10 rounded-xl border border-slate-200 px-3.5 flex items-center text-[12px] text-slate-400 bg-slate-50">
-                  No locations configured — add them in Settings
+                  {t("availability.noLocations")}
                 </div>
               )}
             </div>
             <div>
               <label className="block text-[11.5px] font-semibold text-slate-500 mb-1.5 flex items-center gap-1.5">
-                <MapPin className="h-3.5 w-3.5 text-slate-400" /> Return Location
+                <MapPin className="h-3.5 w-3.5 text-slate-400" /> {t("form.returnLocation")}
               </label>
               {activeLocations.length > 0 ? (
                 <select className={sel} value={returnLoc} onChange={e => setReturnLoc(e.target.value)}>
-                  <option value="">— Select return location —</option>
+                  <option value="">{t("availability.selectReturn")}</option>
                   {activeLocations.map(l => <option key={l.id} value={l.name}>{l.name}{l.address ? ` · ${l.address}` : ""}</option>)}
                 </select>
               ) : (
                 <div className="h-10 rounded-xl border border-slate-200 px-3.5 flex items-center text-[12px] text-slate-400 bg-slate-50">
-                  No locations configured — add them in Settings
+                  {t("availability.noLocations")}
                 </div>
               )}
             </div>
@@ -313,7 +338,9 @@ export function AvailabilitySection() {
                   {" → "}
                   {returnDate && new Date(returnDate).toLocaleDateString("en-GB", { day:"numeric", month:"short" })}
                 </span>
-                <span className="text-[11.5px] text-slate-400">({dayCount} day{dayCount !== 1 ? "s" : ""})</span>
+                <span className="text-[11.5px] text-slate-400">
+                  ({dayCount} {dayCount !== 1 ? t("availability.days") : t("availability.day")})
+                </span>
               </div>
               {(pickupLoc || returnLoc) && (
                 <div className="flex items-center gap-1.5 text-[12px] text-slate-500 bg-white border border-slate-200 px-3 py-2 rounded-xl">
@@ -324,15 +351,15 @@ export function AvailabilitySection() {
                 </div>
               )}
               <button onClick={() => setSearched(false)} className="ml-auto text-[12px] text-slate-400 hover:text-slate-600 flex items-center gap-1">
-                <X className="h-3.5 w-3.5" /> Clear results
+                <X className="h-3.5 w-3.5" /> {t("availability.clearResults")}
               </button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
               {[
-                { label: "Available",   value: available.length,                                     color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100", icon: CheckCircle  },
-                { label: "Reserved",    value: results.filter(r=>r.conflict?.client && r.conflict).length, color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-100", icon: CalendarDays },
-                { label: "Unavailable", value: unavailable.length,                                   color: "text-red-600",     bg: "bg-red-50",     border: "border-red-100",     icon: AlertTriangle },
-                { label: "Maintenance", value: fleet.filter(c => c.status === "maintenance").length,  color: "text-orange-600", bg: "bg-orange-50",  border: "border-orange-100",  icon: Wrench        },
+                { label: t("filter.available"),        value: available.length,                                              color: "text-emerald-600", bg: "bg-emerald-50", border: "border-emerald-100", icon: CheckCircle  },
+                { label: t("filter.reserved"),         value: results.filter(r => r.conflict?.client && r.conflict).length,  color: "text-indigo-600",  bg: "bg-indigo-50",  border: "border-indigo-100",  icon: CalendarDays },
+                { label: t("availability.unavailable"),value: unavailable.length,                                            color: "text-red-600",     bg: "bg-red-50",     border: "border-red-100",     icon: AlertTriangle },
+                { label: t("maintenance.title"),       value: fleet.filter(c => c.status === "maintenance").length,          color: "text-orange-600",  bg: "bg-orange-50",  border: "border-orange-100",  icon: Wrench        },
               ].map(({ label, value, color, bg, border, icon: Icon }) => (
                 <div key={label} className={`${bg} border ${border} rounded-xl px-4 py-3 flex items-center gap-3`}>
                   <Icon className={`h-5 w-5 ${color} flex-shrink-0`} />
@@ -355,8 +382,8 @@ export function AvailabilitySection() {
           {available.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <CheckCircle className="h-4.5 w-4.5 text-emerald-500" />
-                <h3 className="text-[14px] font-bold text-[#1a2332]">Available Cars</h3>
+                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                <h3 className="text-[14px] font-bold text-[#1a2332]">{t("availability.availableCars")}</h3>
                 <span className="text-[11.5px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">{available.length}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -367,7 +394,7 @@ export function AvailabilitySection() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                       <div className="absolute top-2.5 right-2.5">
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-bold bg-emerald-500 text-white">
-                          <CheckCircle className="h-3 w-3" /> Free
+                          <CheckCircle className="h-3 w-3" /> {t("availability.free")}
                         </span>
                       </div>
                       <div className="absolute bottom-2.5 left-3">
@@ -380,16 +407,16 @@ export function AvailabilitySection() {
                         <div className="flex items-center gap-2 text-[11.5px] text-slate-500 flex-wrap">
                           <span>{car.transmission}</span><span className="text-slate-200">·</span>
                           <span>{car.fuel}</span><span className="text-slate-200">·</span>
-                          <span>{car.seats} seats</span>
+                          <span>{car.seats} {t("availability.seats")}</span>
                         </div>
                         <div className="text-right flex-shrink-0 ml-2">
                           <p className="text-[16px] font-bold text-[#1a2332]">${car.pricePerDay}</p>
-                          <p className="text-[10px] text-slate-400">/day</p>
+                          <p className="text-[10px] text-slate-400">{t("availability.perDay")}</p>
                         </div>
                       </div>
                       {dayCount > 0 && (
                         <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 mb-3 flex items-center justify-between">
-                          <span className="text-[11.5px] text-emerald-700 font-medium">{dayCount} days total</span>
+                          <span className="text-[11.5px] text-emerald-700 font-medium">{dayCount} {t("availability.daysTotal")}</span>
                           <span className="text-[13px] font-bold text-emerald-700">${car.pricePerDay * dayCount}</span>
                         </div>
                       )}
@@ -398,13 +425,13 @@ export function AvailabilitySection() {
                           onClick={() => setScheduleFor(car)}
                           className="flex-1 h-9 bg-slate-100 text-slate-700 rounded-xl text-[12px] font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5"
                         >
-                          <CalendarDays className="h-3.5 w-3.5" /> Schedule
+                          <CalendarDays className="h-3.5 w-3.5" /> {t("availability.viewSchedule")}
                         </button>
                         <button
                           onClick={() => setBookingCar(car)}
                           className="flex-1 h-9 bg-[#1a2332] text-white rounded-xl text-[12px] font-semibold hover:bg-[#243044] transition-colors flex items-center justify-center gap-1.5"
                         >
-                          <Car className="h-3.5 w-3.5" /> Book
+                          <Car className="h-3.5 w-3.5" /> {t("action.book")}
                         </button>
                       </div>
                     </div>
@@ -419,11 +446,11 @@ export function AvailabilitySection() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <AlertTriangle className="h-4 w-4 text-slate-400" />
-                <h3 className="text-[14px] font-bold text-slate-500">Unavailable</h3>
+                <h3 className="text-[14px] font-bold text-slate-500">{t("availability.unavailable")}</h3>
                 <span className="text-[11.5px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">{unavailable.length}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {unavailable.map(({ car, reason, conflict }) => (
+                {unavailable.map(({ car, reasonKey, conflict }) => (
                   <div key={car.id} className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden opacity-75">
                     <div className="relative h-40 bg-slate-100 overflow-hidden">
                       <img src={car.image} alt={`${car.brand} ${car.model}`} className="w-full h-full object-cover grayscale-[40%]" loading="lazy" />
@@ -436,12 +463,15 @@ export function AvailabilitySection() {
                     </div>
                     <div className="p-4">
                       <div className="bg-red-50 border border-red-100 rounded-xl px-3 py-2.5 mb-3">
-                        <p className="text-[11.5px] font-bold text-red-600">{reason}</p>
-                        {conflict && <p className="text-[11px] text-red-500 mt-0.5">{conflict.client} · {fmtShort(conflict.from)} → {fmtShort(conflict.to)}</p>}
-                        {car.status === "maintenance" && <p className="text-[11px] text-red-500 mt-0.5">Est. ready after service</p>}
+                        <p className="text-[11.5px] font-bold text-red-600">{reasonKey ? t(reasonKey) : ""}</p>
+                        {conflict && (
+                          <p className="text-[11px] text-red-500 mt-0.5">
+                            {t("availability.bookedBy")} {conflict.client} · {fmtShort(conflict.from)} → {fmtShort(conflict.to)}
+                          </p>
+                        )}
                       </div>
                       <button onClick={() => setScheduleFor(car)} className="w-full h-9 bg-slate-100 text-slate-600 rounded-xl text-[12px] font-semibold hover:bg-slate-200 transition-colors flex items-center justify-center gap-1.5">
-                        <CalendarDays className="h-3.5 w-3.5" /> View Schedule
+                        <CalendarDays className="h-3.5 w-3.5" /> {t("availability.viewSchedule")}
                       </button>
                     </div>
                   </div>
@@ -453,7 +483,7 @@ export function AvailabilitySection() {
           {available.length === 0 && unavailable.length === 0 && (
             <div className="text-center py-16">
               <Car className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-              <p className="text-[14px] font-semibold text-slate-400">No vehicles found</p>
+              <p className="text-[14px] font-semibold text-slate-400">{t("empty.noCars")}</p>
             </div>
           )}
         </div>
@@ -465,8 +495,8 @@ export function AvailabilitySection() {
           <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
             <CalendarDays className="h-8 w-8 text-slate-300" />
           </div>
-          <p className="text-[15px] font-semibold text-slate-600 mb-1.5">Check vehicle availability</p>
-          <p className="text-[13px] text-slate-400 max-w-sm">Select pickup and return dates above, then click "Check Availability" to see which cars are free.</p>
+          <p className="text-[15px] font-semibold text-slate-600 mb-1.5">{t("availability.searchLabel")}</p>
+          <p className="text-[13px] text-slate-400 max-w-sm">{t("availability.subtitle")}</p>
         </div>
       )}
 
@@ -484,7 +514,7 @@ export function AvailabilitySection() {
         )}
       </AnimatePresence>
 
-      {/* Create Rental Modal — shared component */}
+      {/* Create Rental Modal */}
       {bookingCar && (
         <RentalCreationModal
           prefilledCar={bookingCar}
@@ -498,13 +528,14 @@ export function AvailabilitySection() {
           onCreated={rental => {
             addRental(rental);
             setBookingCar(null);
-            setToastMsg(`Rental created for ${bookingCar.brand} ${bookingCar.model} — ${dayCount} days`);
+            setToastMsg(`${bookingCar.brand} ${bookingCar.model} — ${dayCount} ${t("availability.days")}`);
           }}
         />
       )}
 
-      {/* Toast */}
-      {toastMsg && <SuccessToast message={toastMsg} onClose={() => setToastMsg(null)} />}
+      <AnimatePresence>
+        {toastMsg && <SuccessToast message={toastMsg} onClose={() => setToastMsg(null)} />}
+      </AnimatePresence>
     </div>
   );
 }
